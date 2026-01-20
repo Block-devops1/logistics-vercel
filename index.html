@@ -94,7 +94,7 @@
             outputDiv.innerHTML = "<em>⏳ AI is organizing your logistics data...</em>";
 
             try {
-                const response = await fetch("/api/analyze/analyze", {
+                const response = await fetch("/api/analyze", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ text: textInput })
