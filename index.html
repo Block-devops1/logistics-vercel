@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ericss AI Logistics Solutions</title>
+    <style>
+        #output { 
+            margin-top: 25px; 
+            padding: 20px; 
+            background: #ffffff; 
+            border: 1px solid #ddd;
+            border-left: 5px solid #007bff; 
+            border-radius: 8px; 
+            font-family: 'Segoe UI', sans-serif; 
+            color: #333; 
+            line-height: 1.6;
+        }
+        .result-item { margin-bottom: 10px; border-bottom: 1px dotted #eee; padding-bottom: 5px; }
+        .result-label { font-weight: bold; color: #007bff; text-transform: uppercase; font-size: 0.8rem; display: block; }
+        .success-header { color: #28a745; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Logistics Data Extractor</h2>
+        <p>Paste messy waybill or invoice text below:</p>
+        
+        <textarea id="messyInput" placeholder="Example: Recv: Mr. James FReD at 45 Lekki Phase 1..."></textarea>
+        
+        <button onclick="analyzeData()">Analyze (Secure)</button>
+        
+        <div id="output">Results will appear here...</div>
+    </div>
+
+    <script>
+        async function analyzeData() {
+            const outputDiv = document.getElementById('output');
+            const textInput = document.getElementById('messyInput').value;
+            
+            if (!textInput) {
+                alert("Please paste text first!");
+                return;
+            }
+
+            outputDiv.innerHTML = "<em>⏳ AI is organizing your logistics data...</em>";
+
+            try {
+                const response = await fetch("/.netlify/functions/analyze", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ text: textInput })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    const d = result.data;
+                    // Create a clean "Report" look
+                    outputDiv.innerHTML = `
+                        <div class="success-header">✅ DATA SAVED TO GOOGLE SHEETS</div>
+                        <div class="result-item"><span class="result-label">Sender</span> ${d.sender || 'N/A'}</div>
+                        <div class="result-item"><span class="result-label">Receiver</span> ${d.receiver || 'N/A'}</div>
+                        <div class="result-item"><span class="result-label">Tracking Number</span> ${d.tracking_number || 'N/A'}</div>
+                        <div class="result-item"><span class="result-label">Description of Items</span> ${typeof d.items === 'object' ? JSON.stringify(d.items) : d.items}</div>
+                    `;
+                    outputDiv.style.borderLeft = "5px solid #28a745";
+                } else {
+                    outputDiv.innerHTML = `<span style="color:red">❌ Error: ${result.error}</span>`;
+                }
+            } catch (error) {
+                outputDiv.innerText = "Connection Error. Check Netlify logs.";
+            }
+        }
+    </script>
+</body>
+</html>
+
+
