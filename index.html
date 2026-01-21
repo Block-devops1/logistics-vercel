@@ -91,9 +91,12 @@
                 return;
             }
 
+            // Standardize the loading message
             outputDiv.innerHTML = "<em>⏳ AI is organizing your logistics data...</em>";
+            outputDiv.style.borderLeft = "5px solid #007bff"; // Reset to blue while loading
 
             try {
+                // Pointing to your new Vercel API
                 const response = await fetch("/api/analyze", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -104,20 +107,24 @@
 
                 if (response.ok) {
                     const d = result.data;
-                    // Create a clean "Report" look
+                    // Success! Displaying organized labels
                     outputDiv.innerHTML = `
                         <div class="success-header">✅ DATA SAVED TO GOOGLE SHEETS</div>
                         <div class="result-item"><span class="result-label">Sender</span> ${d.sender || 'N/A'}</div>
                         <div class="result-item"><span class="result-label">Receiver</span> ${d.receiver || 'N/A'}</div>
                         <div class="result-item"><span class="result-label">Tracking Number</span> ${d.tracking_number || 'N/A'}</div>
-                        <div class="result-item"><span class="result-label">Description of Items</span> ${typeof d.items === 'object' ? JSON.stringify(d.items) : d.items}</div>
+                        <div class="result-item"><span class="result-label">Description of Items</span> ${typeof d.items === 'object' ? JSON.stringify(d.items) : (d.items || 'N/A')}</div>
                     `;
-                    outputDiv.style.borderLeft = "5px solid #28a745";
+                    outputDiv.style.borderLeft = "5px solid #28a745"; // Success Green
                 } else {
-                    outputDiv.innerHTML = `<span style="color:red">❌ Error: ${result.error}</span>`;
+                    // Show actual server error from Vercel
+                    outputDiv.innerHTML = `<span style="color:red">❌ Error: ${result.error || "Server Error"}</span>`;
+                    outputDiv.style.borderLeft = "5px solid #dc3545"; // Error Red
                 }
             } catch (error) {
-                outputDiv.innerText = "Connection Error. Check Netlify logs.";
+                // Updated message to reflect Vercel
+                outputDiv.innerText = "Connection Error. Check your internet or Vercel Dashboard logs.";
+                console.error("Connection details:", error);
             }
         }
     </script>
