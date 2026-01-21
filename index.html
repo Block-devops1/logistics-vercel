@@ -49,6 +49,13 @@
         margin-top: 15px; 
         transition: background 0.3s; 
     }
+    .description-text {
+    word-wrap: break-word;      /* Forces long words to wrap */
+    overflow-wrap: break-word;  
+    white-space: normal;       /* Ensures text doesn't stay on one line */
+    display: block;            /* Ensures it takes up the full width available */
+    width: 100%;               /* Fills the container space */
+    }
     button:hover { background: #0056b3; }
     #output { 
         margin-top: 25px; 
@@ -82,51 +89,74 @@
     </div>
 
     <script>
-        async function analyzeData() {
-            const outputDiv = document.getElementById('output');
-            const textInput = document.getElementById('messyInput').value;
+          async function analyzeData() {
+    const outputDiv = document.getElementById('output');
+    const textInput = document.getElementById('messyInput').value;
+    
+    if (!textInput) {
+        alert("Please paste text first!");
+        return;
+    }
+
+    outputDiv.innerHTML = "<em>⌛ AI is organizing your logistics data...</em>";
+    outputDiv.style.borderLeft = "5px solid #007bff"; 
+
+    try {
+        const response = await fetch("/api/analyze", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: textInput })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            const d = result.data;
+
+            // --- NEW FORMATTING LOGIC START ---
+            let formattedItems = "N/A";
             
-            if (!textInput) {
-                alert("Please paste text first!");
-                return;
-            }
-
-            // Standardize the loading message
-            outputDiv.innerHTML = "<em>⏳ AI is organizing your logistics data...</em>";
-            outputDiv.style.borderLeft = "5px solid #007bff"; // Reset to blue while loading
-
-            try {
-                // Pointing to your new Vercel API
-                const response = await fetch("/api/analyze", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ text: textInput })
-                });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    const d = result.data;
-                    // Success! Displaying organized labels
-                    outputDiv.innerHTML = `
-                        <div class="success-header">✅ DATA SAVED TO GOOGLE SHEETS</div>
-                        <div class="result-item"><span class="result-label">Sender</span> ${d.sender || 'N/A'}</div>
-                        <div class="result-item"><span class="result-label">Receiver</span> ${d.receiver || 'N/A'}</div>
-                        <div class="result-item"><span class="result-label">Tracking Number</span> ${d.tracking_number || 'N/A'}</div>
-                        <div class="result-item"><span class="result-label">Description of Items</span> ${typeof d.items === 'object' ? JSON.stringify(d.items) : (d.items || 'N/A')}</div>
-                    `;
-                    outputDiv.style.borderLeft = "5px solid #28a745"; // Success Green
-                } else {
-                    // Show actual server error from Vercel
-                    outputDiv.innerHTML = `<span style="color:red">❌ Error: ${result.error || "Server Error"}</span>`;
-                    outputDiv.style.borderLeft = "5px solid #dc3545"; // Error Red
+            if (d.items) {
+                try {
+                    // If d.items is already an object/array, use it. If it's a string, parse it.
+                    const itemsArray = typeof d.items === 'string' ? JSON.parse(d.items) : d.items;
+                    
+                    if (Array.isArray(itemsArray)) {
+                        formattedItems = itemsArray.map(item => {
+                            const qty = item.quantity || "";
+                            const unit = item.unit || "";
+                            const desc = item.description || "";
+                            return `${qty} ${unit} ${desc}`.trim();
+                        }).join(", ");
+                    } else {
+                        formattedItems = d.items;
+                    }
+                } catch (e) {
+                    formattedItems = d.items; // Fallback if parsing fails
                 }
-            } catch (error) {
-                // Updated message to reflect Vercel
-                outputDiv.innerText = "Connection Error. Check your internet or Vercel Dashboard logs.";
-                console.error("Connection details:", error);
             }
+            // --- NEW FORMATTING LOGIC END ---
+
+            outputDiv.innerHTML = `
+                <div class="success-header">✅ DATA SAVED TO GOOGLE SHEETS</div>
+                <div class="result-item"><span class="result-label">Sender</span> ${d.sender || 'N/A'}</div>
+                <div class="result-item"><span class="result-label">Receiver</span> ${d.receiver || 'N/A'}</div>
+                <div class="result-item"><span class="result-label">Tracking Number</span> ${d.tracking_number || 'N/A'}</div>
+                <div class="result-item">
+                    <span class="result-label">Description of Items</span> 
+                    <span class="description-text">${formattedItems}</span>
+                </div>
+            `;
+            outputDiv.style.borderLeft = "5px solid #28a745"; 
+        } else {
+            outputDiv.innerHTML = `<span style="color:red">❌ Error: ${result.error || "Server Error"}</span>`;
+            outputDiv.style.borderLeft = "5px solid #dc3545"; 
         }
+    } catch (error) {
+        outputDiv.innerText = "Connection Error. Check your internet or Vercel Dashboard logs.";
+        console.error("Connection details:", error);
+    }
+}
     </script>
 </body>
 </html>
