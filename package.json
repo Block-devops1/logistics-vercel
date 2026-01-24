@@ -1,6 +1,7 @@
 {
   "name": "logistics-vercel",
   "version": "1.0.0",
+  "type": "module",
   "dependencies": {
     "google-auth-library": "^9.0.0",
     "google-spreadsheet": "4.1.1",
