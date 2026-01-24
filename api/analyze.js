@@ -1,7 +1,7 @@
-const { GoogleSpreadsheet } = require('google-spreadsheet');
-const { JWT } = require('google-auth-library');
+import { GoogleSpreadsheet } from 'google-spreadsheet';
+import { JWT } from 'google-auth-library';
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -20,7 +20,10 @@ module.exports = async (req, res) => {
       },
       body: JSON.stringify({
         model: "meta-llama/llama-3.3-70b-instruct:free",
-        messages: [{ role: "system", content: "Extract to JSON: sender, receiver, tracking_number, items. Respond ONLY with raw JSON." }, { role: "user", content: text }]
+        messages: [
+          { role: "system", content: "Extract to JSON: sender, receiver, tracking_number, description. Respond ONLY with raw JSON." }, 
+          { role: "user", content: text }
+        ]
       })
     });
 
@@ -43,11 +46,11 @@ module.exports = async (req, res) => {
       "Sender": String(extracted.sender || "N/A"),
       "Receiver": String(extracted.receiver || "N/A"),
       "Tracking Number": String(extracted.tracking_number || "N/A"),
-      "Description": typeof extracted.items === 'object' ? JSON.stringify(extracted.items) : String(extracted.items || "N/A")
+      "Description": typeof extracted.description === 'object' ? JSON.stringify(extracted.description) : String(extracted.description || "N/A")
     });
 
     return res.status(200).json({ message: "Success!", data: extracted });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
-};
+}
