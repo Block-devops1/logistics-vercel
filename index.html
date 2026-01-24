@@ -84,11 +84,51 @@
         <textarea id="messyInput" placeholder="Example: Recv: Mr. James FReD at 45 Lekki Phase 1..."></textarea>
         
         <button onclick="analyzeData()">Analyze (Secure)</button>
+        <div class="search-section" style="margin-top: 20px;">
+            <input type="text" id="searchInput" placeholder="Search by Sender or Receiver name..." style="width: 80%; padding: 10px;">
+            <button onclick="searchSpreadsheet()">Search</button>
+        </div>
         
         <div id="output">Results will appear here...</div>
     </div>
 
     <script>
+        async function searchSpreadsheet() {
+    const query = document.getElementById('searchInput').value.toLowerCase();
+    const outputDiv = document.getElementById('output');
+    
+    outputDiv.innerHTML = "Searching records...";
+
+    try {
+        // You'll need an endpoint that fetches all rows from your sheet
+        const response = await fetch("/api/get-records"); 
+        const allData = await response.json(); // Array of logistics objects
+
+        // 1. Filter by Name
+        let filtered = allData.filter(row => 
+            row.sender.toLowerCase().includes(query) || 
+            row.receiver.toLowerCase().includes(query)
+        );
+
+        // 2. Sort by Date (Newest to Oldest)
+        filtered.sort((a, b) => new RegExp(b.date) - new RegExp(a.date));
+
+        // 3. Display Results
+        if (filtered.length === 0) {
+            outputDiv.innerHTML = "No matching records found.";
+            return;
+        }
+
+        outputDiv.innerHTML = filtered.map(item => `
+            <div class="result-item" style="border-left: 5px solid #007bff; margin-bottom: 10px; padding: 10px;">
+                <strong>${item.date}</strong> | ${item.sender} -> ${item.receiver}
+            </div>
+        `).join('');
+
+    } catch (error) {
+        outputDiv.innerHTML = "Error fetching records.";
+    }
+}
         async function analyzeData() {
             const outputDiv = document.getElementById('output');
             const textInput = document.getElementById('messyInput').value;
