@@ -9,3 +9,4 @@ A web-based logistics tool that connects to a spreadsheet and integrates AI for 
 
 ## Deployment
 Live link: [logistics-vercel-beta.vercel.app](https://logistics-vercel-beta.vercel.app)
+Still updated

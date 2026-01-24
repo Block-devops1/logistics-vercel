@@ -119,9 +119,12 @@
             return;
         }
 
+        // Change this part in your index.html search function:
         outputDiv.innerHTML = filtered.map(item => `
             <div class="result-item" style="border-left: 5px solid #007bff; margin-bottom: 10px; padding: 10px;">
-                <strong>${item.date}</strong> | ${item.sender} -> ${item.receiver}
+                <span class="result-label">${item.date || 'No Date'}</span>
+                <strong>${item.sender}</strong> to <strong>${item.receiver}</strong><br>
+                <small>Item: ${item.description || 'N/A'}</small>
             </div>
         `).join('');
 
