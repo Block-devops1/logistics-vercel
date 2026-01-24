@@ -19,11 +19,13 @@ export default async function handler(req, res) {
     const rows = response.data.values;
     // Turn rows into Objects (e.g., {sender: 'James', receiver: 'Musa'})
     const headers = rows[0];
-    const data = rows.slice(1).map(row => {
-      let obj = {};
-      headers.forEach((header, i) => obj[header.toLowerCase().replace(/ /g, '_')] = row[i]);
-      return obj;
-    });
+    const data = rows.slice(1).map(row => ({
+        date: row[0] || '',
+        sender: row[1] || '',
+        receiver: row[2] || '',
+        tracking_number: row[3] || '',
+        description: row[4] || '' // Matching column E
+    }));
 
     res.status(200).json(data);
   } catch (error) {
