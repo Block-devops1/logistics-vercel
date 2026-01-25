@@ -50,11 +50,11 @@
         transition: background 0.3s; 
     }
     .description-text {
-    word-wrap: break-word;      /* Forces long words to wrap */
-    overflow-wrap: break-word;  
-    white-space: normal;       /* Ensures text doesn't stay on one line */
-    display: block;            /* Ensures it takes up the full width available */
-    width: 100%;               /* Fills the container space */
+        word-wrap: break-word;
+        overflow-wrap: break-word;  
+        white-space: normal;
+        display: block;
+        width: 100%;
     }
     button:hover { background: #0056b3; }
     #output { 
@@ -69,8 +69,7 @@
         line-height: 1.6;
         white-space: pre-wrap;
     }
-    /* Styles for the organized result items */
-    .result-item { margin-bottom: 10px; border-bottom: 1px dotted #eee; padding-bottom: 5px; }
+    .result-item { margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
     .result-label { font-weight: bold; color: #007bff; text-transform: uppercase; font-size: 0.8rem; display: block; }
     .success-header { color: #28a745; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
     </style>
@@ -84,8 +83,10 @@
         <textarea id="messyInput" placeholder="Example: Recv: Mr. James FReD at 45 Lekki Phase 1..."></textarea>
         
         <button onclick="analyzeData()">Analyze (Secure)</button>
-        <div class="search-section" style="margin-top: 20px;">
-            <input type="text" id="searchInput" placeholder="Search by Sender or Receiver name..." style="width: 80%; padding: 10px;">
+        
+        <div class="search-section" style="margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px;">
+            <p><strong>Search Records:</strong></p>
+            <input type="text" id="searchInput" placeholder="Search by Sender or Receiver name..." style="width: 75%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
             <button onclick="searchSpreadsheet()">Search</button>
         </div>
         
@@ -94,44 +95,58 @@
 
     <script>
         async function searchSpreadsheet() {
-    const query = document.getElementById('searchInput').value.toLowerCase();
-    const outputDiv = document.getElementById('output');
-    
-    outputDiv.innerHTML = "Searching records...";
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const outputDiv = document.getElementById('output');
+            
+            outputDiv.innerHTML = "<em>Searching records...</em>";
 
-    try {
-        // You'll need an endpoint that fetches all rows from your sheet
-        const response = await fetch("/api/get-records"); 
-        const allData = await response.json(); // Array of logistics objects
+            try {
+                const response = await fetch("/api/get-records"); 
+                const allData = await response.json(); 
 
-        // 1. Filter by Name
-        let filtered = allData.filter(row => 
-            row.sender.toLowerCase().includes(query) || 
-            row.receiver.toLowerCase().includes(query)
-        );
+                // 1. Filter by Name
+                let filtered = allData.filter(row => 
+                    row.sender.toLowerCase().includes(query) || 
+                    row.receiver.toLowerCase().includes(query)
+                );
 
-        // 2. Sort by Date (Newest to Oldest)
-        filtered.sort((a, b) => new RegExp(b.date) - new RegExp(a.date));
+                // 2. Sort: Reverse so the newest items (bottom of sheet) show up first
+                filtered.reverse();
 
-        // 3. Display Results
-        if (filtered.length === 0) {
-            outputDiv.innerHTML = "No matching records found.";
-            return;
+                if (filtered.length === 0) {
+                    outputDiv.innerHTML = "No matching records found.";
+                    return;
+                }
+
+                // 3. Display neatly
+                outputDiv.innerHTML = filtered.map(item => {
+                    let displayDescription = item.description || "N/A";
+                    try {
+                        // If it's a JSON string, turn it into a readable list
+                        if (displayDescription.startsWith('[') || displayDescription.startsWith('{')) {
+                            const parsed = JSON.parse(displayDescription);
+                            displayDescription = Array.isArray(parsed) ? parsed.join(', ') : displayDescription;
+                        }
+                    } catch (e) { /* Fallback to raw string */ }
+
+                    return `
+                        <div class="result-item">
+                            <span class="result-label">${item.date}</span>
+                            <strong>${item.sender}</strong> ➔ <strong>${item.receiver}</strong><br>
+                            <span class="description-text" style="font-size: 0.9em; color: #444;">
+                                <strong>Items:</strong> ${displayDescription}
+                            </span><br>
+                            <small style="color: #888;">Tracking: ${item.tracking_number}</small>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                outputDiv.innerHTML = "<span style='color:red'>Error fetching records.</span>";
+                console.error(error);
+            }
         }
 
-        // Change this part in your index.html search function:
-        outputDiv.innerHTML = filtered.map(item => `
-            <div class="result-item" style="border-left: 5px solid #007bff; margin-bottom: 10px; padding: 10px;">
-                <span class="result-label">${item.date || 'No Date'}</span>
-                <strong>${item.sender}</strong> to <strong>${item.receiver}</strong><br>
-                <small>Item: ${item.description || 'N/A'}</small>
-            </div>
-        `).join('');
-
-    } catch (error) {
-        outputDiv.innerHTML = "Error fetching records.";
-    }
-}
         async function analyzeData() {
             const outputDiv = document.getElementById('output');
             const textInput = document.getElementById('messyInput').value;
@@ -141,7 +156,7 @@
                 return;
             }
 
-            outputDiv.innerHTML = "<em>⌛ AI is organizing your logistics data...</em>";
+            outputDiv.innerHTML = "<em>AI is organizing your logistics data...</em>";
             outputDiv.style.borderLeft = "5px solid #007bff"; 
 
             try {
@@ -155,30 +170,12 @@
 
                 if (response.ok) {
                     const d = result.data;
-
-                    // --- NEW FORMATTING LOGIC START ---
-                    let formattedItems = "N/A";
-            
-                    if (d.items) {
-                        try {
-                            // If d.items is already an object/array, use it. If it's a string, parse it.
-                            const itemsArray = typeof d.items === 'string' ? JSON.parse(d.items) : d.items;
                     
-                            if (Array.isArray(itemsArray)) {
-                                formattedItems = itemsArray.map(item => {
-                                    const qty = item.quantity || "";
-                                    const unit = item.unit || "";
-                                    const desc = item.description || "";
-                                    return `${qty} ${unit} ${desc}`.trim();
-                                }).join(", ");
-                            } else {
-                                formattedItems = d.items;
-                            }
-                        } catch (e) {
-                            formattedItems = d.items; // Fallback if parsing fails
-                        }
+                    // Cleanup for immediate analysis result display
+                    let displayDescription = d.description || d.items || "N/A";
+                    if (Array.isArray(displayDescription)) {
+                        displayDescription = displayDescription.join(", ");
                     }
-                    // --- NEW FORMATTING LOGIC END ---
 
                     outputDiv.innerHTML = `
                         <div class="success-header">✅ DATA SAVED TO GOOGLE SHEETS</div>
@@ -187,7 +184,7 @@
                         <div class="result-item"><span class="result-label">Tracking Number</span> ${d.tracking_number || 'N/A'}</div>
                         <div class="result-item">
                             <span class="result-label">Description of Items</span> 
-                            <span class="description-text">${formattedItems}</span>
+                            <span class="description-text">${displayDescription}</span>
                         </div>
                     `;
                     outputDiv.style.borderLeft = "5px solid #28a745"; 
@@ -196,13 +193,9 @@
                     outputDiv.style.borderLeft = "5px solid #dc3545"; 
                 }
             } catch (error) {
-                outputDiv.innerText = "Connection Error. Check your internet or Vercel Dashboard logs.";
-                console.error("Connection details:", error);
+                outputDiv.innerText = "Connection Error. Check your internet or Vercel logs.";
             }
         }
-    
     </script>
 </body>
 </html>
-
-
