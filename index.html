@@ -55,6 +55,11 @@
         white-space: normal;
         display: block;
         width: 100%;
+        color: #444;
+        background: #f9f9f9;
+        padding: 8px;
+        border-radius: 4px;
+        margin-top: 5px;
     }
     button:hover { background: #0056b3; }
     #output { 
@@ -67,7 +72,6 @@
         font-family: 'Segoe UI', sans-serif; 
         color: #333; 
         line-height: 1.6;
-        white-space: pre-wrap;
     }
     .result-item { margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
     .result-label { font-weight: bold; color: #007bff; text-transform: uppercase; font-size: 0.8rem; display: block; }
@@ -97,20 +101,17 @@
         async function searchSpreadsheet() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const outputDiv = document.getElementById('output');
-            
             outputDiv.innerHTML = "<em>Searching records...</em>";
 
             try {
                 const response = await fetch("/api/get-records"); 
                 const allData = await response.json(); 
 
-                // 1. Filter by Name
                 let filtered = allData.filter(row => 
                     row.sender.toLowerCase().includes(query) || 
                     row.receiver.toLowerCase().includes(query)
                 );
 
-                // 2. Sort: Reverse so the newest items (bottom of sheet) show up first
                 filtered.reverse();
 
                 if (filtered.length === 0) {
@@ -118,14 +119,24 @@
                     return;
                 }
 
-                // 3. Display neatly
                 outputDiv.innerHTML = filtered.map(item => {
                     let displayDescription = item.description || "N/A";
+                    
                     try {
-                        // If it's a JSON string, turn it into a readable list
-                        if (displayDescription.startsWith('[') || displayDescription.startsWith('{')) {
+                        // Check if description is a JSON string and unpack objects
+                        if (typeof displayDescription === 'string' && (displayDescription.startsWith('[') || displayDescription.startsWith('{'))) {
                             const parsed = JSON.parse(displayDescription);
-                            displayDescription = Array.isArray(parsed) ? parsed.join(', ') : displayDescription;
+                            if (Array.isArray(parsed)) {
+                                displayDescription = parsed.map(obj => {
+                                    if (typeof obj === 'object') {
+                                        const qty = obj.quantity || obj.qty || "";
+                                        const unit = obj.unit || "";
+                                        const desc = obj.description || obj.name || "";
+                                        return `${qty} ${unit} ${desc}`.trim();
+                                    }
+                                    return obj;
+                                }).join(", ");
+                            }
                         }
                     } catch (e) { /* Fallback to raw string */ }
 
@@ -133,17 +144,16 @@
                         <div class="result-item">
                             <span class="result-label">${item.date}</span>
                             <strong>${item.sender}</strong> ➔ <strong>${item.receiver}</strong><br>
-                            <span class="description-text" style="font-size: 0.9em; color: #444;">
+                            <div class="description-text">
                                 <strong>Items:</strong> ${displayDescription}
-                            </span><br>
-                            <small style="color: #888;">Tracking: ${item.tracking_number}</small>
+                            </div>
+                            <small style="color: #888;">Tracking: <strong>${item.tracking_number}</strong></small>
                         </div>
                     `;
                 }).join('');
 
             } catch (error) {
                 outputDiv.innerHTML = "<span style='color:red'>Error fetching records.</span>";
-                console.error(error);
             }
         }
 
@@ -170,11 +180,15 @@
 
                 if (response.ok) {
                     const d = result.data;
-                    
-                    // Cleanup for immediate analysis result display
                     let displayDescription = d.description || d.items || "N/A";
+                    
                     if (Array.isArray(displayDescription)) {
-                        displayDescription = displayDescription.join(", ");
+                        displayDescription = displayDescription.map(obj => {
+                            if (typeof obj === 'object') {
+                                return `${obj.quantity || ""} ${obj.unit || ""} ${obj.description || obj.name || ""}`.trim();
+                            }
+                            return obj;
+                        }).join(", ");
                     }
 
                     outputDiv.innerHTML = `
@@ -184,7 +198,7 @@
                         <div class="result-item"><span class="result-label">Tracking Number</span> ${d.tracking_number || 'N/A'}</div>
                         <div class="result-item">
                             <span class="result-label">Description of Items</span> 
-                            <span class="description-text">${displayDescription}</span>
+                            <div class="description-text">${displayDescription}</div>
                         </div>
                     `;
                     outputDiv.style.borderLeft = "5px solid #28a745"; 
