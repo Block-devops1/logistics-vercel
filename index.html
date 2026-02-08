@@ -82,6 +82,11 @@
 
     <div class="container">
         <h2>Logistics Data Extractor</h2>
+
+    <div id="status-container" style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px; font-size: 0.85rem;">
+        <div id="status-dot" style="width: 10px; height: 10px; background: #bbb; border-radius: 50%;"></div>
+        <span id="status-text">Checking AI Connection...</span>
+    </div>
         <p>Paste messy waybill or invoice text below:</p>
         
         <textarea id="messyInput" placeholder="Example: Recv: Mr. James FReD at 45 Lekki Phase 1..."></textarea>
@@ -98,6 +103,25 @@
     </div>
 
     <script>
+        //1. to amke sure it loads once the site is loaded
+        window.onload = async function() {
+            const dot = document.getElementById('status-dot');
+            const text = document.getElementById('status-text');
+
+            try {const response =await fetch("/api/get-records");
+                if (response.ok) {
+                    dot.style.background = "#28a745";//green
+                    text.innerText = "System Online";
+                } else {
+                    throw new Error();
+                }
+            } catch (e) {
+                dot.style.background = "#dc3545";//red
+                text.innerText = "AI Offline - Check Openrouter";
+                }
+                };
+            
+        
         async function searchSpreadsheet() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const outputDiv = document.getElementById('output');
