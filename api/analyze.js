@@ -29,7 +29,7 @@ export default async function handler(req, res) {
         "X-Title": "Ericss Logistics", // Required for Free Tier
       },
       body: JSON.stringify({
-        model: "google/gemini-1.5-flash:free", // Using the free tier model
+        model: "meta-llama/llama-3.3-70b-instruct:free", // Using the free tier model
         messages: [
           { role: "system", content: "You are a data extractor. Extract these fields from the text: sender, receiver, tracking_number, description. Return ONLY raw JSON. No markdown formatting." }, 
           { role: "user", content: text }
