@@ -3,13 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Evueo — AI Logistics Extractor</title>
+    <title>Evueo — Logistics Intelligence</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
-      href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Mono:wght@400;500&family=Figtree:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&family=Figtree:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
       *,
       *::before,
@@ -20,16 +21,19 @@
       }
 
       :root {
-        --bg: #070c18;
-        --surface: #0e1526;
-        --border: #1e2d4a;
-        --accent: #f5a623;
-        --accent2: #e8870a;
-        --text: #e8edf5;
-        --muted: #6b7a99;
-        --success: #22c55e;
-        --error: #ef4444;
-        --radius: 10px;
+        --bg: #faf8f5;
+        --surface: #ffffff;
+        --border: #e8e2d9;
+        --border2: #f0ebe3;
+        --accent: #f97316;
+        --accent2: #ea6c00;
+        --accent-dim: rgba(249, 115, 22, 0.09);
+        --text: #1c1917;
+        --muted: #78716c;
+        --muted2: #a8a29e;
+        --success: #16a34a;
+        --error: #dc2626;
+        --r: 12px;
       }
 
       body {
@@ -37,254 +41,711 @@
         color: var(--text);
         font-family: "Figtree", sans-serif;
         min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 32px 16px 60px;
+        position: relative;
       }
 
-      /* ── Header ── */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: radial-gradient(
+          circle,
+          rgba(0, 0, 0, 0.05) 1px,
+          transparent 1px
+        );
+        background-size: 24px 24px;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      body::after {
+        content: "";
+        position: fixed;
+        top: -160px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 600px;
+        height: 320px;
+        background: radial-gradient(
+          ellipse,
+          rgba(249, 115, 22, 0.1) 0%,
+          transparent 70%
+        );
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .page {
+        position: relative;
+        z-index: 1;
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 36px 20px 80px;
+      }
+
       header {
-        width: 100%;
-        max-width: 680px;
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: space-between;
         margin-bottom: 36px;
+        animation: fadeUp 0.45s ease both;
       }
 
       .logo {
         font-family: "Syne", sans-serif;
-        font-size: 1.75rem;
+        font-size: 2rem;
         font-weight: 800;
-        letter-spacing: -0.5px;
+        letter-spacing: -1px;
+        line-height: 1;
         color: var(--text);
       }
-
-      .logo span {
+      .logo em {
         color: var(--accent);
+        font-style: normal;
+      }
+      .tagline {
+        font-family: "DM Mono", monospace;
+        font-size: 0.66rem;
+        color: var(--muted2);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        margin-top: 6px;
       }
 
-      /* ── Status Pill ── */
       .status-pill {
         display: flex;
         align-items: center;
         gap: 7px;
         background: var(--surface);
         border: 1px solid var(--border);
-        padding: 6px 14px;
+        padding: 7px 14px;
         border-radius: 999px;
         font-family: "DM Mono", monospace;
-        font-size: 0.72rem;
+        font-size: 0.69rem;
         color: var(--muted);
-        letter-spacing: 0.03em;
+        letter-spacing: 0.04em;
+        margin-top: 4px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
       }
-
       .status-dot {
-        width: 8px;
-        height: 8px;
+        width: 7px;
+        height: 7px;
         border-radius: 50%;
-        background: var(--muted);
+        background: var(--muted2);
         flex-shrink: 0;
-        transition: background 0.4s;
+        transition:
+          background 0.4s,
+          box-shadow 0.4s;
       }
-
       .status-dot.online {
         background: var(--success);
-        box-shadow: 0 0 6px var(--success);
+        box-shadow: 0 0 7px rgba(22, 163, 74, 0.5);
       }
       .status-dot.offline {
         background: var(--error);
-        box-shadow: 0 0 6px var(--error);
+        box-shadow: 0 0 7px rgba(220, 38, 38, 0.5);
       }
 
-      /* ── Card ── */
-      .card {
-        width: 100%;
-        max-width: 680px;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        padding: 28px;
+      .stats-strip {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
         margin-bottom: 20px;
       }
 
-      .card-title {
+      .stat-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-top: 3px solid transparent;
+        border-radius: var(--r);
+        padding: 18px 20px;
+        position: relative;
+        overflow: hidden;
+        opacity: 0;
+        transform: translateY(14px);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+      }
+      .stat-card.in {
+        transition:
+          opacity 0.4s ease,
+          transform 0.4s ease,
+          border-top-color 0.5s,
+          box-shadow 0.3s;
+        opacity: 1;
+        transform: translateY(0);
+        border-top-color: var(--accent);
+        box-shadow:
+          0 4px 20px rgba(249, 115, 22, 0.08),
+          0 1px 4px rgba(0, 0, 0, 0.05);
+      }
+      .stat-card::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 50px;
+        background: linear-gradient(
+          to bottom,
+          rgba(249, 115, 22, 0.04),
+          transparent
+        );
+        pointer-events: none;
+      }
+      .stat-number {
         font-family: "Syne", sans-serif;
-        font-size: 0.8rem;
-        font-weight: 700;
-        letter-spacing: 0.12em;
+        font-size: 2.3rem;
+        font-weight: 800;
+        color: var(--text);
+        line-height: 1;
+        margin-bottom: 6px;
+        letter-spacing: -1.5px;
+      }
+      .stat-label {
+        font-family: "DM Mono", monospace;
+        font-size: 0.66rem;
+        color: var(--muted2);
         text-transform: uppercase;
-        color: var(--accent);
-        margin-bottom: 8px;
+        letter-spacing: 0.1em;
       }
 
-      .card-desc {
-        font-size: 0.88rem;
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r);
+        padding: 26px;
+        margin-bottom: 16px;
+        box-shadow:
+          0 1px 4px rgba(0, 0, 0, 0.05),
+          0 4px 20px rgba(0, 0, 0, 0.04);
+        opacity: 0;
+        transform: translateY(14px);
+      }
+      .card.in {
+        transition:
+          opacity 0.45s ease,
+          transform 0.45s ease;
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .section-label {
+        font-family: "DM Mono", monospace;
+        font-size: 0.66rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 5px;
+      }
+      .section-title {
+        font-family: "Syne", sans-serif;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 4px;
+      }
+      .section-desc {
+        font-size: 0.83rem;
         color: var(--muted);
-        margin-bottom: 18px;
+        margin-bottom: 20px;
         line-height: 1.55;
       }
 
-      /* ── Textarea ── */
       textarea {
         width: 100%;
-        height: 160px;
+        height: 148px;
         background: var(--bg);
         border: 1px solid var(--border);
-        border-radius: var(--radius);
+        border-radius: 8px;
         color: var(--text);
         font-family: "DM Mono", monospace;
-        font-size: 0.82rem;
+        font-size: 0.79rem;
         padding: 14px 16px;
         resize: vertical;
         outline: none;
-        transition: border-color 0.2s;
-        line-height: 1.6;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+        line-height: 1.65;
       }
-
       textarea::placeholder {
-        color: var(--muted);
+        color: var(--muted2);
       }
       textarea:focus {
-        border-color: var(--accent);
+        border-color: rgba(249, 115, 22, 0.5);
+        box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.07);
       }
 
-      /* ── Button ── */
       .btn {
         display: inline-flex;
         align-items: center;
         gap: 8px;
         background: var(--accent);
-        color: #07090f;
+        color: #fff;
         font-family: "Figtree", sans-serif;
         font-weight: 700;
-        font-size: 0.9rem;
+        font-size: 0.88rem;
         border: none;
-        padding: 11px 24px;
-        border-radius: var(--radius);
+        padding: 11px 22px;
+        border-radius: 8px;
         cursor: pointer;
         margin-top: 14px;
         transition:
           background 0.2s,
-          transform 0.1s;
+          transform 0.15s,
+          box-shadow 0.2s;
+        box-shadow: 0 2px 12px rgba(249, 115, 22, 0.3);
       }
-
       .btn:hover {
         background: var(--accent2);
+        box-shadow: 0 4px 20px rgba(249, 115, 22, 0.4);
+        transform: translateY(-1px);
       }
       .btn:active {
         transform: scale(0.98);
       }
-
-      .btn.secondary {
-        background: transparent;
-        border: 1px solid var(--border);
-        color: var(--text);
-        font-weight: 600;
-        padding: 10px 20px;
-        margin-top: 0;
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
       }
 
-      .btn.secondary:hover {
+      .btn-outline {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: transparent;
+        color: var(--text);
+        font-family: "Figtree", sans-serif;
+        font-weight: 600;
+        font-size: 0.85rem;
+        border: 1px solid var(--border);
+        padding: 10px 18px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition:
+          border-color 0.2s,
+          color 0.2s,
+          transform 0.15s;
+      }
+      .btn-outline:hover {
         border-color: var(--accent);
         color: var(--accent);
+        transform: translateY(-1px);
       }
 
-      /* ── Search row ── */
+      .btn-ghost {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: var(--accent-dim);
+        color: var(--accent);
+        font-family: "Figtree", sans-serif;
+        font-weight: 600;
+        font-size: 0.85rem;
+        border: 1px solid rgba(249, 115, 22, 0.2);
+        padding: 10px 18px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition:
+          background 0.2s,
+          transform 0.15s;
+      }
+      .btn-ghost:hover {
+        background: rgba(249, 115, 22, 0.15);
+        transform: translateY(-1px);
+      }
+      .btn-ghost:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+      .btn-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+      }
+
       .search-row {
         display: flex;
         gap: 10px;
-        align-items: center;
       }
-
       .search-row input {
         flex: 1;
         background: var(--bg);
         border: 1px solid var(--border);
-        border-radius: var(--radius);
+        border-radius: 8px;
         color: var(--text);
         font-family: "Figtree", sans-serif;
         font-size: 0.88rem;
         padding: 10px 14px;
         outline: none;
-        transition: border-color 0.2s;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
       }
-
       .search-row input::placeholder {
-        color: var(--muted);
+        color: var(--muted2);
       }
       .search-row input:focus {
-        border-color: var(--accent);
+        border-color: rgba(249, 115, 22, 0.5);
+        box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.07);
       }
 
-      /* ── Output ── */
-      #output {
-        margin-top: 20px;
-        min-height: 60px;
-      }
-
-      .output-placeholder {
-        font-family: "DM Mono", monospace;
-        font-size: 0.8rem;
-        color: var(--muted);
-        text-align: center;
-        padding: 24px 0;
-      }
-
-      /* ── Spinner ── */
       .spinner-wrap {
         display: flex;
-        flex-direction: column;
         align-items: center;
         gap: 12px;
-        padding: 28px 0;
+        padding: 22px 0;
       }
-
       .spinner {
-        width: 32px;
-        height: 32px;
-        border: 3px solid var(--border);
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--border2);
         border-top-color: var(--accent);
         border-radius: 50%;
-        animation: spin 0.7s linear infinite;
+        animation: spin 0.65s linear infinite;
+        flex-shrink: 0;
       }
-
       @keyframes spin {
         to {
           transform: rotate(360deg);
         }
       }
-
       .spinner-label {
         font-family: "DM Mono", monospace;
-        font-size: 0.78rem;
+        font-size: 0.75rem;
         color: var(--muted);
       }
 
-      /* ── Result Card ── */
       .result-success {
-        border: 1px solid var(--border);
-        border-left: 4px solid var(--success);
-        border-radius: var(--radius);
+        border: 1px solid rgba(22, 163, 74, 0.2);
+        border-radius: 10px;
         padding: 20px;
+        background: rgba(22, 163, 74, 0.03);
+        margin-top: 16px;
         animation: fadeUp 0.3s ease;
       }
-
       .result-error {
-        border: 1px solid var(--border);
-        border-left: 4px solid var(--error);
-        border-radius: var(--radius);
-        padding: 20px;
+        border: 1px solid rgba(220, 38, 38, 0.2);
+        border-radius: 10px;
+        padding: 16px 20px;
+        background: rgba(220, 38, 38, 0.03);
+        font-family: "DM Mono", monospace;
+        font-size: 0.77rem;
+        color: var(--error);
+        margin-top: 16px;
+      }
+      .result-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(22, 163, 74, 0.1);
+        color: var(--success);
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 4px 10px;
+        border-radius: 999px;
+        margin-bottom: 16px;
+      }
+
+      .fields-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+      .field-full {
+        grid-column: 1/-1;
+      }
+      .field-label {
+        font-family: "DM Mono", monospace;
+        font-size: 0.63rem;
+        color: var(--muted2);
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+      .field-value {
+        font-size: 0.9rem;
+        color: var(--text);
+        font-weight: 500;
+        line-height: 1.5;
+        word-break: break-word;
+      }
+      .tracking-chip {
+        display: inline-block;
+        background: rgba(249, 115, 22, 0.08);
+        color: var(--accent);
         font-family: "DM Mono", monospace;
         font-size: 0.8rem;
-        color: var(--error);
+        font-weight: 500;
+        padding: 4px 10px;
+        border-radius: 6px;
+        border: 1px solid rgba(249, 115, 22, 0.2);
+      }
+
+      .records-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .record-card {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        padding: 14px 16px;
+        transition:
+          border-color 0.2s,
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+      .record-card:hover {
+        border-color: rgba(249, 115, 22, 0.35);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(249, 115, 22, 0.08);
+      }
+      .record-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 7px;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .record-route {
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .record-route .arrow {
+        color: var(--muted2);
+        margin: 0 5px;
+        font-weight: 400;
+      }
+      .record-date {
+        font-family: "DM Mono", monospace;
+        font-size: 0.64rem;
+        color: var(--muted2);
+        white-space: nowrap;
+      }
+      .record-items {
+        font-size: 0.79rem;
+        color: var(--muted);
+        margin-bottom: 7px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .record-tracking {
+        font-family: "DM Mono", monospace;
+        font-size: 0.67rem;
+        color: var(--accent);
+        opacity: 0.8;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 30px 0;
+      }
+      .empty-icon {
+        font-size: 1.7rem;
+        margin-bottom: 8px;
+        opacity: 0.35;
+      }
+      .empty-text {
+        font-family: "DM Mono", monospace;
+        font-size: 0.74rem;
+        color: var(--muted2);
+      }
+
+      .receipt-section {
+        margin-top: 20px;
+        border-top: 1px solid var(--border2);
+        padding-top: 20px;
+        animation: fadeUp 0.35s ease;
+      }
+      .receipt-preview-label {
+        font-family: "DM Mono", monospace;
+        font-size: 0.66rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted2);
+        margin-bottom: 14px;
+      }
+
+      #receipt-card {
+        width: 400px;
+        background: #fff;
+        border-radius: 14px;
+        overflow: hidden;
+        font-family: "Figtree", sans-serif;
+        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
+        margin: 0 auto;
+      }
+
+      .receipt-header-free {
+        background: #fff7ed;
+        border-bottom: 3px solid #f97316;
+        padding: 22px 24px 18px;
+        text-align: center;
+      }
+      .receipt-company-name {
+        font-family: "Syne", sans-serif;
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #1c1917;
+        letter-spacing: -0.5px;
+        margin-bottom: 2px;
+      }
+      .receipt-company-sub {
+        font-size: 0.72rem;
+        color: #a8a29e;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+      .receipt-powered-badge {
+        display: inline-block;
+        margin-top: 10px;
+        background: #f5f5f4;
+        color: #c4b5a5;
+        font-size: 0.62rem;
+        font-family: "DM Mono", monospace;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 3px 10px;
+        border-radius: 999px;
+        border: 1px solid #e8e2d9;
+      }
+
+      .receipt-header-paid {
+        background: #f97316;
+        padding: 22px 24px 18px;
+        text-align: center;
+        display: none;
+      }
+      .receipt-header-paid .receipt-company-name {
+        color: #fff;
+      }
+      .receipt-header-paid .receipt-company-sub {
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .receipt-tracking-strip {
+        background: #1c1917;
+        padding: 14px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .receipt-tracking-label {
+        font-family: "DM Mono", monospace;
+        font-size: 0.62rem;
+        color: rgba(255, 255, 255, 0.4);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+      .receipt-tracking-num {
+        font-family: "DM Mono", monospace;
+        font-size: 1.05rem;
+        font-weight: 500;
+        color: #f97316;
+        letter-spacing: 0.05em;
+      }
+      .receipt-date-val {
+        font-family: "DM Mono", monospace;
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.45);
+        text-align: right;
+        line-height: 1.4;
+      }
+
+      .receipt-body {
+        padding: 20px 24px;
+        background: #fff;
+      }
+      .receipt-route {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 10px;
+        align-items: start;
+        margin-bottom: 16px;
+      }
+      .receipt-party-label {
+        font-size: 0.6rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #a8a29e;
+        margin-bottom: 4px;
+      }
+      .receipt-party-name {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #1c1917;
+        line-height: 1.3;
+      }
+      .receipt-arrow-col {
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 18px;
+        color: #d6d3d1;
+        font-size: 1rem;
+      }
+      .receipt-party.right {
+        text-align: right;
+      }
+
+      .receipt-items-card {
+        background: #faf8f5;
+        border-radius: 10px;
+        padding: 14px 16px;
+        border: 1px solid #e8e2d9;
+      }
+      .receipt-items-label {
+        font-size: 0.6rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #a8a29e;
+        margin-bottom: 6px;
+      }
+      .receipt-items-value {
+        font-size: 0.85rem;
+        color: #374151;
+        line-height: 1.5;
+      }
+
+      .receipt-footer {
+        padding: 14px 24px;
+        border-top: 1px solid #f5f5f4;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .receipt-footer-note {
+        font-size: 0.68rem;
+        color: #d6d3d1;
+      }
+      .receipt-evueo-brand {
+        font-family: "Syne", sans-serif;
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: #d6d3d1;
+        letter-spacing: -0.3px;
+      }
+      .receipt-evueo-brand span {
+        color: #f97316;
       }
 
       @keyframes fadeUp {
         from {
           opacity: 0;
-          transform: translateY(8px);
+          transform: translateY(12px);
         }
         to {
           opacity: 1;
@@ -292,211 +753,84 @@
         }
       }
 
-      .result-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: rgba(34, 197, 94, 0.1);
-        color: var(--success);
-        font-size: 0.75rem;
-        font-weight: 600;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        padding: 4px 10px;
-        border-radius: 999px;
-        margin-bottom: 18px;
-      }
-
-      .field {
-        margin-bottom: 14px;
-      }
-
-      .field:last-child {
-        margin-bottom: 0;
-      }
-
-      .field-label {
-        font-family: "DM Mono", monospace;
-        font-size: 0.7rem;
-        color: var(--muted);
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        margin-bottom: 4px;
-      }
-
-      .field-value {
-        font-size: 0.92rem;
-        color: var(--text);
-        font-weight: 500;
-        line-height: 1.5;
-        word-break: break-word;
-      }
-
-      .tracking-chip {
-        display: inline-block;
-        background: rgba(245, 166, 35, 0.12);
-        color: var(--accent);
-        font-family: "DM Mono", monospace;
-        font-size: 0.82rem;
-        font-weight: 500;
-        padding: 4px 10px;
-        border-radius: 6px;
-        border: 1px solid rgba(245, 166, 35, 0.2);
-      }
-
-      /* ── Search Results ── */
-      .records-list {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
-
-      .record-card {
-        background: var(--bg);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 14px 16px;
-        animation: fadeUp 0.25s ease;
-      }
-
-      .record-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 8px;
-        flex-wrap: wrap;
-        gap: 6px;
-      }
-
-      .record-route {
-        font-size: 0.9rem;
-        font-weight: 600;
-      }
-
-      .record-route .arrow {
-        color: var(--muted);
-        margin: 0 6px;
-      }
-
-      .record-date {
-        font-family: "DM Mono", monospace;
-        font-size: 0.7rem;
-        color: var(--muted);
-      }
-
-      .record-items {
-        font-size: 0.82rem;
-        color: var(--muted);
-        margin-top: 4px;
-        margin-bottom: 6px;
-      }
-
-      .record-tracking {
-        font-family: "DM Mono", monospace;
-        font-size: 0.72rem;
-        color: var(--accent);
-      }
-
-      .no-results {
-        text-align: center;
-        font-family: "DM Mono", monospace;
-        font-size: 0.8rem;
-        color: var(--muted);
-        padding: 24px 0;
-      }
-
-      /* ── Divider ── */
-      .divider {
-        border: none;
-        border-top: 1px solid var(--border);
-        margin: 24px 0;
-      }
-
-      /* ── Mobile ── */
-      @media (max-width: 480px) {
-        body {
-          padding: 20px 12px 48px;
-        }
-        header {
-          margin-bottom: 24px;
+      @media (max-width: 500px) {
+        .page {
+          padding: 22px 14px 60px;
         }
         .logo {
-          font-size: 1.45rem;
+          font-size: 1.55rem;
+        }
+        .stats-strip {
+          gap: 8px;
+        }
+        .stat-card {
+          padding: 14px 12px;
+        }
+        .stat-number {
+          font-size: 1.7rem;
         }
         .card {
-          padding: 20px 16px;
+          padding: 18px 14px;
+        }
+        .fields-grid {
+          grid-template-columns: 1fr;
         }
         .search-row {
           flex-direction: column;
-          align-items: stretch;
         }
-        .btn.secondary {
+        #receipt-card {
           width: 100%;
-          justify-content: center;
+          max-width: 400px;
         }
       }
     </style>
   </head>
   <body>
-    <!-- Header -->
-    <header>
-      <div class="logo">ev<span>u</span>eo</div>
-      <div class="status-pill">
-        <div class="status-dot" id="status-dot"></div>
-        <span id="status-text">Connecting...</span>
-      </div>
-    </header>
+    <div class="page">
+      <header>
+        <div>
+          <div class="logo">ev<em>u</em>eo</div>
+          <div class="tagline">AI · Logistics Intelligence</div>
+        </div>
+        <div class="status-pill">
+          <div class="status-dot" id="status-dot"></div>
+          <span id="status-text">Connecting…</span>
+        </div>
+      </header>
 
-    <!-- Analyze Card -->
-    <div class="card">
-      <div class="card-title">Extract Data</div>
-      <div class="card-desc">
-        Paste raw waybill or invoice text — Evueo will extract and save the
-        structured fields automatically.
-      </div>
-
-      <textarea
-        id="messyInput"
-        placeholder="E.g. Recv: Mr. James at 45 Lekki Phase 1, Lagos. Sender: Chidi Okafor. Tracking: EV-2041. Items: 3 cartons of tiles..."
-      ></textarea>
-
-      <button class="btn" onclick="analyzeData()">
-        <svg
-          width="15"
-          height="15"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-        </svg>
-        Analyze & Save
-      </button>
-
-      <div id="output">
-        <div class="output-placeholder">
-          Results will appear here after analysis.
+      <div class="stats-strip">
+        <div class="stat-card" id="sc-0">
+          <div class="stat-number" id="stat-total">—</div>
+          <div class="stat-label">Total Records</div>
+        </div>
+        <div class="stat-card" id="sc-1">
+          <div class="stat-number" id="stat-today">—</div>
+          <div class="stat-label">Today's Entries</div>
+        </div>
+        <div class="stat-card" id="sc-2">
+          <div
+            class="stat-number"
+            id="stat-last"
+            style="font-size: 0.9rem; letter-spacing: 0; margin-top: 6px"
+          >
+            —
+          </div>
+          <div class="stat-label">Last Entry</div>
         </div>
       </div>
-    </div>
 
-    <!-- Search Card -->
-    <div class="card">
-      <div class="card-title">Search Records</div>
-      <div class="card-desc">
-        Look up past entries by sender or receiver name.
-      </div>
-
-      <div class="search-row">
-        <input
-          type="text"
-          id="searchInput"
-          placeholder="e.g. Chidi or James..."
-        />
-        <button class="btn secondary" onclick="searchSpreadsheet()">
+      <div class="card" id="card-0">
+        <div class="section-label">Extract</div>
+        <div class="section-title">Analyze Waybill / Invoice</div>
+        <div class="section-desc">
+          Paste raw text — Evueo extracts the fields, saves to your sheet, and
+          generates a receipt instantly.
+        </div>
+        <textarea
+          id="messyInput"
+          placeholder="e.g. Recv: Mr. James at 45 Lekki Phase 1. Sender: Chidi Okafor. Tracking EV-2041. 3 cartons of tiles..."
+        ></textarea>
+        <button class="btn" onclick="analyzeData()">
           <svg
             width="14"
             height="14"
@@ -507,89 +841,300 @@
             stroke-linecap="round"
             stroke-linejoin="round"
           >
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
           </svg>
-          Search
+          Analyze & Save
         </button>
+        <div id="analyze-output"></div>
       </div>
 
-      <div id="search-output" style="margin-top: 18px"></div>
+      <div class="card" id="card-1">
+        <div class="section-label">Activity</div>
+        <div class="section-title">Recent Records</div>
+        <div class="section-desc">
+          Last 5 entries — loaded automatically on every visit.
+        </div>
+        <div id="recent-output">
+          <div class="spinner-wrap">
+            <div class="spinner"></div>
+            <span class="spinner-label">Loading records…</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="card-2">
+        <div class="section-label">Lookup</div>
+        <div class="section-title">Search Records</div>
+        <div class="section-desc">
+          Find any entry by sender or receiver name.
+        </div>
+        <div class="search-row">
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="e.g. Chidi or James…"
+          />
+          <button class="btn-outline" onclick="searchSpreadsheet()">
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            Search
+          </button>
+        </div>
+        <div id="search-output" style="margin-top: 16px"></div>
+      </div>
+    </div>
+
+    <div style="position: fixed; top: -9999px; left: -9999px; z-index: -1">
+      <div id="receipt-card">
+        <div class="receipt-header-free" id="receipt-header-free">
+          <div class="receipt-company-name" id="rc-company">
+            Your Logistics Company
+          </div>
+          <div class="receipt-company-sub">Waybill Receipt</div>
+          <div class="receipt-powered-badge">Powered by Evueo</div>
+        </div>
+        <div class="receipt-header-paid" id="receipt-header-paid">
+          <div class="receipt-company-name" id="rc-company-paid">
+            Your Logistics Company
+          </div>
+          <div class="receipt-company-sub">Waybill Receipt</div>
+        </div>
+        <div class="receipt-tracking-strip">
+          <div>
+            <div class="receipt-tracking-label">Tracking ID</div>
+            <div class="receipt-tracking-num" id="rc-tracking">EV-0000</div>
+          </div>
+          <div class="receipt-date-val" id="rc-date">—</div>
+        </div>
+        <div class="receipt-body">
+          <div class="receipt-route">
+            <div class="receipt-party">
+              <div class="receipt-party-label">From</div>
+              <div class="receipt-party-name" id="rc-sender">—</div>
+            </div>
+            <div class="receipt-arrow-col">→</div>
+            <div class="receipt-party right">
+              <div class="receipt-party-label">To</div>
+              <div class="receipt-party-name" id="rc-receiver">—</div>
+            </div>
+          </div>
+          <div class="receipt-items-card">
+            <div class="receipt-items-label">Items / Description</div>
+            <div class="receipt-items-value" id="rc-items">—</div>
+          </div>
+        </div>
+        <div class="receipt-footer">
+          <div class="receipt-footer-note">
+            This receipt confirms registration only.
+          </div>
+          <div class="receipt-evueo-brand">ev<span>u</span>eo</div>
+        </div>
+      </div>
     </div>
 
     <script>
-      // ── Status Check ──
-      window.onload = async function () {
-        const dot = document.getElementById("status-dot");
-        const text = document.getElementById("status-text");
-        try {
-          const res = await fetch("/api/get-records");
-          if (res.ok) {
-            dot.classList.add("online");
-            text.textContent = "System Online";
-          } else throw new Error();
-        } catch {
-          dot.classList.add("offline");
-          text.textContent = "System Offline";
-        }
-      };
+      const IS_PAID_TIER = false;
+      const COMPANY_NAME = "Your Logistics Company";
 
-      // ── Spinner helper ──
-      function showSpinner(containerId, label) {
-        document.getElementById(containerId).innerHTML = `
-        <div class="spinner-wrap">
-          <div class="spinner"></div>
-          <span class="spinner-label">${label}</span>
-        </div>`;
+      function countUp(el, target, delay = 0) {
+        setTimeout(() => {
+          if (target === 0) {
+            el.textContent = "0";
+            return;
+          }
+          let v = 0,
+            step = target / (900 / 16);
+          const t = setInterval(() => {
+            v = Math.min(v + step, target);
+            el.textContent = Math.floor(v);
+            if (v >= target) clearInterval(t);
+          }, 16);
+        }, delay);
       }
 
-      // ── Format description ──
-      function formatDescription(raw) {
-        if (!raw) return "N/A";
+      function formatDesc(raw) {
+        if (!raw || raw === "N/A") return "N/A";
         try {
           if (
             typeof raw === "string" &&
             (raw.startsWith("[") || raw.startsWith("{"))
           ) {
-            const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed)) {
-              return parsed
-                .map((obj) =>
-                  typeof obj === "object"
-                    ? `${obj.quantity || obj.qty || ""} ${obj.unit || ""} ${obj.description || obj.name || ""}`.trim()
-                    : obj,
+            const p = JSON.parse(raw);
+            if (Array.isArray(p))
+              return p
+                .map((o) =>
+                  typeof o === "object"
+                    ? `${o.quantity || o.qty || ""} ${o.unit || ""} ${o.description || o.name || ""}`.trim()
+                    : o,
                 )
                 .join(", ");
-            }
           }
         } catch (_) {}
         return raw;
       }
 
-      // ── Analyze ──
-      async function analyzeData() {
-        const outputDiv = document.getElementById("output");
-        const text = document.getElementById("messyInput").value.trim();
+      function recordCardHTML(r) {
+        return `<div class="record-card">
+      <div class="record-header">
+        <div class="record-route">${r.sender}<span class="arrow">→</span>${r.receiver}</div>
+        <div class="record-date">${r.date}</div>
+      </div>
+      <div class="record-items">${formatDesc(r.description)}</div>
+      <div class="record-tracking">⬡ ${r.tracking_number}</div>
+    </div>`;
+      }
 
+      function renderRecent(records) {
+        const out = document.getElementById("recent-output");
+        const last5 = [...records].reverse().slice(0, 5);
+        if (!last5.length) {
+          out.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No records yet.</div></div>`;
+          return;
+        }
+        out.innerHTML = `<div class="records-list">${last5.map(recordCardHTML).join("")}</div>`;
+      }
+
+      function buildReceiptCard(data) {
+        document.getElementById("receipt-header-free").style.display =
+          IS_PAID_TIER ? "none" : "block";
+        document.getElementById("receipt-header-paid").style.display =
+          IS_PAID_TIER ? "block" : "none";
+        document.getElementById("rc-company").textContent = COMPANY_NAME;
+        document.getElementById("rc-company-paid").textContent = COMPANY_NAME;
+        document.getElementById("rc-tracking").textContent =
+          data.tracking_number || "N/A";
+        document.getElementById("rc-sender").textContent = data.sender || "N/A";
+        document.getElementById("rc-receiver").textContent =
+          data.receiver || "N/A";
+        document.getElementById("rc-items").textContent = formatDesc(
+          Array.isArray(data.description)
+            ? JSON.stringify(data.description)
+            : data.description,
+        );
+        const now = new Date().toLocaleString("en-GB", {
+          timeZone: "Africa/Lagos",
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        document.getElementById("rc-date").innerHTML = now.replace(
+          ", ",
+          "<br>",
+        );
+      }
+
+      async function downloadReceipt() {
+        const btn = document.getElementById("dl-btn");
+        btn.disabled = true;
+        btn.innerHTML = `<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div> Generating…`;
+        try {
+          const card = document.getElementById("receipt-card");
+          const canvas = await html2canvas(card, {
+            scale: 2.5,
+            backgroundColor: "#ffffff",
+            useCORS: true,
+          });
+          const imgData = canvas.toDataURL("image/png");
+          const { jsPDF } = window.jspdf;
+          const pxW = canvas.width / 2.5,
+            pxH = canvas.height / 2.5;
+          const pdf = new jsPDF({
+            orientation: "portrait",
+            unit: "px",
+            format: [pxW, pxH],
+          });
+          pdf.addImage(imgData, "PNG", 0, 0, pxW, pxH);
+          pdf.save(
+            `Evueo-${document.getElementById("rc-tracking").textContent}.pdf`,
+          );
+        } catch (e) {
+          alert("Could not generate PDF.");
+        }
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Receipt`;
+      }
+
+      window.onload = async function () {
+        ["card-0", "card-1", "card-2"].forEach((id, i) =>
+          setTimeout(
+            () => document.getElementById(id).classList.add("in"),
+            150 + i * 100,
+          ),
+        );
+        const dot = document.getElementById("status-dot"),
+          sText = document.getElementById("status-text");
+        try {
+          const res = await fetch("/api/get-records");
+          if (!res.ok) throw new Error();
+          const data = await res.json();
+          dot.classList.add("online");
+          sText.textContent = "System Online";
+          const todayStr = new Date().toLocaleDateString("en-GB", {
+            timeZone: "Africa/Lagos",
+          });
+          const todayCount = data.filter((r) =>
+            (r.date || "").startsWith(todayStr),
+          ).length;
+          const lastDate = data.length
+            ? data[data.length - 1].date.split(",")[0].trim()
+            : "—";
+          [0, 1, 2].forEach((i) =>
+            setTimeout(
+              () => document.getElementById(`sc-${i}`).classList.add("in"),
+              i * 100,
+            ),
+          );
+          countUp(document.getElementById("stat-total"), data.length, 100);
+          countUp(document.getElementById("stat-today"), todayCount, 200);
+          setTimeout(() => {
+            document.getElementById("stat-last").textContent = lastDate;
+          }, 300);
+          renderRecent(data);
+        } catch {
+          dot.classList.add("offline");
+          sText.textContent = "System Offline";
+          [0, 1, 2].forEach((i) =>
+            setTimeout(
+              () => document.getElementById(`sc-${i}`).classList.add("in"),
+              i * 100,
+            ),
+          );
+          document.getElementById("recent-output").innerHTML =
+            `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">Could not connect.</div></div>`;
+        }
+      };
+
+      async function analyzeData() {
+        const out = document.getElementById("analyze-output");
+        const text = document.getElementById("messyInput").value.trim();
         if (!text) {
           alert("Please paste some text first.");
           return;
         }
-
-        showSpinner("output", "AI is extracting your data...");
-
+        out.innerHTML = `<div class="spinner-wrap"><div class="spinner"></div><span class="spinner-label">AI extracting data…</span></div>`;
         try {
           const res = await fetch("/api/analyze", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ text }),
           });
-
           const result = await res.json();
-
           if (res.ok) {
             const d = result.data;
-            const desc = formatDescription(
+            const desc = formatDesc(
               Array.isArray(d.description)
                 ? JSON.stringify(d.description)
                 : d.description,
@@ -602,58 +1147,55 @@
               hour: "2-digit",
               minute: "2-digit",
             });
-
-            outputDiv.innerHTML = `
-            <div class="result-success">
-              <div class="result-badge">✓ Saved to Google Sheets</div>
-              <div class="field">
-                <div class="field-label">Date</div>
-                <div class="field-value">${now}</div>
-              </div>
-              <div class="field">
-                <div class="field-label">Sender</div>
-                <div class="field-value">${d.sender || "N/A"}</div>
-              </div>
-              <div class="field">
-                <div class="field-label">Receiver</div>
-                <div class="field-value">${d.receiver || "N/A"}</div>
-              </div>
-              <div class="field">
-                <div class="field-label">Tracking Number</div>
-                <div class="field-value"><span class="tracking-chip">${d.tracking_number || "N/A"}</span></div>
-              </div>
-              <div class="field">
-                <div class="field-label">Items / Description</div>
-                <div class="field-value">${desc}</div>
-              </div>
-            </div>`;
+            buildReceiptCard(d);
+            out.innerHTML = `
+          <div class="result-success">
+            <div class="result-badge">✓ Saved to Google Sheets</div>
+            <div class="fields-grid">
+              <div><div class="field-label">Date</div><div class="field-value">${now}</div></div>
+              <div><div class="field-label">Tracking</div><div class="field-value"><span class="tracking-chip">${d.tracking_number || "N/A"}</span></div></div>
+              <div><div class="field-label">Sender</div><div class="field-value">${d.sender || "N/A"}</div></div>
+              <div><div class="field-label">Receiver</div><div class="field-value">${d.receiver || "N/A"}</div></div>
+              <div class="field-full"><div class="field-label">Items</div><div class="field-value">${desc}</div></div>
+            </div>
+          </div>
+          <div class="receipt-section">
+            <div class="receipt-preview-label">Receipt ready · free tier</div>
+            <div class="btn-row">
+              <button class="btn-ghost" id="dl-btn" onclick="downloadReceipt()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download Receipt
+              </button>
+            </div>
+          </div>`;
+            const r2 = await fetch("/api/get-records");
+            if (r2.ok) {
+              const d2 = await r2.json();
+              renderRecent(d2);
+              document.getElementById("stat-total").textContent = d2.length;
+            }
           } else {
-            outputDiv.innerHTML = `<div class="result-error">❌ ${result.error || "Server error. Check Vercel logs."}</div>`;
+            out.innerHTML = `<div class="result-error">❌ ${result.error || "Server error."}</div>`;
           }
-        } catch (err) {
-          outputDiv.innerHTML = `<div class="result-error">❌ Connection error. Check your internet.</div>`;
+        } catch {
+          out.innerHTML = `<div class="result-error">❌ Connection error.</div>`;
         }
       }
 
-      // ── Search ──
       async function searchSpreadsheet() {
         const query = document
           .getElementById("searchInput")
           .value.trim()
           .toLowerCase();
-        const outDiv = document.getElementById("search-output");
-
+        const out = document.getElementById("search-output");
         if (!query) {
-          outDiv.innerHTML = "";
+          out.innerHTML = "";
           return;
         }
-
-        showSpinner("search-output", "Searching records...");
-
+        out.innerHTML = `<div class="spinner-wrap"><div class="spinner"></div><span class="spinner-label">Searching…</span></div>`;
         try {
           const res = await fetch("/api/get-records");
           const all = await res.json();
-
           const hits = all
             .filter(
               (r) =>
@@ -661,42 +1203,21 @@
                 r.receiver.toLowerCase().includes(query),
             )
             .reverse();
-
-          if (hits.length === 0) {
-            outDiv.innerHTML =
-              '<div class="no-results">No records found for that name.</div>';
+          if (!hits.length) {
+            out.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">No records found for "${query}".</div></div>`;
             return;
           }
-
-          outDiv.innerHTML = `<div class="records-list">${hits
-            .map((item) => {
-              const desc = formatDescription(item.description);
-              return `
-              <div class="record-card">
-                <div class="record-header">
-                  <div class="record-route">
-                    ${item.sender}<span class="arrow">→</span>${item.receiver}
-                  </div>
-                  <div class="record-date">${item.date}</div>
-                </div>
-                <div class="record-items">${desc}</div>
-                <div class="record-tracking">Tracking: ${item.tracking_number}</div>
-              </div>`;
-            })
-            .join("")}</div>`;
+          out.innerHTML = `<div class="records-list">${hits.map(recordCardHTML).join("")}</div>`;
         } catch {
-          outDiv.innerHTML = `<div class="result-error">❌ Error fetching records.</div>`;
+          out.innerHTML = `<div class="result-error">❌ Error fetching records.</div>`;
         }
       }
 
-      // Search on Enter key
-      document.addEventListener("DOMContentLoaded", () => {
-        document
-          .getElementById("searchInput")
-          .addEventListener("keydown", (e) => {
-            if (e.key === "Enter") searchSpreadsheet();
-          });
-      });
+      document
+        .getElementById("searchInput")
+        .addEventListener("keydown", (e) => {
+          if (e.key === "Enter") searchSpreadsheet();
+        });
     </script>
   </body>
 </html>
