@@ -21,13 +21,10 @@ export default async function handler(req, res) {
 
     // 3. Model fallback — tries each until one works
     const MODELS = [
-      "google/gemini-2.0-flash-exp:free",
       "meta-llama/llama-3.3-70b-instruct:free",
+      "deepseek/deepseek-chat-v3-0324:free",
       "mistralai/mistral-7b-instruct:free",
     ];
-
-    const systemPrompt =
-      "You are a data extractor. Extract these fields from the text: sender, receiver, tracking_number, description. Return ONLY raw JSON. No markdown formatting.";
 
     let aiResponse = null;
     for (const model of MODELS) {
@@ -50,7 +47,9 @@ export default async function handler(req, res) {
           }),
         },
       );
-      if (aiResponse.status !== 429) break; // success or real error — stop trying
+      if (aiResponse.ok) break; // 2xx — success, stop
+      if (aiResponse.status === 500) break; // real server error, no point retrying
+      // 429 (rate limit) or 404 (model gone) — try next model
     }
 
     // 4. THE SAFETY NET: Check if OpenRouter is angry
