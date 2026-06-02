@@ -1046,6 +1046,8 @@
             scale: 2.5,
             backgroundColor: "#ffffff",
             useCORS: true,
+            width: 400, // ← force capture width to card width
+            windowWidth: 400,
           });
           const imgData = canvas.toDataURL("image/png");
           const { jsPDF } = window.jspdf;
