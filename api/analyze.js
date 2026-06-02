@@ -12,37 +12,46 @@ export default async function handler(req, res) {
   try {
     const { text } = req.body;
 
-    // 2. DEBUG: Check if Keys Exist (This prevents the "Silent Crash")
+    // 2. DEBUG: Check if Keys Exist
     if (!process.env.GOOGLE_PRIVATE_KEY || !process.env.OPENROUTER_API_KEY) {
       throw new Error("Missing API Keys in Vercel Settings!");
     }
 
     const GOOGLE_KEY = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n");
 
-    // 3. THE FIX: Add "HTTP-Referer" and "X-Title" headers
-    const aiResponse = await fetch(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": "https://ericss-logistics.vercel.app", // Required for Free Tier
-          "X-Title": "Ericss Logistics", // Required for Free Tier
+    // 3. Model fallback — tries each until one works
+    const MODELS = [
+      "google/gemini-2.0-flash-exp:free",
+      "meta-llama/llama-3.3-70b-instruct:free",
+      "mistralai/mistral-7b-instruct:free",
+    ];
+
+    const systemPrompt =
+      "You are a data extractor. Extract these fields from the text: sender, receiver, tracking_number, description. Return ONLY raw JSON. No markdown formatting.";
+
+    let aiResponse = null;
+    for (const model of MODELS) {
+      aiResponse = await fetch(
+        "https://openrouter.ai/api/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://evueo.com",
+            "X-Title": "Evueo",
+          },
+          body: JSON.stringify({
+            model,
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: text },
+            ],
+          }),
         },
-        body: JSON.stringify({
-          model: "qwen/qwen3-next-80b-a3b-instruct:free", // Using the free tier model
-          messages: [
-            {
-              role: "system",
-              content:
-                "You are a data extractor. Extract these fields from the text: sender, receiver, tracking_number, description. Return ONLY raw JSON. No markdown formatting.",
-            },
-            { role: "user", content: text },
-          ],
-        }),
-      },
-    );
+      );
+      if (aiResponse.status !== 429) break; // success or real error — stop trying
+    }
 
     // 4. THE SAFETY NET: Check if OpenRouter is angry
     if (!aiResponse.ok) {
