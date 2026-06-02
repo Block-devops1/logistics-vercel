@@ -20,6 +20,10 @@ export default async function handler(req, res) {
     const GOOGLE_KEY = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n");
 
     // 3. Model fallback — tries each until one works
+
+    const systemPrompt =
+      "You are a data extractor. Extract these fields from the text: sender, receiver, tracking_number, description. Return ONLY raw JSON. No markdown formatting.";
+
     const MODELS = [
       "meta-llama/llama-3.3-70b-instruct:free",
       "deepseek/deepseek-chat-v3-0324:free",
