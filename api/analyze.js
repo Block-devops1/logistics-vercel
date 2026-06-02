@@ -31,7 +31,7 @@ export default async function handler(req, res) {
           "X-Title": "Ericss Logistics", // Required for Free Tier
         },
         body: JSON.stringify({
-          model: "google/gemma-4-31b-it:free", // Using the free tier model
+          model: "qwen/qwen3-coder:free", // Using the free tier model
           messages: [
             {
               role: "system",
