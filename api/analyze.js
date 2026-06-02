@@ -21,40 +21,25 @@ export default async function handler(req, res) {
 
     // 3. Model fallback — tries each until one works
 
-    const systemPrompt =
-      "You are a data extractor. Extract these fields from the text: sender, receiver, tracking_number, description. Return ONLY raw JSON. No markdown formatting.";
-
-    const MODELS = [
-      "meta-llama/llama-3.3-70b-instruct:free",
-      "deepseek/deepseek-chat-v3-0324:free",
-      "mistralai/mistral-7b-instruct:free",
-    ];
-
-    let aiResponse = null;
-    for (const model of MODELS) {
-      aiResponse = await fetch(
-        "https://openrouter.ai/api/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-            "Content-Type": "application/json",
-            "HTTP-Referer": "https://evueo.com",
-            "X-Title": "Evueo",
-          },
-          body: JSON.stringify({
-            model,
-            messages: [
-              { role: "system", content: systemPrompt },
-              { role: "user", content: text },
-            ],
-          }),
+    const aiResponse = await fetch(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://evueo.com",
+          "X-Title": "Evueo",
         },
-      );
-      if (aiResponse.ok) break; // 2xx — success, stop
-      if (aiResponse.status === 500) break; // real server error, no point retrying
-      // 429 (rate limit) or 404 (model gone) — try next model
-    }
+        body: JSON.stringify({
+          model: "openrouter/free", // auto-selects best available free model
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: text },
+          ],
+        }),
+      },
+    );
 
     // 4. THE SAFETY NET: Check if OpenRouter is angry
     if (!aiResponse.ok) {
