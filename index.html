@@ -6,7 +6,7 @@
     <title>Evueo — Logistics Intelligence</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
-      href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&family=Figtree:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&family=Figtree:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
       rel="stylesheet"
     />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -57,7 +57,6 @@
         pointer-events: none;
         z-index: 0;
       }
-
       body::after {
         content: "";
         position: fixed;
@@ -90,7 +89,6 @@
         margin-bottom: 36px;
         animation: fadeUp 0.45s ease both;
       }
-
       .logo {
         font-family: "Syne", sans-serif;
         font-size: 2rem;
@@ -146,6 +144,7 @@
         box-shadow: 0 0 7px rgba(220, 38, 38, 0.5);
       }
 
+      /* ── STATS ── */
       .stats-strip {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -158,12 +157,13 @@
         border: 1px solid var(--border);
         border-top: 3px solid transparent;
         border-radius: var(--r);
-        padding: 18px 20px;
+        padding: 18px 16px;
         position: relative;
         overflow: hidden;
         opacity: 0;
         transform: translateY(14px);
         box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+        min-width: 0; /* allow shrink */
       }
       .stat-card.in {
         transition:
@@ -194,21 +194,34 @@
       }
       .stat-number {
         font-family: "Syne", sans-serif;
-        font-size: 2.3rem;
+        font-size: 2.1rem;
         font-weight: 800;
         color: var(--text);
         line-height: 1;
         margin-bottom: 6px;
         letter-spacing: -1.5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       .stat-label {
         font-family: "DM Mono", monospace;
-        font-size: 0.66rem;
+        font-size: 0.62rem;
         color: var(--muted2);
         text-transform: uppercase;
-        letter-spacing: 0.1em;
+        letter-spacing: 0.08em;
       }
 
+      /* Last entry smaller font so date fits */
+      #stat-last {
+        font-size: 0.88rem !important;
+        letter-spacing: 0 !important;
+        margin-top: 4px;
+        font-family: "DM Mono", monospace !important;
+        font-weight: 500;
+      }
+
+      /* ── CARDS ── */
       .card {
         background: var(--surface);
         border: 1px solid var(--border);
@@ -576,14 +589,13 @@
         margin-bottom: 14px;
       }
 
+      /* ── RECEIPT ── */
       #receipt-card {
         width: 400px;
         background: #fff;
         border-radius: 14px;
         overflow: hidden;
         font-family: "Figtree", sans-serif;
-        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
-        margin: 0 auto;
       }
 
       .receipt-header-free {
@@ -593,18 +605,20 @@
         text-align: center;
       }
       .receipt-company-name {
-        font-family: "Syne", sans-serif;
-        font-size: 1.15rem;
+        font-family: "Plus Jakarta Sans", sans-serif;
+        font-size: 1.25rem;
         font-weight: 800;
         color: #1c1917;
-        letter-spacing: -0.5px;
-        margin-bottom: 2px;
+        letter-spacing: -0.3px;
+        margin-bottom: 3px;
+        line-height: 1.2;
       }
       .receipt-company-sub {
-        font-size: 0.72rem;
+        font-size: 0.7rem;
         color: #a8a29e;
         text-transform: uppercase;
-        letter-spacing: 0.1em;
+        letter-spacing: 0.12em;
+        font-family: "DM Mono", monospace;
       }
       .receipt-powered-badge {
         display: inline-block;
@@ -635,44 +649,48 @@
 
       .receipt-tracking-strip {
         background: #1c1917;
-        padding: 14px 24px;
+        padding: 14px 20px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 12px;
+        gap: 10px;
       }
       .receipt-tracking-label {
         font-family: "DM Mono", monospace;
-        font-size: 0.62rem;
+        font-size: 0.6rem;
         color: rgba(255, 255, 255, 0.4);
         text-transform: uppercase;
         letter-spacing: 0.1em;
+        margin-bottom: 3px;
       }
       .receipt-tracking-num {
         font-family: "DM Mono", monospace;
-        font-size: 1.05rem;
+        font-size: 1rem;
         font-weight: 500;
         color: #f97316;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.04em;
+        word-break: break-all;
       }
       .receipt-date-val {
         font-family: "DM Mono", monospace;
-        font-size: 0.7rem;
+        font-size: 0.68rem;
         color: rgba(255, 255, 255, 0.45);
         text-align: right;
-        line-height: 1.4;
+        line-height: 1.5;
+        white-space: nowrap;
+        flex-shrink: 0;
       }
 
       .receipt-body {
-        padding: 20px 24px;
+        padding: 18px 20px;
         background: #fff;
       }
       .receipt-route {
         display: grid;
         grid-template-columns: 1fr auto 1fr;
-        gap: 10px;
+        gap: 8px;
         align-items: start;
-        margin-bottom: 16px;
+        margin-bottom: 14px;
       }
       .receipt-party-label {
         font-size: 0.6rem;
@@ -681,18 +699,20 @@
         text-transform: uppercase;
         color: #a8a29e;
         margin-bottom: 4px;
+        font-family: "DM Mono", monospace;
       }
       .receipt-party-name {
         font-size: 0.88rem;
         font-weight: 700;
         color: #1c1917;
         line-height: 1.3;
+        word-break: break-word;
       }
       .receipt-arrow-col {
         display: flex;
         align-items: flex-start;
         justify-content: center;
-        padding-top: 18px;
+        padding-top: 20px;
         color: #d6d3d1;
         font-size: 1rem;
       }
@@ -713,6 +733,7 @@
         text-transform: uppercase;
         color: #a8a29e;
         margin-bottom: 6px;
+        font-family: "DM Mono", monospace;
       }
       .receipt-items-value {
         font-size: 0.85rem;
@@ -721,19 +742,19 @@
       }
 
       .receipt-footer {
-        padding: 14px 24px;
+        padding: 12px 20px;
         border-top: 1px solid #f5f5f4;
         display: flex;
         align-items: center;
         justify-content: space-between;
       }
       .receipt-footer-note {
-        font-size: 0.68rem;
+        font-size: 0.66rem;
         color: #d6d3d1;
       }
       .receipt-evueo-brand {
         font-family: "Syne", sans-serif;
-        font-size: 0.75rem;
+        font-size: 0.78rem;
         font-weight: 800;
         color: #d6d3d1;
         letter-spacing: -0.3px;
@@ -764,10 +785,13 @@
           gap: 8px;
         }
         .stat-card {
-          padding: 14px 12px;
+          padding: 14px 10px;
         }
         .stat-number {
           font-size: 1.7rem;
+        }
+        #stat-last {
+          font-size: 0.78rem !important;
         }
         .card {
           padding: 18px 14px;
@@ -808,13 +832,7 @@
           <div class="stat-label">Today's Entries</div>
         </div>
         <div class="stat-card" id="sc-2">
-          <div
-            class="stat-number"
-            id="stat-last"
-            style="font-size: 0.9rem; letter-spacing: 0; margin-top: 6px"
-          >
-            —
-          </div>
+          <div class="stat-number" id="stat-last">—</div>
           <div class="stat-label">Last Entry</div>
         </div>
       </div>
@@ -895,7 +913,16 @@
       </div>
     </div>
 
-    <div style="position: fixed; top: -9999px; left: -9999px; z-index: -1">
+    <!-- Off-screen receipt for PDF capture -->
+    <div
+      style="
+        position: fixed;
+        top: -9999px;
+        left: -9999px;
+        z-index: -1;
+        width: 400px;
+      "
+    >
       <div id="receipt-card">
         <div class="receipt-header-free" id="receipt-header-free">
           <div class="receipt-company-name" id="rc-company">
@@ -911,7 +938,7 @@
           <div class="receipt-company-sub">Waybill Receipt</div>
         </div>
         <div class="receipt-tracking-strip">
-          <div>
+          <div style="min-width: 0; flex: 1">
             <div class="receipt-tracking-label">Tracking ID</div>
             <div class="receipt-tracking-num" id="rc-tracking">EV-0000</div>
           </div>
@@ -947,6 +974,7 @@
       const IS_PAID_TIER = false;
       const COMPANY_NAME = "Your Logistics Company";
 
+      /* ── Count up ── */
       function countUp(el, target, delay = 0) {
         setTimeout(() => {
           if (target === 0) {
@@ -963,6 +991,16 @@
         }, delay);
       }
 
+      /* ── Normalise API response to array ── */
+      function toArray(data) {
+        if (Array.isArray(data)) return data;
+        if (data && Array.isArray(data.rows)) return data.rows;
+        if (data && Array.isArray(data.records)) return data.records;
+        if (data && Array.isArray(data.data)) return data.data;
+        return [];
+      }
+
+      /* ── Format description ── */
       function formatDesc(raw) {
         if (!raw || raw === "N/A") return "N/A";
         try {
@@ -984,27 +1022,72 @@
         return raw;
       }
 
+      /* ── Today count — robust date match ── */
+      function countToday(records) {
+        const now = new Date();
+        const dd = String(now.getDate()).padStart(2, "0");
+        const mm = String(now.getMonth() + 1).padStart(2, "0");
+        const yyyy = now.getFullYear();
+        // matches "02/06/2026" or "2/6/2026" at start of date string
+        return records.filter((r) => {
+          const d = (r.date || "").trim();
+          return (
+            d.startsWith(`${dd}/${mm}/${yyyy}`) ||
+            d.startsWith(`${parseInt(dd)}/${parseInt(mm)}/${yyyy}`)
+          );
+        }).length;
+      }
+
+      /* ── Short date for stat card ("02 Jun") ── */
+      function shortDate(dateStr) {
+        if (!dateStr) return "—";
+        // dateStr is like "02/06/2026, 21:23:45"
+        const parts = dateStr.split(",")[0].trim().split("/");
+        if (parts.length < 2) return dateStr.split(",")[0].trim();
+        const months = [
+          "Jan",
+          "Feb",
+          "Mar",
+          "Apr",
+          "May",
+          "Jun",
+          "Jul",
+          "Aug",
+          "Sep",
+          "Oct",
+          "Nov",
+          "Dec",
+        ];
+        const day = parts[0];
+        const mon = months[parseInt(parts[1]) - 1] || parts[1];
+        return `${day} ${mon}`;
+      }
+
+      /* ── Record card HTML ── */
       function recordCardHTML(r) {
         return `<div class="record-card">
       <div class="record-header">
-        <div class="record-route">${r.sender}<span class="arrow">→</span>${r.receiver}</div>
-        <div class="record-date">${r.date}</div>
+        <div class="record-route">${r.sender || "?"}<span class="arrow">→</span>${r.receiver || "?"}</div>
+        <div class="record-date">${(r.date || "").split(",")[0]}</div>
       </div>
       <div class="record-items">${formatDesc(r.description)}</div>
-      <div class="record-tracking">⬡ ${r.tracking_number}</div>
+      <div class="record-tracking">⬡ ${r.tracking_number || "N/A"}</div>
     </div>`;
       }
 
-      function renderRecent(records) {
+      /* ── Render recent ── */
+      function renderRecent(rawData) {
+        const records = toArray(rawData);
         const out = document.getElementById("recent-output");
         const last5 = [...records].reverse().slice(0, 5);
         if (!last5.length) {
-          out.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No records yet.</div></div>`;
+          out.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No records yet. Analyze your first waybill above.</div></div>`;
           return;
         }
         out.innerHTML = `<div class="records-list">${last5.map(recordCardHTML).join("")}</div>`;
       }
 
+      /* ── Build receipt ── */
       function buildReceiptCard(data) {
         document.getElementById("receipt-header-free").style.display =
           IS_PAID_TIER ? "none" : "block";
@@ -1036,6 +1119,7 @@
         );
       }
 
+      /* ── Download PDF ── */
       async function downloadReceipt() {
         const btn = document.getElementById("dl-btn");
         btn.disabled = true;
@@ -1046,8 +1130,8 @@
             scale: 2.5,
             backgroundColor: "#ffffff",
             useCORS: true,
-            width: 400, // ← force capture width to card width
-            windowWidth: 400,
+            width: 400, // fix PC clipping
+            windowWidth: 400, // fix PC clipping
           });
           const imgData = canvas.toDataURL("image/png");
           const { jsPDF } = window.jspdf;
@@ -1063,12 +1147,13 @@
             `Evueo-${document.getElementById("rc-tracking").textContent}.pdf`,
           );
         } catch (e) {
-          alert("Could not generate PDF.");
+          alert("Could not generate PDF. Try again.");
         }
         btn.disabled = false;
         btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Receipt`;
       }
 
+      /* ── On load ── */
       window.onload = async function () {
         ["card-0", "card-1", "card-2"].forEach((id, i) =>
           setTimeout(
@@ -1081,18 +1166,17 @@
         try {
           const res = await fetch("/api/get-records");
           if (!res.ok) throw new Error();
-          const data = await res.json();
+          const raw = await res.json();
+          const data = toArray(raw);
+
           dot.classList.add("online");
           sText.textContent = "System Online";
-          const todayStr = new Date().toLocaleDateString("en-GB", {
-            timeZone: "Africa/Lagos",
-          });
-          const todayCount = data.filter((r) =>
-            (r.date || "").startsWith(todayStr),
-          ).length;
+
+          const todayCount = countToday(data);
           const lastDate = data.length
-            ? data[data.length - 1].date.split(",")[0].trim()
+            ? shortDate(data[data.length - 1].date)
             : "—";
+
           [0, 1, 2].forEach((i) =>
             setTimeout(
               () => document.getElementById(`sc-${i}`).classList.add("in"),
@@ -1104,6 +1188,7 @@
           setTimeout(() => {
             document.getElementById("stat-last").textContent = lastDate;
           }, 300);
+
           renderRecent(data);
         } catch {
           dot.classList.add("offline");
@@ -1115,10 +1200,11 @@
             ),
           );
           document.getElementById("recent-output").innerHTML =
-            `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">Could not connect.</div></div>`;
+            `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">Could not connect. Check your network.</div></div>`;
         }
       };
 
+      /* ── Analyze ── */
       async function analyzeData() {
         const out = document.getElementById("analyze-output");
         const text = document.getElementById("messyInput").value.trim();
@@ -1170,11 +1256,19 @@
               </button>
             </div>
           </div>`;
+            // Refresh recent + total
             const r2 = await fetch("/api/get-records");
             if (r2.ok) {
-              const d2 = await r2.json();
+              const raw2 = await r2.json();
+              const d2 = toArray(raw2);
               renderRecent(d2);
               document.getElementById("stat-total").textContent = d2.length;
+              document.getElementById("stat-today").textContent =
+                countToday(d2);
+              if (d2.length)
+                document.getElementById("stat-last").textContent = shortDate(
+                  d2[d2.length - 1].date,
+                );
             }
           } else {
             out.innerHTML = `<div class="result-error">❌ ${result.error || "Server error."}</div>`;
@@ -1184,6 +1278,7 @@
         }
       }
 
+      /* ── Search ── */
       async function searchSpreadsheet() {
         const query = document
           .getElementById("searchInput")
@@ -1197,12 +1292,13 @@
         out.innerHTML = `<div class="spinner-wrap"><div class="spinner"></div><span class="spinner-label">Searching…</span></div>`;
         try {
           const res = await fetch("/api/get-records");
-          const all = await res.json();
+          const raw = await res.json();
+          const all = toArray(raw);
           const hits = all
             .filter(
               (r) =>
-                r.sender.toLowerCase().includes(query) ||
-                r.receiver.toLowerCase().includes(query),
+                (r.sender || "").toLowerCase().includes(query) ||
+                (r.receiver || "").toLowerCase().includes(query),
             )
             .reverse();
           if (!hits.length) {
