@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Transparent background — browser handles light/dark -->
+  <!-- Bold orange e drawn as clean geometric letterform -->
+  <text
+    x="2"
+    y="27"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="30"
+    font-weight="bold"
+    font-style="italic"
+    fill="#f97316"
+    letter-spacing="-1"
+  >e</text>
+</svg>
