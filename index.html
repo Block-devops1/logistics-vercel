@@ -9,6 +9,8 @@
       href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&family=Figtree:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
       rel="stylesheet"
     />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
@@ -921,6 +923,7 @@
         left: -9999px;
         z-index: -1;
         width: 400px;
+        overflow: hidden;
       "
     >
       <div id="receipt-card">
@@ -1132,11 +1135,13 @@
             useCORS: true,
             width: 400, // fix PC clipping
             windowWidth: 400, // fix PC clipping
+            height: card.scrollHeight,
+            windowHeight: card.scrollHeight,
           });
           const imgData = canvas.toDataURL("image/png");
           const { jsPDF } = window.jspdf;
-          const pxW = canvas.width / 2.5,
-            pxH = canvas.height / 2.5;
+          const pxW = canvas.width / 2.5;
+          const pxH = canvas.height / 2.5;
           const pdf = new jsPDF({
             orientation: "portrait",
             unit: "px",
@@ -1318,4 +1323,13 @@
         });
     </script>
   </body>
+  <footer>
+    <footer>
+      <a href="/terms">Terms of Use</a>
+      <span>·</span>
+      <a href="/privacy">Privacy Policy</a>
+      <span>·</span>
+      <span>© 2026 Evueo</span>
+    </footer>
+  </footer>
 </html>
