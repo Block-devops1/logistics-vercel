@@ -1010,8 +1010,9 @@
     </div>
 
     <script>
-      const IS_PAID_TIER = false;
-      const COMPANY_NAME = "Your Logistics Company";
+      // These are now set dynamically from Supabase in window.onload
+      // IS_PAID_TIER → window.userTier === "premium"
+      // COMPANY_NAME → window.companyName
 
       /* ── Count up ── */
       function countUp(el, target, delay = 0) {
@@ -1128,12 +1129,17 @@
 
       /* ── Build receipt ── */
       function buildReceiptCard(data) {
-        document.getElementById("receipt-header-free").style.display =
-          IS_PAID_TIER ? "none" : "block";
-        document.getElementById("receipt-header-paid").style.display =
-          IS_PAID_TIER ? "block" : "none";
-        document.getElementById("rc-company").textContent = COMPANY_NAME;
-        document.getElementById("rc-company-paid").textContent = COMPANY_NAME;
+        const isPaid = window.userTier === "premium";
+        const company = window.companyName || "Your Logistics Company";
+
+        document.getElementById("receipt-header-free").style.display = isPaid
+          ? "none"
+          : "block";
+        document.getElementById("receipt-header-paid").style.display = isPaid
+          ? "block"
+          : "none";
+        document.getElementById("rc-company").textContent = company;
+        document.getElementById("rc-company-paid").textContent = company;
         document.getElementById("rc-tracking").textContent =
           data.tracking_number || "N/A";
         document.getElementById("rc-sender").textContent = data.sender || "N/A";
@@ -1144,6 +1150,7 @@
             ? JSON.stringify(data.description)
             : data.description,
         );
+
         const now = new Date().toLocaleString("en-GB", {
           timeZone: "Africa/Lagos",
           day: "2-digit",
@@ -1258,7 +1265,10 @@
           const res = await fetch("/api/analyze", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ text }),
+            body: JSON.stringify({
+              text,
+              sheetId: window.userSheetId,
+            }),
           });
           const result = await res.json();
           if (res.ok) {
@@ -1332,7 +1342,9 @@
         }
         out.innerHTML = `<div class="spinner-wrap"><div class="spinner"></div><span class="spinner-label">Searching…</span></div>`;
         try {
-          const res = await fetch("/api/get-records");
+          const res = await fetch(
+            `/api/get-records?sheetId=${window.userSheetId}`,
+          );
           const raw = await res.json();
           const all = toArray(raw);
           const hits = all
