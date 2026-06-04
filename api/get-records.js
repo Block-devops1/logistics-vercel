@@ -8,7 +8,7 @@ export default async function handler(req, res) {
     // 1. Get the raw key string from Vercel (using the name from your analyze.js)
     const rawKey = process.env.GOOGLE_PRIVATE_KEY;
     const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-    const sheetId = process.env.GOOGLE_SHEET_ID;
+    const sheetId = req.query.sheetId;
 
     // 2. Safety Check: If any are missing, tell us exactly which one
     if (!rawKey || !clientEmail || !sheetId) {
