@@ -92,6 +92,23 @@ export default async function handler(req, res) {
     await doc.loadInfo();
     const sheet = doc.sheetsByIndex[0];
 
+    // Auto-create headers if sheet is empty
+    const headers = [
+      "Date",
+      "Sender",
+      "Receiver",
+      "Tracking Number",
+      "Description",
+    ];
+    await sheet.loadHeaderRow().catch(async () => {
+      await sheet.setHeaderRow(headers);
+    });
+
+    // Also handle case where header row exists but is empty
+    if (!sheet.headerValues || sheet.headerValues.length === 0) {
+      await sheet.setHeaderRow(headers);
+    }
+
     await sheet.addRow({
       Date: new Date().toLocaleString("en-GB", { timeZone: "Africa/Lagos" }),
       Sender: String(extracted.sender || "N/A"),
