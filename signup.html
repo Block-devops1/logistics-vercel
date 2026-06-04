@@ -1,0 +1,977 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Evueo — Create Your Account</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Figtree:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --bg: #faf8f5;
+        --surface: #fff;
+        --border: #e8e2d9;
+        --accent: #f97316;
+        --accent2: #ea6c00;
+        --text: #1c1917;
+        --muted: #78716c;
+        --muted2: #a8a29e;
+        --error: #dc2626;
+        --success: #16a34a;
+        --r: 12px;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Figtree", sans-serif;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: radial-gradient(
+          circle,
+          rgba(0, 0, 0, 0.045) 1px,
+          transparent 1px
+        );
+        background-size: 24px 24px;
+        pointer-events: none;
+        z-index: 0;
+      }
+      body::after {
+        content: "";
+        position: fixed;
+        top: -160px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 600px;
+        height: 360px;
+        background: radial-gradient(
+          ellipse,
+          rgba(249, 115, 22, 0.1) 0%,
+          transparent 70%
+        );
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      /* NAV */
+      nav {
+        position: relative;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 32px;
+        border-bottom: 1px solid var(--border);
+        background: rgba(250, 248, 245, 0.9);
+        backdrop-filter: blur(10px);
+      }
+      .logo {
+        font-family: "Syne", sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        color: var(--text);
+        text-decoration: none;
+      }
+      .logo em {
+        color: var(--accent);
+        font-style: normal;
+      }
+      .nav-login {
+        font-size: 0.88rem;
+        color: var(--muted);
+        text-decoration: none;
+        font-weight: 500;
+      }
+      .nav-login span {
+        color: var(--accent);
+        font-weight: 600;
+      }
+      .nav-login:hover span {
+        text-decoration: underline;
+      }
+
+      /* MAIN */
+      main {
+        position: relative;
+        z-index: 1;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px 60px;
+      }
+
+      .signup-wrap {
+        width: 100%;
+        max-width: 480px;
+      }
+
+      .signup-header {
+        text-align: center;
+        margin-bottom: 32px;
+        animation: fadeUp 0.4s ease both;
+      }
+      .signup-header h1 {
+        font-family: "Syne", sans-serif;
+        font-size: 1.9rem;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        margin-bottom: 8px;
+      }
+      .signup-header p {
+        font-size: 0.9rem;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .signup-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 32px;
+        box-shadow:
+          0 4px 28px rgba(0, 0, 0, 0.07),
+          0 1px 4px rgba(0, 0, 0, 0.04);
+        animation: fadeUp 0.45s ease 0.1s both;
+      }
+
+      /* STEPS */
+      .steps-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        margin-bottom: 28px;
+      }
+      .step-dot {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+        position: relative;
+      }
+      .step-dot::after {
+        content: "";
+        position: absolute;
+        top: 14px;
+        left: 50%;
+        width: 100%;
+        height: 2px;
+        background: var(--border);
+        z-index: 0;
+      }
+      .step-dot:last-child::after {
+        display: none;
+      }
+      .step-dot-circle {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "DM Mono", monospace;
+        font-size: 0.72rem;
+        font-weight: 500;
+        background: var(--bg);
+        border: 2px solid var(--border);
+        color: var(--muted2);
+        position: relative;
+        z-index: 1;
+        transition: all 0.3s;
+      }
+      .step-dot.active .step-dot-circle {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+      .step-dot.done .step-dot-circle {
+        background: var(--success);
+        border-color: var(--success);
+        color: #fff;
+      }
+      .step-dot-label {
+        font-size: 0.65rem;
+        color: var(--muted2);
+        margin-top: 5px;
+        font-family: "DM Mono", monospace;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .step-dot.active .step-dot-label {
+        color: var(--accent);
+      }
+
+      /* FORM */
+      .form-step {
+        display: none;
+      }
+      .form-step.active {
+        display: block;
+        animation: fadeUp 0.3s ease both;
+      }
+
+      .form-group {
+        margin-bottom: 18px;
+      }
+      label {
+        display: block;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 6px;
+      }
+      .label-hint {
+        font-weight: 400;
+        color: var(--muted2);
+        font-size: 0.78rem;
+      }
+
+      input[type="text"],
+      input[type="email"],
+      input[type="password"] {
+        width: 100%;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        color: var(--text);
+        font-family: "Figtree", sans-serif;
+        font-size: 0.92rem;
+        padding: 12px 14px;
+        outline: none;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+      input:focus {
+        border-color: rgba(249, 115, 22, 0.5);
+        box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.07);
+      }
+      input.error-input {
+        border-color: var(--error);
+      }
+      input::placeholder {
+        color: var(--muted2);
+      }
+
+      .field-error {
+        font-size: 0.78rem;
+        color: var(--error);
+        margin-top: 5px;
+        display: none;
+      }
+      .field-error.show {
+        display: block;
+      }
+
+      /* Password strength */
+      .pw-strength {
+        margin-top: 8px;
+      }
+      .pw-bar {
+        height: 3px;
+        border-radius: 2px;
+        background: var(--border);
+        overflow: hidden;
+        margin-bottom: 4px;
+      }
+      .pw-fill {
+        height: 100%;
+        border-radius: 2px;
+        width: 0%;
+        transition:
+          width 0.3s,
+          background 0.3s;
+      }
+      .pw-label {
+        font-size: 0.72rem;
+        color: var(--muted2);
+        font-family: "DM Mono", monospace;
+      }
+
+      /* Consent */
+      .consent-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        background: rgba(249, 115, 22, 0.04);
+        border: 1px solid rgba(249, 115, 22, 0.15);
+        border-radius: 9px;
+        padding: 14px;
+        margin-bottom: 20px;
+        cursor: pointer;
+      }
+      .consent-row input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+        cursor: pointer;
+        accent-color: var(--accent);
+        margin-top: 1px;
+      }
+      .consent-text {
+        font-size: 0.83rem;
+        color: var(--text);
+        line-height: 1.55;
+      }
+      .consent-text a {
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .consent-text a:hover {
+        text-decoration: underline;
+      }
+
+      /* Buttons */
+      .btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        background: var(--accent);
+        color: #fff;
+        font-family: "Figtree", sans-serif;
+        font-weight: 700;
+        font-size: 0.95rem;
+        border: none;
+        padding: 13px 20px;
+        border-radius: 9px;
+        cursor: pointer;
+        transition:
+          background 0.2s,
+          transform 0.15s,
+          box-shadow 0.2s;
+        box-shadow: 0 2px 12px rgba(249, 115, 22, 0.3);
+      }
+      .btn:hover:not(:disabled) {
+        background: var(--accent2);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 20px rgba(249, 115, 22, 0.4);
+      }
+      .btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .btn-outline {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        background: transparent;
+        color: var(--text);
+        font-family: "Figtree", sans-serif;
+        font-weight: 600;
+        font-size: 0.9rem;
+        border: 1px solid var(--border);
+        padding: 12px 20px;
+        border-radius: 9px;
+        cursor: pointer;
+        transition:
+          border-color 0.2s,
+          color 0.2s;
+        margin-top: 10px;
+      }
+      .btn-outline:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      /* Spinner */
+      .spinner {
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.65s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Alert */
+      .alert {
+        border-radius: 9px;
+        padding: 12px 16px;
+        margin-bottom: 18px;
+        font-size: 0.85rem;
+        display: none;
+      }
+      .alert.show {
+        display: block;
+        animation: fadeUp 0.3s ease;
+      }
+      .alert-error {
+        background: rgba(220, 38, 38, 0.06);
+        border: 1px solid rgba(220, 38, 38, 0.2);
+        color: var(--error);
+      }
+      .alert-success {
+        background: rgba(22, 163, 74, 0.06);
+        border: 1px solid rgba(22, 163, 74, 0.2);
+        color: var(--success);
+      }
+
+      /* Plan cards */
+      .plan-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+      .plan-card {
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        padding: 16px;
+        cursor: pointer;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+        position: relative;
+      }
+      .plan-card:hover {
+        border-color: rgba(249, 115, 22, 0.4);
+      }
+      .plan-card.selected {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+      }
+      .plan-card input[type="radio"] {
+        display: none;
+      }
+      .plan-name {
+        font-family: "Syne", sans-serif;
+        font-weight: 700;
+        font-size: 0.95rem;
+        margin-bottom: 4px;
+      }
+      .plan-price {
+        font-size: 0.8rem;
+        color: var(--muted);
+        margin-bottom: 10px;
+        font-family: "DM Mono", monospace;
+      }
+      .plan-features {
+        list-style: none;
+      }
+      .plan-features li {
+        font-size: 0.78rem;
+        color: var(--muted);
+        margin-bottom: 5px;
+        display: flex;
+        align-items: flex-start;
+        gap: 6px;
+        line-height: 1.4;
+      }
+      .plan-features li::before {
+        content: "✓";
+        color: var(--success);
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+      .plan-badge {
+        position: absolute;
+        top: -10px;
+        right: 12px;
+        background: var(--accent);
+        color: #fff;
+        font-family: "DM Mono", monospace;
+        font-size: 0.6rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 2px 10px;
+        border-radius: 999px;
+      }
+
+      .divider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 20px 0;
+      }
+      .divider span {
+        font-size: 0.78rem;
+        color: var(--muted2);
+        white-space: nowrap;
+      }
+      .divider::before,
+      .divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+
+      .signin-link {
+        text-align: center;
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin-top: 20px;
+      }
+      .signin-link a {
+        color: var(--accent);
+        font-weight: 600;
+        text-decoration: none;
+      }
+      .signin-link a:hover {
+        text-decoration: underline;
+      }
+
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 480px) {
+        nav {
+          padding: 14px 18px;
+        }
+        .signup-card {
+          padding: 22px 18px;
+        }
+        .plan-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <a href="/" class="logo">ev<em>u</em>eo</a>
+      <a href="/login" class="nav-login"
+        >Already have an account? <span>Sign in</span></a
+      >
+    </nav>
+
+    <main>
+      <div class="signup-wrap">
+        <div class="signup-header">
+          <h1>Create your account</h1>
+          <p>Set up your logistics team in under 2 minutes.</p>
+        </div>
+
+        <div class="signup-card">
+          <!-- Steps indicator -->
+          <div class="steps-indicator">
+            <div class="step-dot active" id="dot-1">
+              <div class="step-dot-circle">1</div>
+              <div class="step-dot-label">Account</div>
+            </div>
+            <div class="step-dot" id="dot-2">
+              <div class="step-dot-circle">2</div>
+              <div class="step-dot-label">Company</div>
+            </div>
+            <div class="step-dot" id="dot-3">
+              <div class="step-dot-circle">3</div>
+              <div class="step-dot-label">Plan</div>
+            </div>
+          </div>
+
+          <div id="alert" class="alert"></div>
+
+          <!-- STEP 1: Account -->
+          <div class="form-step active" id="step-1">
+            <div class="form-group">
+              <label>Email address</label>
+              <input
+                type="email"
+                id="email"
+                placeholder="you@yourcompany.com"
+              />
+              <div class="field-error" id="email-error">
+                Please enter a valid email address.
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Password</label>
+              <input
+                type="password"
+                id="password"
+                placeholder="Min. 8 characters"
+                oninput="checkPassword(this.value)"
+              />
+              <div class="pw-strength">
+                <div class="pw-bar">
+                  <div class="pw-fill" id="pw-fill"></div>
+                </div>
+                <div class="pw-label" id="pw-label">Enter a password</div>
+              </div>
+              <div class="field-error" id="pw-error">
+                Password must be at least 8 characters.
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Confirm password</label>
+              <input
+                type="password"
+                id="confirm-password"
+                placeholder="Repeat your password"
+              />
+              <div class="field-error" id="confirm-error">
+                Passwords do not match.
+              </div>
+            </div>
+
+            <button class="btn" onclick="goStep2()">Continue →</button>
+          </div>
+
+          <!-- STEP 2: Company -->
+          <div class="form-step" id="step-2">
+            <div class="form-group">
+              <label>Your full name</label>
+              <input
+                type="text"
+                id="full-name"
+                placeholder="e.g. Richie James"
+              />
+              <div class="field-error" id="name-error">
+                Please enter your name.
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Company name</label>
+              <input
+                type="text"
+                id="company-name"
+                placeholder="e.g. Johnbosco Logistics Ltd"
+              />
+              <div class="field-error" id="company-error">
+                Please enter your company name.
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>
+                Google Sheet ID
+                <span class="label-hint">— paste from your sheet URL</span>
+              </label>
+              <input
+                type="text"
+                id="sheet-id"
+                placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms"
+              />
+              <div class="field-error" id="sheet-error">
+                Please enter your Google Sheet ID.
+              </div>
+            </div>
+
+            <div
+              style="
+                background: rgba(249, 115, 22, 0.05);
+                border: 1px solid rgba(249, 115, 22, 0.15);
+                border-radius: 8px;
+                padding: 12px 14px;
+                margin-bottom: 18px;
+              "
+            >
+              <div
+                style="
+                  font-size: 0.78rem;
+                  color: var(--muted);
+                  line-height: 1.6;
+                "
+              >
+                <strong style="color: var(--text)"
+                  >How to find your Sheet ID:</strong
+                ><br />
+                Open your Google Sheet. The URL looks like:<br />
+                <span
+                  style="
+                    font-family: &quot;DM Mono&quot;, monospace;
+                    font-size: 0.72rem;
+                    color: var(--accent);
+                  "
+                  >docs.google.com/spreadsheets/d/<strong>THIS-IS-YOUR-ID</strong>/edit</span
+                ><br />
+                Copy the part between <code>/d/</code> and <code>/edit</code>.
+              </div>
+            </div>
+
+            <label style="margin-bottom: 18px; display: block">
+              <div class="consent-row">
+                <input type="checkbox" id="consent" />
+                <span class="consent-text">
+                  I have read and agree to Evueo's
+                  <a href="/terms" target="_blank">Terms of Use</a>
+                  and
+                  <a href="/privacy" target="_blank">Privacy Policy</a>. I
+                  confirm I am authorised to act on behalf of my company.
+                </span>
+              </div>
+            </label>
+            <div
+              class="field-error"
+              id="consent-error"
+              style="margin-top: -12px; margin-bottom: 14px"
+            >
+              You must agree to the Terms and Privacy Policy to continue.
+            </div>
+
+            <button class="btn" onclick="goStep3()">Continue →</button>
+            <button class="btn-outline" onclick="goBack(1)">← Back</button>
+          </div>
+
+          <!-- STEP 3: Plan -->
+          <div class="form-step" id="step-3">
+            <p
+              style="
+                font-size: 0.88rem;
+                color: var(--muted);
+                margin-bottom: 16px;
+                line-height: 1.55;
+              "
+            >
+              Choose your plan. You can upgrade or downgrade at any time from
+              your account settings.
+            </p>
+
+            <div class="plan-grid">
+              <div
+                class="plan-card selected"
+                id="plan-free"
+                onclick="selectPlan('free')"
+              >
+                <input type="radio" name="plan" value="free" checked />
+                <div class="plan-name">Free</div>
+                <div class="plan-price">₦0 / month</div>
+                <ul class="plan-features">
+                  <li>20 extractions/month</li>
+                  <li>PDF receipts</li>
+                  <li>Record search</li>
+                </ul>
+              </div>
+              <div
+                class="plan-card"
+                id="plan-premium"
+                onclick="selectPlan('premium')"
+              >
+                <div class="plan-badge">Popular</div>
+                <input type="radio" name="plan" value="premium" />
+                <div class="plan-name">Premium</div>
+                <div class="plan-price">₦5,000 / month</div>
+                <ul class="plan-features">
+                  <li>Unlimited extractions</li>
+                  <li>Your logo on receipts</li>
+                  <li>No watermark</li>
+                </ul>
+              </div>
+            </div>
+
+            <div id="alert-step3" class="alert"></div>
+
+            <button class="btn" id="create-btn" onclick="createAccount()">
+              Create Account
+            </button>
+            <button class="btn-outline" onclick="goBack(2)">← Back</button>
+          </div>
+        </div>
+
+        <div class="signin-link">
+          Already have an account? <a href="/login">Sign in here</a>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // ── Supabase init ──
+      const { createClient } = supabase;
+      const sb = createClient(
+        "YOUR_SUPABASE_URL", // ← replace with your Supabase Project URL
+        "YOUR_SUPABASE_ANON_KEY", // ← replace with your anon key
+      );
+
+      let selectedPlan = "free";
+
+      // ── Password strength ──
+      function checkPassword(val) {
+        const fill = document.getElementById("pw-fill");
+        const label = document.getElementById("pw-label");
+        let strength = 0;
+        if (val.length >= 8) strength++;
+        if (/[A-Z]/.test(val)) strength++;
+        if (/[0-9]/.test(val)) strength++;
+        if (/[^A-Za-z0-9]/.test(val)) strength++;
+        const colors = ["#ef4444", "#f97316", "#eab308", "#16a34a"];
+        const labels = ["Too short", "Weak", "Good", "Strong"];
+        const pct = ["25%", "50%", "75%", "100%"];
+        if (val.length === 0) {
+          fill.style.width = "0%";
+          label.textContent = "Enter a password";
+          return;
+        }
+        fill.style.width = pct[Math.min(strength - 1, 3)] || "25%";
+        fill.style.background = colors[Math.min(strength - 1, 3)] || colors[0];
+        label.textContent = labels[Math.min(strength - 1, 3)] || labels[0];
+      }
+
+      // ── Plan select ──
+      function selectPlan(plan) {
+        selectedPlan = plan;
+        document
+          .getElementById("plan-free")
+          .classList.toggle("selected", plan === "free");
+        document
+          .getElementById("plan-premium")
+          .classList.toggle("selected", plan === "premium");
+      }
+
+      // ── Step navigation ──
+      function showStep(n) {
+        document
+          .querySelectorAll(".form-step")
+          .forEach((s) => s.classList.remove("active"));
+        document.getElementById(`step-${n}`).classList.add("active");
+        for (let i = 1; i <= 3; i++) {
+          const dot = document.getElementById(`dot-${i}`);
+          dot.classList.remove("active", "done");
+          if (i < n) dot.classList.add("done");
+          if (i === n) dot.classList.add("active");
+          if (i < n) dot.querySelector(".step-dot-circle").textContent = "✓";
+          else dot.querySelector(".step-dot-circle").textContent = i;
+        }
+      }
+
+      function goBack(n) {
+        showStep(n);
+      }
+
+      // ── Validation helpers ──
+      function showErr(id, show) {
+        const el = document.getElementById(id);
+        el.classList.toggle("show", show);
+      }
+
+      function setAlert(msg, type = "error") {
+        const el = document.getElementById("alert");
+        el.className = `alert alert-${type} show`;
+        el.textContent = msg;
+      }
+
+      // ── Step 1 validation ──
+      function goStep2() {
+        const email = document.getElementById("email").value.trim();
+        const pw = document.getElementById("password").value;
+        const confirm = document.getElementById("confirm-password").value;
+        let valid = true;
+
+        const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        showErr("email-error", !emailOk);
+        if (!emailOk) valid = false;
+
+        showErr("pw-error", pw.length < 8);
+        if (pw.length < 8) valid = false;
+
+        showErr("confirm-error", pw !== confirm);
+        if (pw !== confirm) valid = false;
+
+        if (valid) showStep(2);
+      }
+
+      // ── Step 2 validation ──
+      function goStep3() {
+        const name = document.getElementById("full-name").value.trim();
+        const company = document.getElementById("company-name").value.trim();
+        const sheet = document.getElementById("sheet-id").value.trim();
+        const consent = document.getElementById("consent").checked;
+        let valid = true;
+
+        showErr("name-error", !name);
+        if (!name) valid = false;
+
+        showErr("company-error", !company);
+        if (!company) valid = false;
+
+        showErr("sheet-error", !sheet);
+        if (!sheet) valid = false;
+
+        showErr("consent-error", !consent);
+        if (!consent) valid = false;
+
+        if (valid) showStep(3);
+      }
+
+      // ── Create account ──
+      async function createAccount() {
+        const btn = document.getElementById("create-btn");
+        btn.disabled = true;
+        btn.innerHTML = `<div class="spinner"></div> Creating account…`;
+
+        const email = document.getElementById("email").value.trim();
+        const pw = document.getElementById("password").value;
+        const fullName = document.getElementById("full-name").value.trim();
+        const company = document.getElementById("company-name").value.trim();
+        const sheetId = document.getElementById("sheet-id").value.trim();
+
+        try {
+          // 1. Create auth user in Supabase
+          const { data: authData, error: authError } = await sb.auth.signUp({
+            email,
+            password: pw,
+            options: { data: { full_name: fullName, company_name: company } },
+          });
+
+          if (authError) throw new Error(authError.message);
+
+          // 2. Insert company record with consent timestamp
+          const { error: dbError } = await sb.from("companies").insert({
+            id: authData.user.id,
+            email,
+            company_name: company,
+            tier: selectedPlan,
+            sheet_id: sheetId,
+            agreed_to_terms: true,
+            agreed_at: new Date().toISOString(),
+            agreed_ip: "client", // IP captured server-side in production
+          });
+
+          if (dbError) throw new Error(dbError.message);
+
+          // 3. Redirect to app
+          window.location.href =
+            selectedPlan === "premium" ? "/upgrade" : "/app";
+        } catch (err) {
+          const a = document.getElementById("alert-step3");
+          a.className = "alert alert-error show";
+          a.textContent =
+            err.message || "Something went wrong. Please try again.";
+          btn.disabled = false;
+          btn.innerHTML = "Create Account";
+        }
+      }
+    </script>
+  </body>
+</html>
