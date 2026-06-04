@@ -17,12 +17,12 @@ export default async function handler(req, res) {
     const sb = createClient(
       process.env.SUPABASE_URL,
       process.env.SUPABASE_ANON_KEY,
-      { global: { headers: { Authorization: `Bearer ${token}` } } }
+      { global: { headers: { Authorization: `Bearer ${token}` } } },
     );
 
     // 2. Fetch sheet_id from Supabase — RLS ensures only their own row is returned
     const { data: profile, error: profileError } = await sb
-      .from("profiles")
+      .from("companies")
       .select("sheet_id")
       .single();
 
@@ -62,7 +62,7 @@ export default async function handler(req, res) {
             { role: "user", content: text },
           ],
         }),
-      }
+      },
     );
 
     if (!aiResponse.ok) {

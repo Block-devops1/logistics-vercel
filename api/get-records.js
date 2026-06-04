@@ -18,7 +18,7 @@ export default async function handler(req, res) {
 
     // 2. Fetch sheet_id from Supabase — RLS ensures only their own row is returned
     const { data: profile, error: profileError } = await sb
-      .from("profiles")
+      .from("companies")
       .select("sheet_id")
       .single();
 
