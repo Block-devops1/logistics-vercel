@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
 
   try {
-    const { text } = req.body;
+    const { text, sheetId } = req.body;
 
     if (!process.env.GOOGLE_PRIVATE_KEY || !process.env.OPENROUTER_API_KEY) {
       throw new Error("Missing API Keys in Vercel Settings!");
@@ -63,7 +63,7 @@ export default async function handler(req, res) {
       scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
 
-    const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID, auth);
+    const doc = new GoogleSpreadsheet(sheetId, auth);
     await doc.loadInfo();
     const sheet = doc.sheetsByIndex[0];
 
