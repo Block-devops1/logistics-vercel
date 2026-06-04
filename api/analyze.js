@@ -1,22 +1,47 @@
 import { GoogleSpreadsheet } from "google-spreadsheet";
 import { JWT } from "google-auth-library";
+import { createClient } from "@supabase/supabase-js";
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
   if (req.method === "OPTIONS") return res.status(200).end();
 
   try {
-    const { text, sheetId } = req.body;
+    // 1. Get user session from Authorization header
+    const token = req.headers.authorization?.replace("Bearer ", "");
+    if (!token) throw new Error("Unauthorized: No session token.");
 
+    const sb = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_ANON_KEY,
+      { global: { headers: { Authorization: `Bearer ${token}` } } }
+    );
+
+    // 2. Fetch sheet_id from Supabase — RLS ensures only their own row is returned
+    const { data: profile, error: profileError } = await sb
+      .from("profiles")
+      .select("sheet_id")
+      .single();
+
+    if (profileError || !profile?.sheet_id) {
+      throw new Error("No spreadsheet connected to this account.");
+    }
+
+    const sheetId = profile.sheet_id;
+
+    // 3. Validate env vars
+    const { text } = req.body;
+    if (!text) throw new Error("No text provided.");
     if (!process.env.GOOGLE_PRIVATE_KEY || !process.env.OPENROUTER_API_KEY) {
       throw new Error("Missing API Keys in Vercel Settings!");
     }
 
     const GOOGLE_KEY = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n");
 
+    // 4. Call AI
     const systemPrompt =
       "You are a data extractor. Extract these fields from the text: sender, receiver, tracking_number, description. Return ONLY raw JSON. No markdown formatting.";
 
@@ -37,7 +62,7 @@ export default async function handler(req, res) {
             { role: "user", content: text },
           ],
         }),
-      },
+      }
     );
 
     if (!aiResponse.ok) {
@@ -46,7 +71,6 @@ export default async function handler(req, res) {
     }
 
     const aiData = await aiResponse.json();
-
     let content = aiData.choices[0].message.content;
     const jsonStart = content.indexOf("{");
     const jsonEnd = content.lastIndexOf("}");
@@ -57,6 +81,7 @@ export default async function handler(req, res) {
 
     const extracted = JSON.parse(content.substring(jsonStart, jsonEnd + 1));
 
+    // 5. Write to the user's own sheet
     const auth = new JWT({
       email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
       key: GOOGLE_KEY,

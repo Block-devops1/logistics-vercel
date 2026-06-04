@@ -1,25 +1,46 @@
 import { google } from "googleapis";
+import { createClient } from "@supabase/supabase-js";
 
 export default async function handler(req, res) {
   if (req.method !== "GET")
     return res.status(405).json({ error: "Method Not Allowed" });
 
   try {
-    // 1. Get the raw key string from Vercel (using the name from your analyze.js)
+    // 1. Get user session from Authorization header
+    const token = req.headers.authorization?.replace("Bearer ", "");
+    if (!token) throw new Error("Unauthorized: No session token.");
+
+    const sb = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_ANON_KEY,
+      { global: { headers: { Authorization: `Bearer ${token}` } } },
+    );
+
+    // 2. Fetch sheet_id from Supabase — RLS ensures only their own row is returned
+    const { data: profile, error: profileError } = await sb
+      .from("profiles")
+      .select("sheet_id")
+      .single();
+
+    if (profileError || !profile?.sheet_id) {
+      throw new Error("No spreadsheet connected to this account.");
+    }
+
+    const sheetId = profile.sheet_id;
+
+    // 3. Validate env vars
     const rawKey = process.env.GOOGLE_PRIVATE_KEY;
     const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-    const sheetId = req.query.sheetId;
 
-    // 2. Safety Check: If any are missing, tell us exactly which one
-    if (!rawKey || !clientEmail || !sheetId) {
+    if (!rawKey || !clientEmail) {
       throw new Error(
-        `Missing Env Vars: Key:${!!rawKey}, Email:${!!clientEmail}, ID:${!!sheetId}`,
+        `Missing Env Vars: Key:${!!rawKey}, Email:${!!clientEmail}`,
       );
     }
 
-    // 3. Fix the formatting of the private key
     const formattedKey = rawKey.replace(/\\n/g, "\n");
 
+    // 4. Read from the user's own sheet
     const auth = new google.auth.GoogleAuth({
       credentials: {
         client_email: clientEmail,
@@ -37,7 +58,6 @@ export default async function handler(req, res) {
 
     const rows = response.data.values;
     if (!rows || rows.length <= 1) {
-      // Added check for empty sheet (only headers)
       return res.status(200).json([]);
     }
 

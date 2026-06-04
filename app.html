@@ -1212,7 +1212,12 @@
         const dot = document.getElementById("status-dot"),
           sText = document.getElementById("status-text");
         try {
-          const res = await fetch("/api/get-records");
+          const {
+            data: { session },
+          } = await sb.auth.getSession();
+          const res = await fetch("/api/get-records", {
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          });
           if (!res.ok) throw new Error();
           const raw = await res.json();
           const data = toArray(raw);
@@ -1262,13 +1267,16 @@
         }
         out.innerHTML = `<div class="spinner-wrap"><div class="spinner"></div><span class="spinner-label">AI extracting data…</span></div>`;
         try {
+          const {
+            data: { session },
+          } = await sb.auth.getSession();
           const res = await fetch("/api/analyze", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              text,
-              sheetId: window.userSheetId,
-            }),
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({ text }),
           });
           const result = await res.json();
           if (res.ok) {
@@ -1308,7 +1316,9 @@
             </div>
           </div>`;
             // Refresh recent + total
-            const r2 = await fetch("/api/get-records");
+            const r2 = await fetch("/api/get-records", {
+              headers: { Authorization: `Bearer ${session.access_token}` },
+            });
             if (r2.ok) {
               const raw2 = await r2.json();
               const d2 = toArray(raw2);
@@ -1342,9 +1352,12 @@
         }
         out.innerHTML = `<div class="spinner-wrap"><div class="spinner"></div><span class="spinner-label">Searching…</span></div>`;
         try {
-          const res = await fetch(
-            `/api/get-records?sheetId=${window.userSheetId}`,
-          );
+          const {
+            data: { session },
+          } = await sb.auth.getSession();
+          const res = await fetch("/api/get-records", {
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          });
           const raw = await res.json();
           const all = toArray(raw);
           const hits = all
