@@ -808,10 +808,9 @@
 
     <script>
       // ── Supabase init ──
-      const { createClient } = supabase;
-      const sb = createClient(
-        "YOUR_SUPABASE_URL", // ← replace with your Supabase Project URL
-        "YOUR_SUPABASE_ANON_KEY", // ← replace with your anon key
+      const sb = supabase.createClient(
+        "https://pyoijoamwgkyszlcgblk.supabase.co", // ← replace with your Supabase Project URL
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB5b2lqb2Ftd2dreXN6bGNnYmxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MTk4NTcsImV4cCI6MjA5NjA5NTg1N30.SFTZ6Ae22Ln4lzYATubf-7h_LdvZxzBPJzxINJuzcZk", // ← replace with your anon key
       );
 
       let selectedPlan = "free";
