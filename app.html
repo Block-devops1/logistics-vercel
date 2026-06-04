@@ -13,6 +13,21 @@
     <link rel="apple-touch-icon" href="/favicon.svg" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      const sb = supabase.createClient(
+        "https://pyoijoamwgkyszlcgblk.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB5b2lqb2Ftd2dreXN6bGNnYmxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MTk4NTcsImV4cCI6MjA5NjA5NTg1N30.SFTZ6Ae22Ln4lzYATubf-7h_LdvZxzBPJzxINJuzcZk",
+      );
+
+      // Gate — runs before page loads
+      (async () => {
+        const { data } = await sb.auth.getSession();
+        if (!data.session) {
+          window.location.href = "/login";
+        }
+      })();
+    </script>
     <style>
       *,
       *::before,
@@ -827,6 +842,22 @@
           <div class="status-dot" id="status-dot"></div>
           <span id="status-text">Connecting…</span>
         </div>
+        <button
+          onclick="logout()"
+          style="
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            font-family: &quot;Figtree&quot;, sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 7px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+          "
+        >
+          Log out
+        </button>
       </header>
 
       <div class="stats-strip">
@@ -1326,6 +1357,11 @@
         .addEventListener("keydown", (e) => {
           if (e.key === "Enter") searchSpreadsheet();
         });
+
+      async function logout() {
+        await sb.auth.signOut();
+        window.location.href = "/login";
+      }
     </script>
   </body>
   <footer>
