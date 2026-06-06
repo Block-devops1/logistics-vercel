@@ -1010,112 +1010,112 @@
     </div>
 
     <script>
-        // These are now set dynamically from Supabase in window.onload
-        // IS_PAID_TIER → window.userTier === "premium"
-        // COMPANY_NAME → window.companyName
+      // These are now set dynamically from Supabase in window.onload
+      // IS_PAID_TIER → window.userTier === "premium"
+      // COMPANY_NAME → window.companyName
 
-        async function authHeaders() {
-          const {
-            data: { session },
-          } = await sb.auth.getSession();
-          return {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          };
-        }
+      async function authHeaders() {
+        const {
+          data: { session },
+        } = await sb.auth.getSession();
+        return {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        };
+      }
 
-        /* ── Count up ── */
-        function countUp(el, target, delay = 0) {
-          setTimeout(() => {
-            if (target === 0) {
-              el.textContent = "0";
-              return;
-            }
-            let v = 0,
-              step = target / (900 / 16);
-            const t = setInterval(() => {
-              v = Math.min(v + step, target);
-              el.textContent = Math.floor(v);
-              if (v >= target) clearInterval(t);
-            }, 16);
-          }, delay);
-        }
+      /* ── Count up ── */
+      function countUp(el, target, delay = 0) {
+        setTimeout(() => {
+          if (target === 0) {
+            el.textContent = "0";
+            return;
+          }
+          let v = 0,
+            step = target / (900 / 16);
+          const t = setInterval(() => {
+            v = Math.min(v + step, target);
+            el.textContent = Math.floor(v);
+            if (v >= target) clearInterval(t);
+          }, 16);
+        }, delay);
+      }
 
-        /* ── Normalise API response to array ── */
-        function toArray(data) {
-          if (Array.isArray(data)) return data;
-          if (data && Array.isArray(data.rows)) return data.rows;
-          if (data && Array.isArray(data.records)) return data.records;
-          if (data && Array.isArray(data.data)) return data.data;
-          return [];
-        }
+      /* ── Normalise API response to array ── */
+      function toArray(data) {
+        if (Array.isArray(data)) return data;
+        if (data && Array.isArray(data.rows)) return data.rows;
+        if (data && Array.isArray(data.records)) return data.records;
+        if (data && Array.isArray(data.data)) return data.data;
+        return [];
+      }
 
-        /* ── Format description ── */
-        function formatDesc(raw) {
-          if (!raw || raw === "N/A") return "N/A";
-          try {
-            if (
-              typeof raw === "string" &&
-              (raw.startsWith("[") || raw.startsWith("{"))
-            ) {
-              const p = JSON.parse(raw);
-              if (Array.isArray(p))
-                return p
-                  .map((o) =>
-                    typeof o === "object"
-                      ? `${o.quantity || o.qty || ""} ${o.unit || ""} ${o.description || o.name || ""}`.trim()
-                      : o,
-                  )
-                  .join(", ");
-            }
-          } catch (_) {}
-          return raw;
-        }
+      /* ── Format description ── */
+      function formatDesc(raw) {
+        if (!raw || raw === "N/A") return "N/A";
+        try {
+          if (
+            typeof raw === "string" &&
+            (raw.startsWith("[") || raw.startsWith("{"))
+          ) {
+            const p = JSON.parse(raw);
+            if (Array.isArray(p))
+              return p
+                .map((o) =>
+                  typeof o === "object"
+                    ? `${o.quantity || o.qty || ""} ${o.unit || ""} ${o.description || o.name || ""}`.trim()
+                    : o,
+                )
+                .join(", ");
+          }
+        } catch (_) {}
+        return raw;
+      }
 
-        /* ── Today count — robust date match ── */
-        function countToday(records) {
-          const now = new Date();
-          const dd = String(now.getDate()).padStart(2, "0");
-          const mm = String(now.getMonth() + 1).padStart(2, "0");
-          const yyyy = now.getFullYear();
-          // matches "02/06/2026" or "2/6/2026" at start of date string
-          return records.filter((r) => {
-            const d = (r.date || "").trim();
-            return (
-              d.startsWith(`${dd}/${mm}/${yyyy}`) ||
-              d.startsWith(`${parseInt(dd)}/${parseInt(mm)}/${yyyy}`)
-            );
-          }).length;
-        }
+      /* ── Today count — robust date match ── */
+      function countToday(records) {
+        const now = new Date();
+        const dd = String(now.getDate()).padStart(2, "0");
+        const mm = String(now.getMonth() + 1).padStart(2, "0");
+        const yyyy = now.getFullYear();
+        // matches "02/06/2026" or "2/6/2026" at start of date string
+        return records.filter((r) => {
+          const d = (r.date || "").trim();
+          return (
+            d.startsWith(`${dd}/${mm}/${yyyy}`) ||
+            d.startsWith(`${parseInt(dd)}/${parseInt(mm)}/${yyyy}`)
+          );
+        }).length;
+      }
 
-        /* ── Short date for stat card ("02 Jun") ── */
-        function shortDate(dateStr) {
-          if (!dateStr) return "—";
-          // dateStr is like "02/06/2026, 21:23:45"
-          const parts = dateStr.split(",")[0].trim().split("/");
-          if (parts.length < 2) return dateStr.split(",")[0].trim();
-          const months = [
-            "Jan",
-            "Feb",
-            "Mar",
-            "Apr",
-            "May",
-            "Jun",
-            "Jul",
-            "Aug",
-            "Sep",
-            "Oct",
-            "Nov",
-            "Dec",
-          ];
-          const day = parts[0];
-          const mon = months[parseInt(parts[1]) - 1] || parts[1];
-          return `${day} ${mon}`;
-        }
+      /* ── Short date for stat card ("02 Jun") ── */
+      function shortDate(dateStr) {
+        if (!dateStr) return "—";
+        // dateStr is like "02/06/2026, 21:23:45"
+        const parts = dateStr.split(",")[0].trim().split("/");
+        if (parts.length < 2) return dateStr.split(",")[0].trim();
+        const months = [
+          "Jan",
+          "Feb",
+          "Mar",
+          "Apr",
+          "May",
+          "Jun",
+          "Jul",
+          "Aug",
+          "Sep",
+          "Oct",
+          "Nov",
+          "Dec",
+        ];
+        const day = parts[0];
+        const mon = months[parseInt(parts[1]) - 1] || parts[1];
+        return `${day} ${mon}`;
+      }
 
-        /* ── Record card HTML ── */
-        function recordCardHTML(r) {
-          return `<div class="record-card">
+      /* ── Record card HTML ── */
+      function recordCardHTML(r) {
+        return `<div class="record-card">
         <div class="record-header">
           <div class="record-route">${r.sender || "?"}<span class="arrow">→</span>${r.receiver || "?"}</div>
           <div class="record-date">${(r.date || "").split(",")[0]}</div>
@@ -1123,191 +1123,191 @@
         <div class="record-items">${formatDesc(r.description)}</div>
         <div class="record-tracking">⬡ ${r.tracking_number || "N/A"}</div>
       </div>`;
+      }
+
+      /* ── Render recent ── */
+      function renderRecent(rawData) {
+        const records = toArray(rawData);
+        const out = document.getElementById("recent-output");
+        const last5 = [...records].reverse().slice(0, 5);
+        if (!last5.length) {
+          out.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No records yet. Analyze your first waybill above.</div></div>`;
+          return;
+        }
+        out.innerHTML = `<div class="records-list">${last5.map(recordCardHTML).join("")}</div>`;
+      }
+
+      function formatReceiptDesc(raw) {
+        if (!raw || raw === "N/A") return "N/A";
+
+        // Detect numbered list e.g. "1. item 2. item"
+        const numbered = raw.match(/\d+\.\s[^0-9\.][^]*?(?=\s*\d+\.|$)/g);
+        if (numbered && numbered.length > 1) {
+          return numbered
+            .map(
+              (item) =>
+                `<div style="padding:4px 0;border-bottom:1px solid #f0ebe3;font-size:0.81rem;line-height:1.5;color:#374151;">${item.trim()}</div>`,
+            )
+            .join("");
         }
 
-        /* ── Render recent ── */
-        function renderRecent(rawData) {
-          const records = toArray(rawData);
-          const out = document.getElementById("recent-output");
-          const last5 = [...records].reverse().slice(0, 5);
-          if (!last5.length) {
-            out.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No records yet. Analyze your first waybill above.</div></div>`;
-            return;
-          }
-          out.innerHTML = `<div class="records-list">${last5.map(recordCardHTML).join("")}</div>`;
-        }
+        return `<span style="font-size:0.85rem;color:#374151;line-height:1.6;">${raw}</span>`;
+      }
 
-        function formatReceiptDesc(raw) {
-          if (!raw || raw === "N/A") return "N/A";
+      /* ── Build receipt ── */
+      function buildReceiptCard(data) {
+        const isPaid = window.userTier === "premium";
+        const company = window.companyName || "Your Logistics Company";
 
-          // Detect numbered list e.g. "1. item 2. item"
-          const numbered = raw.match(/\d+\.\s[^0-9\.][^]*?(?=\s*\d+\.|$)/g);
-          if (numbered && numbered.length > 1) {
-            return numbered
-              .map(
-                (item) =>
-                  `<div style="padding:4px 0;border-bottom:1px solid #f0ebe3;font-size:0.81rem;line-height:1.5;color:#374151;">${item.trim()}</div>`,
-              )
-              .join("");
-          }
+        document.getElementById("receipt-header-free").style.display = isPaid
+          ? "none"
+          : "block";
+        document.getElementById("receipt-header-paid").style.display = isPaid
+          ? "block"
+          : "none";
+        document.getElementById("rc-company").textContent = company;
+        document.getElementById("rc-company-paid").textContent = company;
+        document.getElementById("rc-tracking").textContent =
+          data.tracking_number || "N/A";
+        document.getElementById("rc-sender").textContent = data.sender || "N/A";
+        document.getElementById("rc-receiver").textContent =
+          data.receiver || "N/A";
+        document.getElementById("rc-items").innerHTML = formatReceiptDesc(
+          Array.isArray(data.description)
+            ? JSON.stringify(data.description)
+            : data.description,
+        );
 
-          return `<span style="font-size:0.85rem;color:#374151;line-height:1.6;">${raw}</span>`;
-        }
+        const now = new Date().toLocaleString("en-GB", {
+          timeZone: "Africa/Lagos",
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        document.getElementById("rc-date").innerHTML = now.replace(
+          ", ",
+          "<br>",
+        );
+      }
 
-        /* ── Build receipt ── */
-        function buildReceiptCard(data) {
-          const isPaid = window.userTier === "premium";
-          const company = window.companyName || "Your Logistics Company";
-
-          document.getElementById("receipt-header-free").style.display = isPaid
-            ? "none"
-            : "block";
-          document.getElementById("receipt-header-paid").style.display = isPaid
-            ? "block"
-            : "none";
-          document.getElementById("rc-company").textContent = company;
-          document.getElementById("rc-company-paid").textContent = company;
-          document.getElementById("rc-tracking").textContent =
-            data.tracking_number || "N/A";
-          document.getElementById("rc-sender").textContent = data.sender || "N/A";
-          document.getElementById("rc-receiver").textContent =
-            data.receiver || "N/A";
-          document.getElementById("rc-items").innerHTML = formatReceiptDesc(
-            Array.isArray(data.description)
-              ? JSON.stringify(data.description)
-              : data.description,
-          );
-
-          const now = new Date().toLocaleString("en-GB", {
-            timeZone: "Africa/Lagos",
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
+      /* ── Download PDF ── */
+      async function downloadReceipt() {
+        const btn = document.getElementById("dl-btn");
+        btn.disabled = true;
+        btn.innerHTML = `<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div> Generating…`;
+        try {
+          const card = document.getElementById("receipt-card");
+          const canvas = await html2canvas(card, {
+            scale: 2.5,
+            backgroundColor: "#ffffff",
+            useCORS: true,
+            width: 400,
+            height: card.scrollHeight,
+            windowWidth: 400,
+            windowHeight: card.scrollHeight,
+            x: 0,
+            y: 0,
           });
-          document.getElementById("rc-date").innerHTML = now.replace(
-            ", ",
-            "<br>",
+          const imgData = canvas.toDataURL("image/png");
+          const { jsPDF } = window.jspdf;
+          const pxW = canvas.width / 2.5;
+          const pxH = canvas.height / 2.5;
+          const pdf = new jsPDF({
+            orientation: "portrait",
+            unit: "px",
+            format: [pxW, pxH],
+          });
+          pdf.addImage(imgData, "PNG", 0, 0, pxW, pxH);
+          pdf.save(
+            `Evueo-${document.getElementById("rc-tracking").textContent}.pdf`,
           );
+        } catch (e) {
+          alert("Could not generate PDF. Try again.");
         }
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Receipt`;
+      }
 
-        /* ── Download PDF ── */
-        async function downloadReceipt() {
-          const btn = document.getElementById("dl-btn");
-          btn.disabled = true;
-          btn.innerHTML = `<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div> Generating…`;
-          try {
-            const card = document.getElementById("receipt-card");
-            const canvas = await html2canvas(card, {
-              scale: 2.5,
-              backgroundColor: "#ffffff",
-              useCORS: true,
-              width: 400,
-              height: card.scrollHeight,
-              windowWidth: 400,
-              windowHeight: card.scrollHeight,
-              x: 0,
-              y: 0,
-            });
-            const imgData = canvas.toDataURL("image/png");
-            const { jsPDF } = window.jspdf;
-            const pxW = canvas.width / 2.5;
-            const pxH = canvas.height / 2.5;
-            const pdf = new jsPDF({
-              orientation: "portrait",
-              unit: "px",
-              format: [pxW, pxH],
-            });
-            pdf.addImage(imgData, "PNG", 0, 0, pxW, pxH);
-            pdf.save(
-              `Evueo-${document.getElementById("rc-tracking").textContent}.pdf`,
-            );
-          } catch (e) {
-            alert("Could not generate PDF. Try again.");
-          }
-          btn.disabled = false;
-          btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Receipt`;
-        }
+      /* ── On load ── */
+      window.onload = async function () {
+        ["card-0", "card-1", "card-2"].forEach((id, i) =>
+          setTimeout(
+            () => document.getElementById(id).classList.add("in"),
+            150 + i * 100,
+          ),
+        );
+        const dot = document.getElementById("status-dot"),
+          sText = document.getElementById("status-text");
+        try {
+          const {
+            data: { session },
+          } = await sb.auth.getSession();
+          const res = await fetch("/api/get-records", {
+            headers: await authHeaders(),
+          });
+          if (!res.ok) throw new Error();
+          const raw = await res.json();
+          const data = toArray(raw);
 
-        /* ── On load ── */
-        window.onload = async function () {
-          ["card-0", "card-1", "card-2"].forEach((id, i) =>
+          dot.classList.add("online");
+          sText.textContent = "System Online";
+
+          const todayCount = countToday(data);
+          const lastDate = data.length
+            ? shortDate(data[data.length - 1].date)
+            : "—";
+
+          [0, 1, 2].forEach((i) =>
             setTimeout(
-              () => document.getElementById(id).classList.add("in"),
-              150 + i * 100,
+              () => document.getElementById(`sc-${i}`).classList.add("in"),
+              i * 100,
             ),
           );
-          const dot = document.getElementById("status-dot"),
-            sText = document.getElementById("status-text");
-          try {
-            const {
-              data: { session },
-            } = await sb.auth.getSession();
-            const res = await fetch("/api/get-records", {
-              headers: await authHeaders(),
-            });
-            if (!res.ok) throw new Error();
-            const raw = await res.json();
-            const data = toArray(raw);
+          countUp(document.getElementById("stat-total"), data.length, 100);
+          countUp(document.getElementById("stat-today"), todayCount, 200);
+          setTimeout(() => {
+            document.getElementById("stat-last").textContent = lastDate;
+          }, 300);
 
-            dot.classList.add("online");
-            sText.textContent = "System Online";
+          renderRecent(data);
+        } catch {
+          dot.classList.add("offline");
+          sText.textContent = "System Offline";
+          [0, 1, 2].forEach((i) =>
+            setTimeout(
+              () => document.getElementById(`sc-${i}`).classList.add("in"),
+              i * 100,
+            ),
+          );
+          document.getElementById("recent-output").innerHTML =
+            `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">Could not connect. Check your network.</div></div>`;
+        }
+      };
 
-            const todayCount = countToday(data);
-            const lastDate = data.length
-              ? shortDate(data[data.length - 1].date)
-              : "—";
+      /* ── Analyze ── */
+      async function analyzeData() {
+        const out = document.getElementById("analyze-output");
+        const text = document.getElementById("messyInput").value.trim();
+        if (!text) {
+          alert("Please paste some text first.");
+          return;
+        }
 
-            [0, 1, 2].forEach((i) =>
-              setTimeout(
-                () => document.getElementById(`sc-${i}`).classList.add("in"),
-                i * 100,
-              ),
-            );
-            countUp(document.getElementById("stat-total"), data.length, 100);
-            countUp(document.getElementById("stat-today"), todayCount, 200);
-            setTimeout(() => {
-              document.getElementById("stat-last").textContent = lastDate;
-            }, 300);
+        out.innerHTML = `<div class="spinner-wrap"><div class="spinner"></div><span class="spinner-label">AI extracting data…</span></div>`;
 
-            renderRecent(data);
-          } catch {
-            dot.classList.add("offline");
-            sText.textContent = "System Offline";
-            [0, 1, 2].forEach((i) =>
-              setTimeout(
-                () => document.getElementById(`sc-${i}`).classList.add("in"),
-                i * 100,
-              ),
-            );
-            document.getElementById("recent-output").innerHTML =
-              `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">Could not connect. Check your network.</div></div>`;
-          }
-        };
+        try {
+          const res = await fetch("/api/analyze", {
+            method: "POST",
+            headers: await authHeaders(),
+            body: JSON.stringify({ text }),
+          });
+          const result = await res.json();
 
-        /* ── Analyze ── */
-        async function analyzeData() {
-          const out = document.getElementById("analyze-output");
-          const text = document.getElementById("messyInput").value.trim();
-          if (!text) {
-            alert("Please paste some text first.");
-            return;
-          }
-
-          out.innerHTML = `<div class="spinner-wrap"><div class="spinner"></div><span class="spinner-label">AI extracting data…</span></div>`;
-
-          try {
-            const res = await fetch("/api/analyze", {
-              method: "POST",
-              headers: await authHeaders(),
-              body: JSON.stringify({ text }),
-            });
-            const result = await res.json();
-
-            // ── Limit reached (403) — check BEFORE res.ok ──
-            if (res.status === 403 && result.error === "LIMIT_REACHED") { {
-              out.innerHTML = `
+          // ── Limit reached (403) — check BEFORE res.ok ──
+          if (res.status === 403 && result.error === "LIMIT_REACHED") {
+            out.innerHTML = `
           <div class="result-error" style="border-color:rgba(249,115,22,0.3);background:rgba(249,115,22,0.05);">
             <div style="font-size:1rem;margin-bottom:8px;">🔒 Monthly limit reached</div>
             <div style="font-size:0.84rem;color:var(--muted);margin-bottom:16px;">
@@ -1320,38 +1320,38 @@
               Upgrade to Premium — ₦5,000/month
             </a>
           </div>`;
+            return;
+          }
+
+          if (res.ok) {
+            const d = result.data;
+
+            // ── Null check — prevent silent crash ──
+            if (!d) {
+              out.innerHTML = `<div class="result-error">❌ AI returned no data. Please try again.</div>`;
               return;
             }
 
-            if (res.ok) {
-              const d = result.data;
+            const desc = formatDesc(
+              Array.isArray(d.description)
+                ? JSON.stringify(d.description)
+                : d.description,
+            );
 
-              // ── Null check — prevent silent crash ──
-              if (!d) {
-                out.innerHTML = `<div class="result-error">❌ AI returned no data. Please try again.</div>`;
-                return;
-              }
+            const now = new Date().toLocaleString("en-GB", {
+              timeZone: "Africa/Lagos",
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            });
 
-              const desc = formatDesc(
-                Array.isArray(d.description)
-                  ? JSON.stringify(d.description)
-                  : d.description,
-              );
+            buildReceiptCard(d);
 
-              const now = new Date().toLocaleString("en-GB", {
-                timeZone: "Africa/Lagos",
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              });
+            const isPaid = window.userTier === "premium";
 
-              buildReceiptCard(d);
-
-              const isPaid = window.userTier === "premium";
-
-              out.innerHTML = `
+            out.innerHTML = `
           <div class="result-success">
             <div class="result-badge">✓ Saved to Google Sheets</div>
             <div class="fields-grid">
@@ -1378,78 +1378,78 @@
             </div>
           </div>`;
 
-              // Refresh recent + stats
-              const r2 = await fetch("/api/get-records", {
-                headers: await authHeaders(),
-              });
-              if (r2.ok) {
-                const d2 = toArray(await r2.json());
-                renderRecent(d2);
-                document.getElementById("stat-total").textContent = d2.length;
-                document.getElementById("stat-today").textContent =
-                  countToday(d2);
-                if (d2.length)
-                  document.getElementById("stat-last").textContent = shortDate(
-                    d2[d2.length - 1].date,
-                  );
-              }
-            } else {
-              out.innerHTML = `<div class="result-error">❌ ${result.error || "Server error."}</div>`;
-            }
-          } catch (err) {
-            console.error("analyzeData error:", err);
-            out.innerHTML = `<div class="result-error">❌ Connection error. Check console for details.</div>`;
-          }
-        }
-
-        /* ── Search ── */
-        async function searchSpreadsheet() {
-          const query = document
-            .getElementById("searchInput")
-            .value.trim()
-            .toLowerCase();
-          const out = document.getElementById("search-output");
-          if (!query) {
-            out.innerHTML = "";
-            return;
-          }
-          out.innerHTML = `<div class="spinner-wrap"><div class="spinner"></div><span class="spinner-label">Searching…</span></div>`;
-          try {
-            const {
-              data: { session },
-            } = await sb.auth.getSession();
-            const res = await fetch("/api/get-records", {
+            // Refresh recent + stats
+            const r2 = await fetch("/api/get-records", {
               headers: await authHeaders(),
             });
-            const raw = await res.json();
-            const all = toArray(raw);
-            const hits = all
-              .filter(
-                (r) =>
-                  (r.sender || "").toLowerCase().includes(query) ||
-                  (r.receiver || "").toLowerCase().includes(query),
-              )
-              .reverse();
-            if (!hits.length) {
-              out.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">No records found for "${query}".</div></div>`;
-              return;
+            if (r2.ok) {
+              const d2 = toArray(await r2.json());
+              renderRecent(d2);
+              document.getElementById("stat-total").textContent = d2.length;
+              document.getElementById("stat-today").textContent =
+                countToday(d2);
+              if (d2.length)
+                document.getElementById("stat-last").textContent = shortDate(
+                  d2[d2.length - 1].date,
+                );
             }
-            out.innerHTML = `<div class="records-list">${hits.map(recordCardHTML).join("")}</div>`;
-          } catch {
-            out.innerHTML = `<div class="result-error">❌ Error fetching records.</div>`;
+          } else {
+            out.innerHTML = `<div class="result-error">❌ ${result.error || "Server error."}</div>`;
           }
+        } catch (err) {
+          console.error("analyzeData error:", err);
+          out.innerHTML = `<div class="result-error">❌ Connection error. Check console for details.</div>`;
         }
+      }
 
-        document
+      /* ── Search ── */
+      async function searchSpreadsheet() {
+        const query = document
           .getElementById("searchInput")
-          .addEventListener("keydown", (e) => {
-            if (e.key === "Enter") searchSpreadsheet();
-          });
-
-        async function logout() {
-          await sb.auth.signOut();
-          window.location.href = "/login";
+          .value.trim()
+          .toLowerCase();
+        const out = document.getElementById("search-output");
+        if (!query) {
+          out.innerHTML = "";
+          return;
         }
+        out.innerHTML = `<div class="spinner-wrap"><div class="spinner"></div><span class="spinner-label">Searching…</span></div>`;
+        try {
+          const {
+            data: { session },
+          } = await sb.auth.getSession();
+          const res = await fetch("/api/get-records", {
+            headers: await authHeaders(),
+          });
+          const raw = await res.json();
+          const all = toArray(raw);
+          const hits = all
+            .filter(
+              (r) =>
+                (r.sender || "").toLowerCase().includes(query) ||
+                (r.receiver || "").toLowerCase().includes(query),
+            )
+            .reverse();
+          if (!hits.length) {
+            out.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">No records found for "${query}".</div></div>`;
+            return;
+          }
+          out.innerHTML = `<div class="records-list">${hits.map(recordCardHTML).join("")}</div>`;
+        } catch {
+          out.innerHTML = `<div class="result-error">❌ Error fetching records.</div>`;
+        }
+      }
+
+      document
+        .getElementById("searchInput")
+        .addEventListener("keydown", (e) => {
+          if (e.key === "Enter") searchSpreadsheet();
+        });
+
+      async function logout() {
+        await sb.auth.signOut();
+        window.location.href = "/login";
+      }
     </script>
   </body>
   <footer>
