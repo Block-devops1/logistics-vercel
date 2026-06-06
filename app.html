@@ -1305,40 +1305,50 @@
           alert("Please paste some text first.");
           return;
         }
+
         out.innerHTML = `<div class="spinner-wrap"><div class="spinner"></div><span class="spinner-label">AI extracting data…</span></div>`;
+
         try {
-          const {
-            data: { session },
-          } = await sb.auth.getSession();
           const res = await fetch("/api/analyze", {
             method: "POST",
             headers: await authHeaders(),
             body: JSON.stringify({ text }),
           });
           const result = await res.json();
+
+          // ── Limit reached (403) — check BEFORE res.ok ──
+          if (res.status === 403 && result.error === "limit_reached") {
+            out.innerHTML = `
+        <div class="result-error" style="border-color:rgba(249,115,22,0.3);background:rgba(249,115,22,0.05);">
+          <div style="font-size:1rem;margin-bottom:8px;">🔒 Monthly limit reached</div>
+          <div style="font-size:0.84rem;color:var(--muted);margin-bottom:16px;">
+            You have used all 10 free extractions this month.
+          </div>
+          <a href="/upgrade" style="
+            display:inline-block;background:var(--accent);color:#fff;
+            font-family:'Figtree',sans-serif;font-weight:700;font-size:0.88rem;
+            padding:10px 20px;border-radius:8px;text-decoration:none;">
+            Upgrade to Premium — ₦5,000/month
+          </a>
+        </div>`;
+            return;
+          }
+
           if (res.ok) {
             const d = result.data;
+
+            // ── Null check — prevent silent crash ──
+            if (!d) {
+              out.innerHTML = `<div class="result-error">❌ AI returned no data. Please try again.</div>`;
+              return;
+            }
+
             const desc = formatDesc(
               Array.isArray(d.description)
                 ? JSON.stringify(d.description)
                 : d.description,
             );
-            if (res.status === 403 && result.error === "limit_reached") {
-              out.innerHTML = `
-                <div class="result-error" style="border-color:rgba(249,115,22,0.3);background:rgba(249,115,22,0.05);">
-                  <div style="font-size:1rem;margin-bottom:8px;">🔒 Monthly limit reached</div>
-                  <div style="font-size:0.84rem;color:var(--muted);margin-bottom:16px;">
-                    You have used all 10 free extractions this month.
-                  </div>
-                  <a href="/upgrade" style="
-                    display:inline-block;background:var(--accent);color:#fff;
-                    font-family:'Figtree',sans-serif;font-weight:700;font-size:0.88rem;
-                    padding:10px 20px;border-radius:8px;text-decoration:none;">
-                    Upgrade to Premium — ₦5,000/month
-                  </a>
-                </div>`;
-              return;
-            }
+
             const now = new Date().toLocaleString("en-GB", {
               timeZone: "Africa/Lagos",
               day: "2-digit",
@@ -1347,34 +1357,44 @@
               hour: "2-digit",
               minute: "2-digit",
             });
+
             buildReceiptCard(d);
+
+            const isPaid = window.userTier === "premium";
+
             out.innerHTML = `
-          <div class="result-success">
-            <div class="result-badge">✓ Saved to Google Sheets</div>
-            <div class="fields-grid">
-              <div><div class="field-label">Date</div><div class="field-value">${now}</div></div>
-              <div><div class="field-label">Tracking</div><div class="field-value"><span class="tracking-chip">${d.tracking_number || "N/A"}</span></div></div>
-              <div><div class="field-label">Sender</div><div class="field-value">${d.sender || "N/A"}</div></div>
-              <div><div class="field-label">Receiver</div><div class="field-value">${d.receiver || "N/A"}</div></div>
-              <div class="field-full"><div class="field-label">Items</div><div class="field-value">${desc}</div></div>
-            </div>
+        <div class="result-success">
+          <div class="result-badge">✓ Saved to Google Sheets</div>
+          <div class="fields-grid">
+            <div><div class="field-label">Date</div><div class="field-value">${now}</div></div>
+            <div><div class="field-label">Tracking</div><div class="field-value"><span class="tracking-chip">${d.tracking_number || "N/A"}</span></div></div>
+            <div><div class="field-label">Sender</div><div class="field-value">${d.sender || "N/A"}</div></div>
+            <div><div class="field-label">Receiver</div><div class="field-value">${d.receiver || "N/A"}</div></div>
+            <div class="field-full"><div class="field-label">Items</div><div class="field-value">${desc}</div></div>
           </div>
-          <div class="receipt-section">
-            <div class="receipt-preview-label">Receipt ready · free tier</div>
-            <div class="btn-row">
-              <button class="btn-ghost" id="dl-btn" onclick="downloadReceipt()">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Download Receipt
-              </button>
-            </div>
-          </div>`;
-            // Refresh recent + total
+        </div>
+        <div class="receipt-section">
+          <div class="receipt-preview-label">Receipt ready · ${isPaid ? "premium" : "free tier"}
+            ${
+              result.extractions_remaining !== undefined && !isPaid
+                ? `<span style="color:var(--accent);margin-left:8px;">· ${result.extractions_remaining} extractions left</span>`
+                : ""
+            }
+          </div>
+          <div class="btn-row">
+            <button class="btn-ghost" id="dl-btn" onclick="downloadReceipt()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download Receipt
+            </button>
+          </div>
+        </div>`;
+
+            // Refresh recent + stats
             const r2 = await fetch("/api/get-records", {
               headers: await authHeaders(),
             });
             if (r2.ok) {
-              const raw2 = await r2.json();
-              const d2 = toArray(raw2);
+              const d2 = toArray(await r2.json());
               renderRecent(d2);
               document.getElementById("stat-total").textContent = d2.length;
               document.getElementById("stat-today").textContent =
@@ -1387,8 +1407,9 @@
           } else {
             out.innerHTML = `<div class="result-error">❌ ${result.error || "Server error."}</div>`;
           }
-        } catch {
-          out.innerHTML = `<div class="result-error">❌ Connection error.</div>`;
+        } catch (err) {
+          console.error("analyzeData error:", err);
+          out.innerHTML = `<div class="result-error">❌ Connection error. Check console for details.</div>`;
         }
       }
 
