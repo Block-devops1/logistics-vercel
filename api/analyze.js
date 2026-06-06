@@ -21,10 +21,13 @@ export default async function handler(req, res) {
     );
 
     // 2. Fetch sheet_id from Supabase — RLS ensures only their own row is returned
-    const { data: profile, error: profileError } = await sb
+    const {
+      data: { user },
+    } = await sb.auth.getUser();
+    await sb
       .from("companies")
-      .select("sheet_id, tier, extractions_used")
-      .single();
+      .update({ extractions_used: (profile.extractions_used || 0) + 1 })
+      .eq("id", user.id);
 
     if (profileError || !profile?.sheet_id) {
       throw new Error("No spreadsheet connected to this account.");
