@@ -13,21 +13,23 @@ export default async function handler(req, res) {
     // 1. Get user session from Authorization header
     const token = req.headers.authorization?.replace("Bearer ", "");
     if (!token) throw new Error("Unauthorized: No session token.");
-    // 1.5 Re-validate session and get user info from Supabase
+
     const sb = createClient(
       process.env.SUPABASE_URL,
       process.env.SUPABASE_ANON_KEY,
       { global: { headers: { Authorization: `Bearer ${token}` } } },
     );
 
-    // 2. Fetch sheet_id from Supabase — RLS ensures only their own row is returned
+    // 2. Get user and fetch their profile
     const {
       data: { user },
     } = await sb.auth.getUser();
-    await sb
+    if (!user) throw new Error("Unauthorized: Invalid session.");
+
+    const { data: profile, error: profileError } = await sb
       .from("companies")
-      .update({ extractions_used: (profile.extractions_used || 0) + 1 })
-      .eq("id", user.id);
+      .select("sheet_id, tier, extractions_used")
+      .single();
 
     if (profileError || !profile?.sheet_id) {
       throw new Error("No spreadsheet connected to this account.");
@@ -35,7 +37,7 @@ export default async function handler(req, res) {
 
     const sheetId = profile.sheet_id;
 
-    // 3. Validate env vars
+    // 3. Validate env vars and request body
     const { text } = req.body;
     if (!text) throw new Error("No text provided.");
     if (!process.env.GOOGLE_PRIVATE_KEY || !process.env.OPENROUTER_API_KEY) {
@@ -107,7 +109,6 @@ export default async function handler(req, res) {
       await sheet.setHeaderRow(headers);
     });
 
-    // Also handle case where header row exists but is empty
     if (!sheet.headerValues || sheet.headerValues.length === 0) {
       await sheet.setHeaderRow(headers);
     }
@@ -123,9 +124,11 @@ export default async function handler(req, res) {
           : String(extracted.description || "N/A"),
     });
 
+    // 6. Increment extraction counter
     await sb
       .from("companies")
-      .update({ extractions_used: (profile.extractions_used || 0) + 1 });
+      .update({ extractions_used: (profile.extractions_used || 0) + 1 })
+      .eq("id", user.id);
 
     return res.status(200).json({ message: "Success!", data: extracted });
   } catch (error) {
