@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     // 1. Get user session from Authorization header
     const token = req.headers.authorization?.replace("Bearer ", "");
     if (!token) throw new Error("Unauthorized: No session token.");
-
+    // 1.5 Re-validate session and get user info from Supabase
     const sb = createClient(
       process.env.SUPABASE_URL,
       process.env.SUPABASE_ANON_KEY,
@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     // 2. Fetch sheet_id from Supabase — RLS ensures only their own row is returned
     const { data: profile, error: profileError } = await sb
       .from("companies")
-      .select("sheet_id")
+      .select("sheet_id", "extractions_used")
       .single();
 
     if (profileError || !profile?.sheet_id) {
