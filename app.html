@@ -995,9 +995,9 @@
               <div class="receipt-party-name" id="rc-receiver">—</div>
             </div>
           </div>
-          <div class="receipt-items-card">
+          <div class="receipt-items-card" style="padding: 10px 16px">
             <div class="receipt-items-label">Items / Description</div>
-            <div class="receipt-items-value" id="rc-items">—</div>
+            <div id="rc-items">—</div>
           </div>
         </div>
         <div class="receipt-footer">
@@ -1013,6 +1013,16 @@
       // These are now set dynamically from Supabase in window.onload
       // IS_PAID_TIER → window.userTier === "premium"
       // COMPANY_NAME → window.companyName
+
+      async function authHeaders() {
+        const {
+          data: { session },
+        } = await sb.auth.getSession();
+        return {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        };
+      }
 
       /* ── Count up ── */
       function countUp(el, target, delay = 0) {
@@ -1127,6 +1137,36 @@
         out.innerHTML = `<div class="records-list">${last5.map(recordCardHTML).join("")}</div>`;
       }
 
+      function formatReceiptDesc(raw) {
+        if (!raw || raw === "N/A") return "N/A";
+
+        // Detect numbered list pattern e.g. "1. item 2. item"
+        const numbered = raw.match(/\d+\.\s[^0-9]+/g);
+        if (numbered && numbered.length > 1) {
+          return numbered
+            .map(
+              (item) => `
+      <div style="
+        display:flex; align-items:flex-start; gap:8px;
+        padding:5px 0; border-bottom:1px solid #f0ebe3;
+        font-size:0.82rem; line-height:1.5; color:#374151;">
+        <span style="
+          background:#f97316; color:#fff;
+          font-family:'DM Mono',monospace; font-size:0.62rem;
+          font-weight:500; padding:1px 6px; border-radius:4px;
+          flex-shrink:0; margin-top:2px;">
+          ${item.match(/^\d+/)[0]}
+        </span>
+        <span>${item.replace(/^\d+\.\s/, "").trim()}</span>
+      </div>`,
+            )
+            .join("");
+        }
+
+        // Fallback — plain text
+        return `<span style="font-size:0.85rem;color:#374151;line-height:1.6;">${raw}</span>`;
+      }
+
       /* ── Build receipt ── */
       function buildReceiptCard(data) {
         const isPaid = window.userTier === "premium";
@@ -1145,7 +1185,7 @@
         document.getElementById("rc-sender").textContent = data.sender || "N/A";
         document.getElementById("rc-receiver").textContent =
           data.receiver || "N/A";
-        document.getElementById("rc-items").textContent = formatDesc(
+        document.getElementById("rc-items").textContent = formatRecieptDesc(
           Array.isArray(data.description)
             ? JSON.stringify(data.description)
             : data.description,
@@ -1216,7 +1256,7 @@
             data: { session },
           } = await sb.auth.getSession();
           const res = await fetch("/api/get-records", {
-            headers: { Authorization: `Bearer ${session.access_token}` },
+            headers: await authHeaders(),
           });
           if (!res.ok) throw new Error();
           const raw = await res.json();
@@ -1272,10 +1312,7 @@
           } = await sb.auth.getSession();
           const res = await fetch("/api/analyze", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${session.access_token}`,
-            },
+            headers: await authHeaders(),
             body: JSON.stringify({ text }),
           });
           const result = await res.json();
@@ -1286,6 +1323,22 @@
                 ? JSON.stringify(d.description)
                 : d.description,
             );
+            if (res.status === 403 && result.error === "limit_reached") {
+              out.innerHTML = `
+                <div class="result-error" style="border-color:rgba(249,115,22,0.3);background:rgba(249,115,22,0.05);">
+                  <div style="font-size:1rem;margin-bottom:8px;">🔒 Monthly limit reached</div>
+                  <div style="font-size:0.84rem;color:var(--muted);margin-bottom:16px;">
+                    You have used all 10 free extractions this month.
+                  </div>
+                  <a href="/upgrade" style="
+                    display:inline-block;background:var(--accent);color:#fff;
+                    font-family:'Figtree',sans-serif;font-weight:700;font-size:0.88rem;
+                    padding:10px 20px;border-radius:8px;text-decoration:none;">
+                    Upgrade to Premium — ₦5,000/month
+                  </a>
+                </div>`;
+              return;
+            }
             const now = new Date().toLocaleString("en-GB", {
               timeZone: "Africa/Lagos",
               day: "2-digit",
