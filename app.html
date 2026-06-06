@@ -1370,7 +1370,7 @@
           </div>`;
             // Refresh recent + total
             const r2 = await fetch("/api/get-records", {
-              headers: { Authorization: `Bearer ${session.access_token}` },
+              headers: await authHeaders(),
             });
             if (r2.ok) {
               const raw2 = await r2.json();
@@ -1409,7 +1409,7 @@
             data: { session },
           } = await sb.auth.getSession();
           const res = await fetch("/api/get-records", {
-            headers: { Authorization: `Bearer ${session.access_token}` },
+            headers: await authHeaders(),
           });
           const raw = await res.json();
           const all = toArray(raw);
