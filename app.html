@@ -956,7 +956,7 @@
       style="
         position: fixed;
         top: -9999px;
-        left: -9999px;
+        left: 0;
         z-index: -1;
         width: 400px;
         overflow: hidden;
@@ -1140,30 +1140,17 @@
       function formatReceiptDesc(raw) {
         if (!raw || raw === "N/A") return "N/A";
 
-        // Detect numbered list pattern e.g. "1. item 2. item"
-        const numbered = raw.match(/\d+\.\s[^0-9]+/g);
+        // Detect numbered list e.g. "1. item 2. item"
+        const numbered = raw.match(/\d+\.\s[^0-9\.][^]*?(?=\s*\d+\.|$)/g);
         if (numbered && numbered.length > 1) {
           return numbered
             .map(
-              (item) => `
-      <div style="
-        display:flex; align-items:flex-start; gap:8px;
-        padding:5px 0; border-bottom:1px solid #f0ebe3;
-        font-size:0.82rem; line-height:1.5; color:#374151;">
-        <span style="
-          background:#f97316; color:#fff;
-          font-family:'DM Mono',monospace; font-size:0.62rem;
-          font-weight:500; padding:1px 6px; border-radius:4px;
-          flex-shrink:0; margin-top:2px;">
-          ${item.match(/^\d+/)[0]}
-        </span>
-        <span>${item.replace(/^\d+\.\s/, "").trim()}</span>
-      </div>`,
+              (item) =>
+                `<div style="padding:4px 0;border-bottom:1px solid #f0ebe3;font-size:0.81rem;line-height:1.5;color:#374151;">${item.trim()}</div>`,
             )
             .join("");
         }
 
-        // Fallback — plain text
         return `<span style="font-size:0.85rem;color:#374151;line-height:1.6;">${raw}</span>`;
       }
 
@@ -1216,10 +1203,12 @@
             scale: 2.5,
             backgroundColor: "#ffffff",
             useCORS: true,
-            width: 400, // fix PC clipping
-            windowWidth: 400, // fix PC clipping
+            width: 400,
             height: card.scrollHeight,
+            windowWidth: 400,
             windowHeight: card.scrollHeight,
+            x: 0,
+            y: 0,
           });
           const imgData = canvas.toDataURL("image/png");
           const { jsPDF } = window.jspdf;
