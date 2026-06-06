@@ -37,6 +37,13 @@ export default async function handler(req, res) {
 
     const sheetId = profile.sheet_id;
 
+    // Enforce free tier limit
+    const isFree = !profile.tier || profile.tier === "free";
+    const usedCount = profile.extractions_used || 0;
+    if (isFree && usedCount >= 10) {
+      return res.status(403).json({ error: "LIMIT_REACHED" });
+    }
+
     // 3. Validate env vars and request body
     const { text } = req.body;
     if (!text) throw new Error("No text provided.");
