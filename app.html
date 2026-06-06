@@ -1185,7 +1185,7 @@
         document.getElementById("rc-sender").textContent = data.sender || "N/A";
         document.getElementById("rc-receiver").textContent =
           data.receiver || "N/A";
-        document.getElementById("rc-items").textContent = formatRecieptDesc(
+        document.getElementById("rc-items").innerHTML = formatReceiptDesc(
           Array.isArray(data.description)
             ? JSON.stringify(data.description)
             : data.description,
