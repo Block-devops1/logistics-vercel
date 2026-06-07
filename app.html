@@ -1238,18 +1238,54 @@
             150 + i * 100,
           ),
         );
-        const dot = document.getElementById("status-dot"),
-          sText = document.getElementById("status-text");
+
+        const dot = document.getElementById("status-dot");
+        const sText = document.getElementById("status-text");
+
         try {
+          // Get company data from Supabase
           const {
             data: { session },
           } = await sb.auth.getSession();
+          if (!session) {
+            window.location.href = "/login";
+            return;
+          }
+
+          const { data: company } = await sb
+            .from("companies")
+            .select("company_name, sheet_id, tier, extractions_used")
+            .single();
+
+          window.userTier = company.tier;
+          window.userExtractions = company.extractions_used;
+          window.companyName = company.company_name;
+
+          // Show company name in header
+          document.querySelector(".logo").innerHTML =
+            `ev<em>u</em>eo <span style="font-size:0.7rem;font-weight:500;color:var(--muted);letter-spacing:0;font-family:'Figtree',sans-serif;">· ${company.company_name}</span>`;
+
+          // Premium badge
+          if (company.tier === "premium") {
+            document.querySelector(".tagline").insertAdjacentHTML(
+              "afterend",
+              `<div style="display:inline-flex;align-items:center;gap:4px;
+          background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.25);
+          border-radius:999px;padding:3px 10px;margin-top:6px;width:fit-content;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <span style="font-family:'DM Mono',monospace;font-size:0.62rem;
+            color:#f97316;letter-spacing:0.1em;text-transform:uppercase;">Premium</span>
+        </div>`,
+            );
+          }
+
           const res = await fetch("/api/get-records", {
             headers: await authHeaders(),
           });
           if (!res.ok) throw new Error();
-          const raw = await res.json();
-          const data = toArray(raw);
+          const data = toArray(await res.json());
 
           dot.classList.add("online");
           sText.textContent = "System Online";
@@ -1285,7 +1321,6 @@
             `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">Could not connect. Check your network.</div></div>`;
         }
       };
-
       /* ── Analyze ── */
       async function analyzeData() {
         const out = document.getElementById("analyze-output");
@@ -1385,7 +1420,9 @@
             if (r2.ok) {
               const d2 = toArray(await r2.json());
               renderRecent(d2);
-              document.getElementById("stat-total").textContent = d2.length;
+              document.getElementById(
+                "reset-extractions.jsstat-total",
+              ).textContent = d2.length;
               document.getElementById("stat-today").textContent =
                 countToday(d2);
               if (d2.length)
