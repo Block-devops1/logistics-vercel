@@ -703,13 +703,11 @@
         background: #fff;
       }
       .receipt-route {
-        display: grid;
-        grid-template-columns: 1fr auto 1fr;
+        display: flex;
+        flex-direction: column;
         gap: 8px;
-        align-items: start;
         margin-bottom: 14px;
-        overflow: hidden;
-        max-width: 100%;
+        width: 100%;
       }
 
       .receipt-party-label {
@@ -731,15 +729,10 @@
         max-width: 100%;
       }
       .receipt-arrow-col {
-        display: flex;
-        align-items: flex-start;
-        justify-content: center;
-        padding-top: 20px;
-        color: #d6d3d1;
-        font-size: 1rem;
+        display: none;
       }
       .receipt-party.right {
-        text-align: right;
+        text-align: left;
       }
 
       .receipt-items-card {
