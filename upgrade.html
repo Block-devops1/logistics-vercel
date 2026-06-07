@@ -276,29 +276,30 @@
         const handler = PaystackPop.setup({
           key: "pk_test_3b47131d5b6c0e13b7c629fa6c8d50789d97cc91",
           email,
-          amount: 500000, // ₦5,000 in kobo
+          amount: 500000,
           currency: "NGN",
           ref: "EVU-" + Date.now(),
-          callback_url: `https://evueo.com.ng/api/verify-payment?userId=${userId}`,
           metadata: { userId },
-          onSuccess: async (transaction) => {
+          onCancel: () => {
+            btn.disabled = false;
+            btn.innerHTML = "Pay ₦5,000 — Upgrade Now";
+          },
+          callback: function (response) {
             btn.innerHTML = `<span class="spinner"></span> Activating Premium…`;
-            const verifyRes = await fetch("/api/verify-payment", {
+            fetch("/api/verify-payment", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                reference: transaction.reference,
-                userId,
-              }),
-            });
-            const verifyData = await verifyRes.json();
-            if (verifyRes.ok) {
-              window.location.href = "/app";
-            } else {
-              btn.disabled = false;
-              btn.innerHTML = "Pay ₦5,000 — Upgrade Now";
-              alert("Payment verified but upgrade failed: " + verifyData.error);
-            }
+              body: JSON.stringify({ reference: response.reference, userId }),
+            })
+              .then((r) => r.json())
+              .then(() => {
+                window.location.href = "/app";
+              })
+              .catch((e) => {
+                alert("Error: " + e.message);
+                btn.disabled = false;
+                btn.innerHTML = "Pay ₦5,000 — Upgrade Now";
+              });
           },
         });
 
