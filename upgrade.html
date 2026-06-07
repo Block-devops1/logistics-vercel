@@ -279,6 +279,7 @@
           amount: 500000, // ₦5,000 in kobo
           currency: "NGN",
           ref: "EVU-" + Date.now(),
+          callback_url: `https://evueo.com.ng/api/verify-payment?userId=${userId}`,
           metadata: { userId },
           onSuccess: async (transaction) => {
             btn.innerHTML = `<span class="spinner"></span> Activating Premium…`;

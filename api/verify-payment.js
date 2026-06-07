@@ -1,9 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).end();
-
-  const { reference, userId } = req.body;
+  const reference = req.body?.reference || req.query?.reference;
+  const userId = req.body?.userId || req.query?.userId;
+  if (!reference || !userId) {
+    return res.status(400).json({ error: "Missing reference or userId" });
+  }
   if (!reference || !userId) {
     return res.status(400).json({ error: "Missing reference or userId" });
   }
