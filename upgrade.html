@@ -282,7 +282,7 @@
           metadata: { userId },
           onSuccess: async (transaction) => {
             btn.innerHTML = `<span class="spinner"></span> Activating Premium…`;
-            await fetch("/api/verify-payment", {
+            const verifyRes = await fetch("/api/verify-payment", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -290,11 +290,14 @@
                 userId,
               }),
             });
-            window.location.href = "/app";
-          },
-          onCancel: () => {
-            btn.disabled = false;
-            btn.innerHTML = "Pay ₦5,000 — Upgrade Now";
+            const verifyData = await verifyRes.json();
+            if (verifyRes.ok) {
+              window.location.href = "/app";
+            } else {
+              btn.disabled = false;
+              btn.innerHTML = "Pay ₦5,000 — Upgrade Now";
+              alert("Payment verified but upgrade failed: " + verifyData.error);
+            }
           },
         });
 
