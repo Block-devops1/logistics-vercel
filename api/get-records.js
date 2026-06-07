@@ -20,6 +20,7 @@ export default async function handler(req, res) {
     const { data: profile, error: profileError } = await sb
       .from("companies")
       .select("sheet_id")
+      .eq("id", user.id)
       .single();
 
     if (profileError || !profile?.sheet_id) {

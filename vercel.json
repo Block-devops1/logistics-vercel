@@ -1,3 +1,6 @@
 {
   "cleanUrls": true
 }
+
+{ "src": "/upgrade", "dest": "/upgrade.html" }
+{ "src": "/signup", "dest": "/signup.html" }

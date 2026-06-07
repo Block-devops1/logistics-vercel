@@ -10,6 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Figtree:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
+    <script src="https://js.paystack.co/v1/inline.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
       *,
@@ -1032,8 +1033,34 @@
           if (dbError) throw new Error(dbError.message);
 
           // 3. Redirect to app
-          window.location.href =
-            selectedPlan === "premium" ? "/upgrade" : "/app";
+          // 3. If premium, fire Paystack payment
+          if (selectedPlan === "premium") {
+            const handler = PaystackPop.setup({
+              key: "pk_test_3b47131d5b6c0e13b7c629fa6c8d50789d97cc91",
+              email,
+              amount: 500000, // ₦5,000 in kobo
+              currency: "NGN",
+              ref: "EVU-" + Date.now(),
+              metadata: { userId: authData.user.id },
+              onSuccess: async (transaction) => {
+                await fetch("/api/verify-payment", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    reference: transaction.reference,
+                    userId: authData.user.id,
+                  }),
+                });
+                window.location.href = "/app";
+              },
+              onCancel: () => {
+                window.location.href = "/app"; // goes as free if they cancel
+              },
+            });
+            handler.openIframe();
+          } else {
+            window.location.href = "/app";
+          }
         } catch (err) {
           const a = document.getElementById("alert-step3");
           a.className = "alert alert-error show";

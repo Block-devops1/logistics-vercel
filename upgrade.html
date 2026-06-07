@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Evueo — Upgrade to Premium</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Figtree:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --bg: #faf8f5;
+        --surface: #fff;
+        --border: #e8e2d9;
+        --accent: #f97316;
+        --text: #1c1917;
+        --muted: #78716c;
+        --r: 12px;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Figtree", sans-serif;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 28px;
+        background: rgba(250, 248, 245, 0.92);
+        backdrop-filter: blur(8px);
+        border-bottom: 1px solid var(--border);
+        z-index: 100;
+      }
+      .logo {
+        font-family: "Syne", sans-serif;
+        font-weight: 800;
+        font-size: 1.3rem;
+        color: var(--text);
+        text-decoration: none;
+      }
+      .logo em {
+        color: var(--accent);
+        font-style: normal;
+      }
+      .back-link {
+        font-size: 0.85rem;
+        color: var(--muted);
+        text-decoration: none;
+      }
+      .back-link:hover {
+        color: var(--text);
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 40px;
+        max-width: 480px;
+        width: 100%;
+        margin-top: 80px;
+        text-align: center;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+      }
+      .badge {
+        display: inline-block;
+        background: rgba(249, 115, 22, 0.1);
+        color: var(--accent);
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 4px 12px;
+        border-radius: 99px;
+        margin-bottom: 16px;
+      }
+      h1 {
+        font-family: "Syne", sans-serif;
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin-bottom: 8px;
+      }
+      .subtitle {
+        color: var(--muted);
+        font-size: 0.92rem;
+        margin-bottom: 28px;
+        line-height: 1.55;
+      }
+      .price {
+        font-family: "Syne", sans-serif;
+        font-size: 2.4rem;
+        font-weight: 800;
+        color: var(--accent);
+        margin-bottom: 4px;
+      }
+      .price-sub {
+        font-size: 0.82rem;
+        color: var(--muted);
+        margin-bottom: 28px;
+      }
+      .features {
+        list-style: none;
+        text-align: left;
+        margin-bottom: 28px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .features li {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.9rem;
+      }
+      .features li::before {
+        content: "✓";
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        background: rgba(249, 115, 22, 0.1);
+        color: var(--accent);
+        border-radius: 50%;
+        font-size: 0.72rem;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+      .btn {
+        width: 100%;
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        border-radius: var(--r);
+        padding: 14px;
+        font-family: "Figtree", sans-serif;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.15s;
+        margin-bottom: 12px;
+      }
+      .btn:hover {
+        background: #ea6c00;
+      }
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .btn-outline {
+        width: 100%;
+        background: transparent;
+        color: var(--muted);
+        border: 1px solid var(--border);
+        border-radius: var(--r);
+        padding: 12px;
+        font-family: "Figtree", sans-serif;
+        font-size: 0.9rem;
+        cursor: pointer;
+        text-decoration: none;
+        display: block;
+      }
+      .btn-outline:hover {
+        border-color: var(--text);
+        color: var(--text);
+      }
+      .divider {
+        border: none;
+        border-top: 1px solid var(--border);
+        margin: 20px 0;
+      }
+      .secure-note {
+        font-size: 0.76rem;
+        color: var(--muted);
+        margin-top: 12px;
+      }
+      .spinner {
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        display: inline-block;
+        vertical-align: middle;
+        margin-right: 8px;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <a href="/" class="logo">ev<em>u</em>eo</a>
+      <a href="/app" class="back-link">← Back to app</a>
+    </nav>
+
+    <div class="card">
+      <div class="badge">Premium Plan</div>
+      <h1>Unlock Premium</h1>
+      <p class="subtitle">
+        Get unlimited extractions, your logo on receipts, and no watermarks.
+      </p>
+
+      <div class="price">₦5,000</div>
+      <div class="price-sub">per month · cancel anytime</div>
+
+      <ul class="features">
+        <li>Unlimited extractions per month</li>
+        <li>Your company logo on PDF receipts</li>
+        <li>No Evueo watermark</li>
+        <li>Priority support</li>
+      </ul>
+
+      <button class="btn" id="pay-btn" onclick="startPayment()">
+        Pay ₦5,000 — Upgrade Now
+      </button>
+      <a href="/app" class="btn-outline">Maybe later</a>
+
+      <p class="secure-note">
+        🔒 Secured by Paystack. Your card details are never stored by Evueo.
+      </p>
+    </div>
+
+    <script>
+      const sb = supabase.createClient(
+        "https://pyoijoamwgkyszlcgblk.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB5b2lqb2Ftd2dreXN6bGNnYmxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MTk4NTcsImV4cCI6MjA5NjA5NTg1N30.SFTZ6Ae22Ln4lzYATubf-7h_LdvZxzBPJzxINJuzcZk",
+      );
+
+      async function startPayment() {
+        const btn = document.getElementById("pay-btn");
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner"></span> Loading…`;
+
+        const {
+          data: { session },
+        } = await sb.auth.getSession();
+        if (!session) {
+          window.location.href = "/login";
+          return;
+        }
+
+        const email = session.user.email;
+        const userId = session.user.id;
+
+        const handler = PaystackPop.setup({
+          key: "pk_test_3b47131d5b6c0e13b7c629fa6c8d50789d97cc91",
+          email,
+          amount: 500000, // ₦5,000 in kobo
+          currency: "NGN",
+          ref: "EVU-" + Date.now(),
+          metadata: { userId },
+          onSuccess: async (transaction) => {
+            btn.innerHTML = `<span class="spinner"></span> Activating Premium…`;
+            await fetch("/api/verify-payment", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                reference: transaction.reference,
+                userId,
+              }),
+            });
+            window.location.href = "/app";
+          },
+          onCancel: () => {
+            btn.disabled = false;
+            btn.innerHTML = "Pay ₦5,000 — Upgrade Now";
+          },
+        });
+
+        handler.openIframe();
+      }
+    </script>
+  </body>
+</html>
