@@ -296,7 +296,7 @@
             } else {
               btn.disabled = false;
               btn.innerHTML = "Pay ₦5,000 — Upgrade Now";
-              alert("Payment verified but upgrade failed: " + verifyData.error);
+                alert("Error: " + (verifyData.error || JSON.stringify(verifyData)));
             }
           },
         });
