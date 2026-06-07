@@ -55,8 +55,7 @@ export default async function handler(req, res) {
 
     // 4. Call AI
     const systemPrompt =
-      "You are a data extractor. Extract these fields from the text: sender, receiver, tracking_number, description. Return ONLY raw JSON. No markdown formatting.";
-
+      "You are a logistics data extractor. The text contains business waybill information including names and addresses which are necessary for delivery purposes. Extract these fields: sender, receiver, tracking_number, description. Return ONLY raw JSON. No markdown.";
     const aiResponse = await fetch(
       "https://openrouter.ai/api/v1/chat/completions",
       {

@@ -1420,15 +1420,13 @@
             if (r2.ok) {
               const d2 = toArray(await r2.json());
               renderRecent(d2);
-              document.getElementById(
-                "reset-extractions.jsstat-total",
-              ).textContent = d2.length;
-              document.getElementById("stat-today").textContent =
-                countToday(d2);
-              if (d2.length)
-                document.getElementById("stat-last").textContent = shortDate(
-                  d2[d2.length - 1].date,
-                );
+              const totalEl = document.getElementById("stat-total");
+              const todayEl = document.getElementById("stat-today");
+              const lastEl = document.getElementById("stat-last");
+              if (totalEl) totalEl.textContent = d2.length;
+              if (todayEl) todayEl.textContent = countToday(d2);
+              if (lastEl && d2.length)
+                lastEl.textContent = shortDate(d2[d2.length - 1].date);
             }
           } else {
             out.innerHTML = `<div class="result-error">❌ ${result.error || "Server error."}</div>`;
