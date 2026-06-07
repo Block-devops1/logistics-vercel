@@ -69,9 +69,7 @@ export default async function handler(req, res) {
         },
         body: JSON.stringify({
           model:
-            profile.tier === "premium"
-              ? "google/gemini-2.0-flash-lite-001"
-              : "openrouter/free",
+            profile.tier === "premium" ? "openrouter/auto" : "openrouter/free",
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: text },
