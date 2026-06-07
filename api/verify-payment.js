@@ -3,9 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 export default async function handler(req, res) {
   const reference = req.body?.reference || req.query?.reference;
   const userId = req.body?.userId || req.query?.userId;
-  if (!reference || !userId) {
-    return res.status(400).json({ error: "Missing reference or userId" });
-  }
+
   if (!reference || !userId) {
     return res.status(400).json({ error: "Missing reference or userId" });
   }
@@ -24,6 +22,7 @@ export default async function handler(req, res) {
     const paystackData = await paystackRes.json();
 
     if (!paystackData.status || paystackData.data.status !== "success") {
+      if (req.method === "GET") return res.redirect(302, "/upgrade");
       return res.status(400).json({ error: "Payment not successful" });
     }
 
@@ -45,9 +44,12 @@ export default async function handler(req, res) {
       })
       .eq("id", userId);
 
+    // 3. Redirect to app if GET (from Paystack callback_url), or return JSON if POST
+    if (req.method === "GET") return res.redirect(302, "/app");
     return res.status(200).json({ message: "Upgraded to premium!" });
   } catch (error) {
     console.error("Verify payment error:", error.message);
+    if (req.method === "GET") return res.redirect(302, "/upgrade");
     return res.status(500).json({ error: error.message });
   }
 }
