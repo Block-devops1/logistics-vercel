@@ -252,57 +252,65 @@
     </div>
 
     <script>
-      const sb = supabase.createClient(
-        "https://pyoijoamwgkyszlcgblk.supabase.co",
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB5b2lqb2Ftd2dreXN6bGNnYmxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MTk4NTcsImV4cCI6MjA5NjA5NTg1N30.SFTZ6Ae22Ln4lzYATubf-7h_LdvZxzBPJzxINJuzcZk",
-      );
+       const sb = supabase.createClient(
+  "https://pyoijoamwgkyszlcgblk.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB5b2lqb2Ftd2dreXN6bGNnYmxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MTk4NTcsImV4cCI6MjA5NjA5NTg1N30.SFTZ6Ae22Ln4lzYATubf-7h_LdvZxzBPJzxINJuzcZk"
+);
 
-      async function startPayment() {
-        const btn = document.getElementById("pay-btn");
-        btn.disabled = true;
-        btn.innerHTML = `<span class="spinner"></span> Loading…`;
+async function startPayment() {
+  const btn = document.getElementById("pay-btn");
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner"></span> Loading…`;
 
-        const {
-          data: { session },
-        } = await sb.auth.getSession();
-        if (!session) {
-          window.location.href = "/login";
-          return;
-        }
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) {
+    window.location.href = "/login";
+    return;
+  }
 
-        const email = session.user.email;
-        const userId = session.user.id;
+  const email = session.user.email;
+  const userId = session.user.id;
 
-        const handler = PaystackPop.setup({
-          key: "pk_test_3b47131d5b6c0e13b7c629fa6c8d50789d97cc91",
-          email,
-          amount: 500000, // ₦5,000 in kobo
-          currency: "NGN",
-          ref: "EVU-" + Date.now(),
-          metadata: { userId },
-          onSuccess: async (transaction) => {
-            btn.innerHTML = `<span class="spinner"></span> Activating Premium…`;
-            const verifyRes = await fetch("/api/verify-payment", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                reference: transaction.reference,
-                userId,
-              }),
-            });
-            const verifyData = await verifyRes.json();
-            if (verifyRes.ok) {
-              window.location.href = "/app";
-            } else {
-              btn.disabled = false;
-              btn.innerHTML = "Pay ₦5,000 — Upgrade Now";
-                alert("Error: " + (verifyData.error || JSON.stringify(verifyData)));
-            }
-          },
+  const handler = PaystackPop.setup({
+    key: "pk_test_3b47131d5b6c0e13b7c629fa6c8d50789d97cc91",
+    email,
+    amount: 500000,
+    currency: "NGN",
+    ref: "EVU-" + Date.now(),
+    metadata: { userId },
+    onCancel: () => {
+      btn.disabled = false;
+      btn.innerHTML = "Pay ₦5,000 — Upgrade Now";
+    },
+    onSuccess: async (transaction) => {
+      btn.innerHTML = `<span class="spinner"></span> Activating Premium…`;
+      try {
+        const verifyRes = await fetch("/api/verify-payment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            reference: transaction.reference,
+            userId,
+          }),
         });
-
-        handler.openIframe();
+        const verifyData = await verifyRes.json();
+        if (verifyRes.ok) {
+          window.location.href = "/app";
+        } else {
+          alert("Upgrade failed: " + (verifyData.error || JSON.stringify(verifyData)));
+          btn.disabled = false;
+          btn.innerHTML = "Pay ₦5,000 — Upgrade Now";
+        }
+      } catch (e) {
+        alert("Network error: " + e.message);
+        btn.disabled = false;
+        btn.innerHTML = "Pay ₦5,000 — Upgrade Now";
       }
+    },
+  });
+
+  handler.openIframe();
+}
     </script>
   </body>
 </html>
