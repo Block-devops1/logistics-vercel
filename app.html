@@ -1206,23 +1206,26 @@
           const card = document.getElementById("receipt-card");
           card.style.width = "400px";
           card.style.maxWidth = "400px";
-          card.style.overflow = "hidden";
+          card.style.overflow = "visible";
+          card.style.position = "relative";
 
           const canvas = await html2canvas(card, {
             scale: 2,
             backgroundColor: "#ffffff",
             useCORS: true,
             logging: false,
+            width: 400,
+            windowWidth: 400,
           });
 
           card.style.width = "";
           card.style.maxWidth = "";
           card.style.overflow = "";
-
+          card.style.position = "";
           const imgData = canvas.toDataURL("image/png");
           const { jsPDF } = window.jspdf;
-          const pxW = canvas.width / 2.5;
-          const pxH = canvas.height / 2.5;
+          const pxW = canvas.width / 2;
+          const pxH = canvas.height / 2;
           const pdf = new jsPDF({
             orientation: "portrait",
             unit: "px",
