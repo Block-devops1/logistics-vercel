@@ -2,6 +2,7 @@ import { GoogleSpreadsheet } from "google-spreadsheet";
 import { JWT } from "google-auth-library";
 import { createClient } from "@supabase/supabase-js";
 
+export const config = { maxDuration: 30 };
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -63,11 +64,14 @@ export default async function handler(req, res) {
         headers: {
           Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
           "Content-Type": "application/json",
-          "HTTP-Referer": "https://evueo.com",
+          "HTTP-Referer": "https://evueo.com.ng",
           "X-Title": "Evueo",
         },
         body: JSON.stringify({
-          model: "openrouter/free",
+          model:
+            profile.tier === "premium"
+              ? "google/gemini-2.0-flash-lite-001"
+              : "openrouter/free",
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: text },

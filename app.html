@@ -1199,19 +1199,20 @@
         btn.innerHTML = `<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div> Generating…`;
         try {
           const card = document.getElementById("receipt-card");
+          card.style.width = "400px";
+          card.style.maxWidth = "400px";
+          card.style.overflow = "hidden";
+
           const canvas = await html2canvas(card, {
-            scale: 2.5,
+            scale: 2,
             backgroundColor: "#ffffff",
             useCORS: true,
-            width: 400,
-            height: card.scrollHeight,
-            windowWidth: 400,
-            windowHeight: card.scrollHeight,
-            scrollX: 0,
-            scrollY: 0,
-            x: 0,
-            y: 0,
+            logging: false,
           });
+
+          card.style.width = "";
+          card.style.maxWidth = "";
+          card.style.overflow = "";
           const imgData = canvas.toDataURL("image/png");
           const { jsPDF } = window.jspdf;
           const pxW = canvas.width / 2.5;
