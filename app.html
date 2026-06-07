@@ -708,7 +708,10 @@
         gap: 8px;
         align-items: start;
         margin-bottom: 14px;
+        overflow: hidden;
+        max-width: 100%;
       }
+
       .receipt-party-label {
         font-size: 0.6rem;
         font-weight: 700;
@@ -724,6 +727,8 @@
         color: #1c1917;
         line-height: 1.3;
         word-break: break-word;
+        overflow: hidden;
+        max-width: 100%;
       }
       .receipt-arrow-col {
         display: flex;
@@ -1213,6 +1218,7 @@
           card.style.width = "";
           card.style.maxWidth = "";
           card.style.overflow = "";
+
           const imgData = canvas.toDataURL("image/png");
           const { jsPDF } = window.jspdf;
           const pxW = canvas.width / 2.5;
