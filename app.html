@@ -1215,15 +1215,13 @@
           const imgData = canvas.toDataURL("image/png");
           const { jsPDF } = window.jspdf;
 
-          const scale = 3;
-          const pdfWidth = canvas.width / scale;
-          const pdfHeight = canvas.height / scale;
+          const pdfWidth = canvas.width * 0.75;
+          const pdfHeight = canvas.height * 0.75;
 
           const pdf = new jsPDF({
             orientation: "portrait",
-            unit: "px",
+            unit: "pt",
             format: [pdfWidth, pdfHeight],
-            hotfixes: ["px_scaling"],
           });
 
           pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
