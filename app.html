@@ -1215,7 +1215,7 @@
           const imgData = canvas.toDataURL("image/png");
           const { jsPDF } = window.jspdf;
 
-          const pdfWidth = canvas.width * 0.75;
+          const pdfWidth = canvas.width * 0.75 + 2; // Add some padding
           const pdfHeight = canvas.height * 0.75;
 
           const pdf = new jsPDF({
