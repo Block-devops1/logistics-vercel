@@ -1450,50 +1450,96 @@
 
       /* ── Search ── */
       async function searchSpreadsheet() {
-        const query = document
-          .getElementById("searchInput")
-          .value.trim()
-          .toLowerCase();
-        const out = document.getElementById("search-output");
-        if (!query) {
-          out.innerHTML = "";
-          return;
-        }
-        out.innerHTML = `<div class="spinner-wrap"><div class="spinner"></div><span class="spinner-label">Searching…</span></div>`;
+        const query = document.getElementById("searchInput").value.trim();
         try {
-          const {
-            data: { session },
-          } = await sb.auth.getSession();
-          const res = await fetch("/api/get-records", {
-            headers: await authHeaders(),
+          const card = document.getElementById("receipt-card");
+
+          // Remember original styles to restore later
+          const wrapper = card.parentElement;
+          const origCardStyles = {
+            width: card.style.width || "",
+            maxWidth: card.style.maxWidth || "",
+            visibility: card.style.visibility || "",
+            position: card.style.position || "",
+            left: card.style.left || "",
+            top: card.style.top || "",
+            transform: card.style.transform || "",
+          };
+          const origWrapperStyles = {
+            position: wrapper.style.position || "",
+            left: wrapper.style.left || "",
+            top: wrapper.style.top || "",
+            transform: wrapper.style.transform || "",
+            zIndex: wrapper.style.zIndex || "",
+            overflow: wrapper.style.overflow || "",
+          };
+
+          // Place wrapper in viewport temporarily and make card visible but hidden from user
+          wrapper.style.position = "fixed";
+          wrapper.style.left = "50%";
+          wrapper.style.top = "40px";
+          wrapper.style.transform = "translateX(-50%)";
+          wrapper.style.zIndex = "99999";
+          wrapper.style.overflow = "visible";
+
+          card.style.width = "400px";
+          card.style.maxWidth = "400px";
+          card.style.visibility = "visible";
+
+          // Wait for fonts to be ready to avoid missing font rendering in canvas
+          if (document.fonts && document.fonts.ready)
+            await document.fonts.ready;
+
+          const canvas = await html2canvas(card, {
+            scale: Math.max(2, window.devicePixelRatio || 1),
+            useCORS: true,
+            backgroundColor: "#ffffff",
+            width: 400,
+            height: card.scrollHeight,
+            windowWidth: Math.max(document.documentElement.clientWidth, 1200),
+            scrollX: 0,
+            scrollY: 0,
           });
-          const raw = await res.json();
-          const all = toArray(raw);
-          const hits = all
-            .filter(
-              (r) =>
-                (r.sender || "").toLowerCase().includes(query) ||
-                (r.receiver || "").toLowerCase().includes(query),
-            )
-            .reverse();
-          if (!hits.length) {
-            out.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">No records found for "${query}".</div></div>`;
-            return;
-          }
-          out.innerHTML = `<div class="records-list">${hits.map(recordCardHTML).join("")}</div>`;
-        } catch {
-          out.innerHTML = `<div class="result-error">❌ Error fetching records.</div>`;
+
+          // Restore styles
+          card.style.width = origCardStyles.width;
+          card.style.maxWidth = origCardStyles.maxWidth;
+          card.style.visibility = origCardStyles.visibility;
+          card.style.position = origCardStyles.position;
+          card.style.left = origCardStyles.left;
+          card.style.top = origCardStyles.top;
+          card.style.transform = origCardStyles.transform;
+
+          wrapper.style.position = origWrapperStyles.position;
+          wrapper.style.left = origWrapperStyles.left;
+          wrapper.style.top = origWrapperStyles.top;
+          wrapper.style.transform = origWrapperStyles.transform;
+          wrapper.style.zIndex = origWrapperStyles.zIndex;
+          wrapper.style.overflow = origWrapperStyles.overflow;
+
+          const imgData = canvas.toDataURL("image/png");
+          const { jsPDF } = window.jspdf;
+
+          const pdfWidth = canvas.width * 0.75 + 2; // Add some padding
+          const pdfHeight = canvas.height * 0.75;
+
+          const pdf = new jsPDF({
+            orientation: "portrait",
+            unit: "pt",
+            format: [pdfWidth, pdfHeight],
+          });
+
+          pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+          pdf.save(
+            `Evueo-${document.getElementById("rc-tracking").textContent}.pdf`,
+          );
+        } catch (e) {
+          console.error("PDF generation failed:", e);
+          alert("Could not generate receipt file. Please try again.");
         }
-      }
 
-      document
-        .getElementById("searchInput")
-        .addEventListener("keydown", (e) => {
-          if (e.key === "Enter") searchSpreadsheet();
-        });
-
-      async function logout() {
-        await sb.auth.signOut();
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Receipt`;
         window.location.href = "/login";
       }
     </script>
