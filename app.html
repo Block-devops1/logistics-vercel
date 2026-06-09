@@ -956,7 +956,7 @@
         top: -9999px;
         left: 0;
         z-index: -1;
-        width: 400px;
+        width: 420px;
         overflow: visible;
       "
     >
@@ -1191,6 +1191,7 @@
       }
 
       /* ── Download PDF ── */
+      /* ── Download PDF ── */
       async function downloadReceipt() {
         const btn = document.getElementById("dl-btn");
         btn.disabled = true;
@@ -1198,20 +1199,24 @@
         try {
           const card = document.getElementById("receipt-card");
           const prevWidth = card.style.width;
+
+          // Ensure it's fully expanded layout-wise before taking the snapshot
           card.style.width = "400px";
           card.style.maxWidth = "400px";
           card.style.overflow = "visible";
           card.style.boxSizing = "border-box";
 
+          // Capture options fixing the clipping issue
           const canvas = await html2canvas(card, {
-            scale: 2,
+            scale: 2, // High resolution
             backgroundColor: "#ffffff",
             useCORS: true,
             logging: false,
             width: 400,
-            windowWidth: 420,
+            windowWidth: 400,
+            windowHeight: card.scrollHeight, // FIX: Forces capture of the entire hidden/long height
             scrollX: 0,
-            scrollY: 0,
+            scrollY: -window.scrollY, // FIX: Prevents blank cutoff if page is scrolled down
           });
 
           card.style.width = prevWidth;
@@ -1221,18 +1226,23 @@
 
           const imgData = canvas.toDataURL("image/png");
           const { jsPDF } = window.jspdf;
+
+          // Calculate high-resolution page dimensions accurately
           const pxW = canvas.width / 2;
           const pxH = canvas.height / 2;
+
           const pdf = new jsPDF({
             orientation: "portrait",
             unit: "px",
             format: [pxW, pxH],
           });
+
           pdf.addImage(imgData, "PNG", 0, 0, pxW, pxH);
           pdf.save(
             `Evueo-${document.getElementById("rc-tracking").textContent}.pdf`,
           );
         } catch (e) {
+          console.error(e);
           alert("Could not generate PDF. Try again.");
         }
         btn.disabled = false;
