@@ -1190,73 +1190,69 @@
         );
       }
 
-      /* ── Download PDF (Cross-Device Parity Fix) ── */
+      /* ── Download Pixel-Perfect UI PDF ── */
       async function downloadReceipt() {
         const btn = document.getElementById("dl-btn");
         btn.disabled = true;
         btn.innerHTML = `<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div> Generating…`;
 
-        // Target the live card element
-        const originalCard = document.getElementById("receipt-card");
-        if (!originalCard) {
-          alert("Receipt card element not found.");
-          btn.disabled = false;
-          return;
-        }
-
-        // 1. Create a deep clone of the element to break away from parent CSS rules
-        const clonedCard = originalCard.cloneNode(true);
-
-        // 2. Style the clone so it renders beautifully but is invisible to the user
-        clonedCard.style.position = "absolute";
-        clonedCard.style.top = "-9999px";
-        clonedCard.style.left = "0";
-        clonedCard.style.width = "400px";
-        clonedCard.style.maxWidth = "400px";
-        clonedCard.style.minWidth = "400px";
-        clonedCard.style.transform = "none";
-        clonedCard.style.boxSizing = "border-box";
-        clonedCard.style.display = "block";
-        clonedCard.style.visibility = "visible";
-
-        // Append clone to the root body component
-        document.body.appendChild(clonedCard);
-
         try {
-          // 3. Take snapshot of the isolated 400px desktop-profile target clone
+          const originalCard = document.getElementById("receipt-card");
+
+          // 1. Create an isolated rendering wrapper at the card's native layout width
+          const printWrapper = document.createElement("div");
+          printWrapper.style.position = "fixed";
+          printWrapper.style.top = "0";
+          printWrapper.style.left = "0";
+          printWrapper.style.width = "400px"; // Keeps your native 400px card context steady
+          printWrapper.style.zIndex = "-9999";
+          printWrapper.style.visibility = "hidden";
+          printWrapper.style.pointerEvents = "none";
+
+          // 2. Clone the element without altering its internal styles or properties
+          const clonedCard = originalCard.cloneNode(true);
+
+          printWrapper.appendChild(clonedCard);
+          document.body.appendChild(printWrapper);
+
+          // 3. Wait 150ms for the mobile browser engine to compute font heights fully
+          await new Promise((resolve) => setTimeout(resolve, 150));
+
+          // 4. Instruct html2canvas to capture your card at its explicit width and true height
           const canvas = await html2canvas(clonedCard, {
-            scale: 2, // High resolution crisp rendering
-            backgroundColor: "#ffffff",
+            scale: 3, // High-DPI output for ultra-crisp presentation
             useCORS: true,
-            logging: false,
+            backgroundColor: null, // Automatically respects your original CSS backgrounds
             width: 400,
-            height: clonedCard.scrollHeight,
+            windowWidth: 400,
+            height: clonedCard.scrollHeight, // Safely captures the entire structure down to the final pixel
+            scrollX: 0,
+            scrollY: 0,
           });
 
-          // Remove the temporary clone from DOM instantly
-          clonedCard.remove();
+          // 5. Instantly clean up the document tree wrapper
+          document.body.removeChild(printWrapper);
 
+          // 6. Output into standard jsPDF layout container
           const imgData = canvas.toDataURL("image/png");
           const { jsPDF } = window.jspdf;
 
-          // 4. Calculate dimensions explicitly in points (pt) to bypass device pixel ratio variance
-          const targetWidthPt = 400;
-          const targetHeightPt = (canvas.height * targetWidthPt) / canvas.width;
+          const pdfWidth = 400;
+          const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
           const pdf = new jsPDF({
             orientation: "portrait",
-            unit: "pt",
-            format: [targetWidthPt, targetHeightPt], // Dynamic page fit
+            unit: "px",
+            format: [pdfWidth, pdfHeight],
           });
 
-          pdf.addImage(imgData, "PNG", 0, 0, targetWidthPt, targetHeightPt);
+          pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
           pdf.save(
             `Evueo-${document.getElementById("rc-tracking").textContent}.pdf`,
           );
         } catch (e) {
-          console.error("PDF generation error: ", e);
-          if (clonedCard) clonedCard.remove();
-          alert("Could not generate PDF. Please try again.");
+          console.error("PDF generation failed:", e);
+          alert("Could not generate receipt file. Please try again.");
         }
 
         btn.disabled = false;
