@@ -1190,71 +1190,75 @@
         );
       }
 
-      /* ── Download PDF ── */
-      /* ── Download PDF ── */
+      /* ── Download PDF (Cross-Device Parity Fix) ── */
       async function downloadReceipt() {
         const btn = document.getElementById("dl-btn");
         btn.disabled = true;
         btn.innerHTML = `<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div> Generating…`;
+
+        // Target the live card element
+        const originalCard = document.getElementById("receipt-card");
+        if (!originalCard) {
+          alert("Receipt card element not found.");
+          btn.disabled = false;
+          return;
+        }
+
+        // 1. Create a deep clone of the element to break away from parent CSS rules
+        const clonedCard = originalCard.cloneNode(true);
+
+        // 2. Style the clone so it renders beautifully but is invisible to the user
+        clonedCard.style.position = "absolute";
+        clonedCard.style.top = "-9999px";
+        clonedCard.style.left = "0";
+        clonedCard.style.width = "400px";
+        clonedCard.style.maxWidth = "400px";
+        clonedCard.style.minWidth = "400px";
+        clonedCard.style.transform = "none";
+        clonedCard.style.boxSizing = "border-box";
+        clonedCard.style.display = "block";
+        clonedCard.style.visibility = "visible";
+
+        // Append clone to the root body component
+        document.body.appendChild(clonedCard);
+
         try {
-          const card = document.getElementById("receipt-card");
-
-          // 1. Store existing styles to restore later
-          const prevWidth = card.style.width;
-          const prevMaxWidth = card.style.maxWidth;
-          const prevTransform = card.style.transform;
-          const prevTransformOrigin = card.style.transformOrigin;
-
-          // 2. Rigidly freeze dimensions to match desktop rendering profile
-          card.style.setProperty("width", "400px", "important");
-          card.style.setProperty("max-width", "400px", "important");
-          card.style.setProperty("transform", "none", "important");
-          card.style.setProperty("transform-origin", "initial", "important");
-          card.style.overflow = "visible";
-          card.style.boxSizing = "border-box";
-
-          // 3. Force html2canvas into a deep element scroll heights frame
-          const canvas = await html2canvas(card, {
-            scale: 2, // High resolution for clear text and badges
+          // 3. Take snapshot of the isolated 400px desktop-profile target clone
+          const canvas = await html2canvas(clonedCard, {
+            scale: 2, // High resolution crisp rendering
             backgroundColor: "#ffffff",
             useCORS: true,
             logging: false,
             width: 400,
-            windowWidth: 400, // Forces container rendering bounds to 400px wide layout
-            windowHeight: card.scrollHeight, // Reads the actual template element length
-            scrollX: 0,
-            scrollY: -window.scrollY, // Stabilizes tracking offset if user scrolled
+            height: clonedCard.scrollHeight,
           });
 
-          // 4. Restore original layout states instantly
-          card.style.width = prevWidth;
-          card.style.maxWidth = prevMaxWidth;
-          card.style.transform = prevTransform;
-          card.style.transformOrigin = prevTransformOrigin;
-          card.style.overflow = "";
-          card.style.boxSizing = "";
+          // Remove the temporary clone from DOM instantly
+          clonedCard.remove();
 
           const imgData = canvas.toDataURL("image/png");
           const { jsPDF } = window.jspdf;
 
-          // Calculate exact canvas aspect ratio dimensions
-          const pxW = canvas.width / 2;
-          const pxH = canvas.height / 2;
+          // 4. Calculate dimensions explicitly in points (pt) to bypass device pixel ratio variance
+          const targetWidthPt = 400;
+          const targetHeightPt = (canvas.height * targetWidthPt) / canvas.width;
 
           const pdf = new jsPDF({
             orientation: "portrait",
-            unit: "px",
-            format: [pxW, pxH], // Locks page size directly to the receipt's native proportions
+            unit: "pt",
+            format: [targetWidthPt, targetHeightPt], // Dynamic page fit
           });
 
-          pdf.addImage(imgData, "PNG", 0, 0, pxW, pxH);
+          pdf.addImage(imgData, "PNG", 0, 0, targetWidthPt, targetHeightPt);
           pdf.save(
             `Evueo-${document.getElementById("rc-tracking").textContent}.pdf`,
           );
         } catch (e) {
-          console.error(e);
+          console.error("PDF generation error: ", e);
+          if (clonedCard) clonedCard.remove();
           alert("Could not generate PDF. Please try again.");
         }
+
         btn.disabled = false;
         btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Receipt`;
       }
