@@ -959,7 +959,7 @@
         top: -9999px;
         left: 0;
         z-index: -1;
-        width: 420px;
+        width: 400px;
         overflow: visible;
       "
     >
@@ -1200,6 +1200,8 @@
 
         try {
           const card = document.getElementById("receipt-card");
+          card.style.width = "400px";
+          card.style.maxWidth = "400px";
 
           const canvas = await html2canvas(card, {
             scale: 3,
@@ -1212,6 +1214,8 @@
             scrollY: 0,
           });
 
+          card.style.width = "";
+          card.style.maxWidth = "";
           const imgData = canvas.toDataURL("image/png");
           const { jsPDF } = window.jspdf;
 
