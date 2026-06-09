@@ -1199,41 +1199,44 @@
         try {
           const originalCard = document.getElementById("receipt-card");
 
-          // 1. Create an isolated rendering wrapper at the card's native layout width
+          // 1. Create a rendering wrapper pushed entirely off-screen
+          // We keep visibility: visible so html2canvas can read the pixel data
           const printWrapper = document.createElement("div");
-          printWrapper.style.position = "fixed";
+          printWrapper.style.position = "absolute";
           printWrapper.style.top = "0";
-          printWrapper.style.left = "0";
-          printWrapper.style.width = "400px"; // Keeps your native 400px card context steady
-          printWrapper.style.zIndex = "-9999";
-          printWrapper.style.visibility = "hidden";
-          printWrapper.style.pointerEvents = "none";
+          printWrapper.style.left = "-9999px"; // Throws it completely off-screen out of sight
+          printWrapper.style.width = "400px"; // Locks it to your design's intended desktop width
+          printWrapper.style.boxSizing = "border-box";
 
-          // 2. Clone the element without altering its internal styles or properties
+          // 2. Clone your receipt card exactly as it is
           const clonedCard = originalCard.cloneNode(true);
+          clonedCard.style.width = "400px";
+          clonedCard.style.maxWidth = "400px";
+          clonedCard.style.margin = "0";
+          clonedCard.style.transform = "none";
 
           printWrapper.appendChild(clonedCard);
           document.body.appendChild(printWrapper);
 
-          // 3. Wait 150ms for the mobile browser engine to compute font heights fully
+          // 3. Give the rendering engine 150ms to parse fonts and layout boundaries
           await new Promise((resolve) => setTimeout(resolve, 150));
 
-          // 4. Instruct html2canvas to capture your card at its explicit width and true height
+          // 4. Snap the canvas now that it is visible to the engine but off-screen
           const canvas = await html2canvas(clonedCard, {
-            scale: 3, // High-DPI output for ultra-crisp presentation
+            scale: 3, // Ensures your crisp fonts stay ultra-sharp
             useCORS: true,
-            backgroundColor: null, // Automatically respects your original CSS backgrounds
+            backgroundColor: null, // Pulls the exact background rules you designed
             width: 400,
             windowWidth: 400,
-            height: clonedCard.scrollHeight, // Safely captures the entire structure down to the final pixel
+            height: clonedCard.scrollHeight, // Captures the full vertical layout without cutoffs
             scrollX: 0,
             scrollY: 0,
           });
 
-          // 5. Instantly clean up the document tree wrapper
+          // 5. Clean up the off-screen clone from the page instantly
           document.body.removeChild(printWrapper);
 
-          // 6. Output into standard jsPDF layout container
+          // 6. Output to the final PDF document container
           const imgData = canvas.toDataURL("image/png");
           const { jsPDF } = window.jspdf;
 
