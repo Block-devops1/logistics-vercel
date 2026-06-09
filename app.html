@@ -1198,43 +1198,53 @@
         btn.innerHTML = `<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div> Generating…`;
         try {
           const card = document.getElementById("receipt-card");
-          const prevWidth = card.style.width;
 
-          // Ensure it's fully expanded layout-wise before taking the snapshot
-          card.style.width = "400px";
-          card.style.maxWidth = "400px";
+          // 1. Store existing styles to restore later
+          const prevWidth = card.style.width;
+          const prevMaxWidth = card.style.maxWidth;
+          const prevTransform = card.style.transform;
+          const prevTransformOrigin = card.style.transformOrigin;
+
+          // 2. Rigidly freeze dimensions to match desktop rendering profile
+          card.style.setProperty("width", "400px", "important");
+          card.style.setProperty("max-width", "400px", "important");
+          card.style.setProperty("transform", "none", "important");
+          card.style.setProperty("transform-origin", "initial", "important");
           card.style.overflow = "visible";
           card.style.boxSizing = "border-box";
 
-          // Capture options fixing the clipping issue
+          // 3. Force html2canvas into a deep element scroll heights frame
           const canvas = await html2canvas(card, {
-            scale: 2, // High resolution
+            scale: 2, // High resolution for clear text and badges
             backgroundColor: "#ffffff",
             useCORS: true,
             logging: false,
             width: 400,
-            windowWidth: 400,
-            windowHeight: card.scrollHeight, // FIX: Forces capture of the entire hidden/long height
+            windowWidth: 400, // Forces container rendering bounds to 400px wide layout
+            windowHeight: card.scrollHeight, // Reads the actual template element length
             scrollX: 0,
-            scrollY: -window.scrollY, // FIX: Prevents blank cutoff if page is scrolled down
+            scrollY: -window.scrollY, // Stabilizes tracking offset if user scrolled
           });
 
+          // 4. Restore original layout states instantly
           card.style.width = prevWidth;
-          card.style.maxWidth = "";
+          card.style.maxWidth = prevMaxWidth;
+          card.style.transform = prevTransform;
+          card.style.transformOrigin = prevTransformOrigin;
           card.style.overflow = "";
           card.style.boxSizing = "";
 
           const imgData = canvas.toDataURL("image/png");
           const { jsPDF } = window.jspdf;
 
-          // Calculate high-resolution page dimensions accurately
+          // Calculate exact canvas aspect ratio dimensions
           const pxW = canvas.width / 2;
           const pxH = canvas.height / 2;
 
           const pdf = new jsPDF({
             orientation: "portrait",
             unit: "px",
-            format: [pxW, pxH],
+            format: [pxW, pxH], // Locks page size directly to the receipt's native proportions
           });
 
           pdf.addImage(imgData, "PNG", 0, 0, pxW, pxH);
@@ -1243,7 +1253,7 @@
           );
         } catch (e) {
           console.error(e);
-          alert("Could not generate PDF. Try again.");
+          alert("Could not generate PDF. Please try again.");
         }
         btn.disabled = false;
         btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Receipt`;
