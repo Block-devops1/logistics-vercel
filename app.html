@@ -611,7 +611,7 @@
         width: 400px;
         background: #fff;
         border-radius: 14px;
-        overflow: hidden;
+        overflow: visible;
         font-family: "Figtree", sans-serif;
       }
 
@@ -993,7 +993,7 @@
               <div class="receipt-party-name" id="rc-receiver">—</div>
             </div>
           </div>
-          <div class="receipt-items-card" style="padding: 10px 16px">
+          <div class="receipt-items-card">
             <div class="receipt-items-label">Items / Description</div>
             <div id="rc-items">—</div>
           </div>
@@ -1197,10 +1197,11 @@
         btn.innerHTML = `<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div> Generating…`;
         try {
           const card = document.getElementById("receipt-card");
+          const prevWidth = card.style.width;
           card.style.width = "400px";
           card.style.maxWidth = "400px";
           card.style.overflow = "visible";
-          card.style.position = "relative";
+          card.style.boxSizing = "border-box";
 
           const canvas = await html2canvas(card, {
             scale: 2,
@@ -1208,13 +1209,16 @@
             useCORS: true,
             logging: false,
             width: 400,
-            windowWidth: 400,
+            windowWidth: 420,
+            scrollX: 0,
+            scrollY: 0,
           });
 
-          card.style.width = "";
+          card.style.width = prevWidth;
           card.style.maxWidth = "";
           card.style.overflow = "";
-          card.style.position = "";
+          card.style.boxSizing = "";
+
           const imgData = canvas.toDataURL("image/png");
           const { jsPDF } = window.jspdf;
           const pxW = canvas.width / 2;
