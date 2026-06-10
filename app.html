@@ -1350,7 +1350,13 @@
             headers: await authHeaders(),
             body: JSON.stringify({ text }),
           });
-          const result = await res.json();
+          let result;
+          try {
+            result = await res.json();
+          } catch {
+            out.innerHTML = `<div class="result-error">❌ Server timeout. Please try again.</div>`;
+            return;
+          }
 
           // ── Limit reached (403) — check BEFORE res.ok ──
           if (res.status === 403 && result.error === "LIMIT_REACHED") {
