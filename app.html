@@ -957,11 +957,13 @@
     <div
       style="
         position: absolute;
-        top: -9999px;
+        top: 0;
         left: 0;
-        z-index: -1;
+        z-index: -9999;
         width: 400px;
-        overflow: visible;
+        overflow: hidden;
+        opacity: 0;
+        pointer-events: none;
       "
     >
       <div id="receipt-card">
@@ -1203,33 +1205,28 @@
           const card = document.getElementById("receipt-card");
           card.style.width = "400px";
           card.style.maxWidth = "400px";
+          card.style.opacity = "1";
 
           const canvas = await html2canvas(card, {
-            scale: 3,
-            useCORS: true,
+            scale: 2,
             backgroundColor: "#ffffff",
-            width: 400,
-            height: card.scrollHeight,
-            windowWidth: 1200,
-            scrollX: 0,
-            scrollY: 0,
+            useCORS: true,
+            allowTaint: true,
+            logging: false,
           });
 
-          card.style.width = "";
-          card.style.maxWidth = "";
+          card.style.opacity = "0";
+
           const imgData = canvas.toDataURL("image/png");
           const { jsPDF } = window.jspdf;
-
-          const pdfWidth = canvas.width * 0.75 + 2; // Add some padding
-          const pdfHeight = canvas.height * 0.75;
-
+          const pxW = canvas.width / 2;
+          const pxH = canvas.height / 2;
           const pdf = new jsPDF({
             orientation: "portrait",
-            unit: "pt",
-            format: [pdfWidth, pdfHeight],
+            unit: "px",
+            format: [pxW, pxH],
           });
-
-          pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+          pdf.addImage(imgData, "PNG", 0, 0, pxW, pxH);
           pdf.save(
             `Evueo-${document.getElementById("rc-tracking").textContent}.pdf`,
           );
