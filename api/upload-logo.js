@@ -1,4 +1,4 @@
-const { createClient } = require("@supabase/supabase-js");
+import { createClient } from "@supabase/supabase-js";
 
 // Serverless endpoint to receive base64 logo, upload to private storage,
 // create a signed download URL and persist path to companies table.
@@ -14,7 +14,7 @@ const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
   auth: { persistSession: false },
 });
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   if (req.method !== "POST")
     return res.status(405).json({ error: "Method not allowed" });
 
@@ -92,4 +92,4 @@ module.exports = async (req, res) => {
     console.error("upload-logo error:", err);
     return res.status(500).json({ error: err.message || String(err) });
   }
-};
+}

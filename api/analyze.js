@@ -22,10 +22,13 @@ export default async function handler(req, res) {
     );
 
     // 2. Get user and fetch their profile
-    const {
-      data: { user },
-    } = await sb.auth.getUser();
-    if (!user) throw new Error("Unauthorized: Invalid session.");
+    // Verify the token explicitly server-side to avoid relying on client internals
+    const { data: userData, error: userErr } = await sb.auth.getUser(token);
+    const user = userData?.user || userData;
+    if (userErr || !user) {
+      console.error("analyze: auth getUser failed:", userErr);
+      throw new Error("Unauthorized: Invalid session.");
+    }
 
     const { data: profile, error: profileError } = await sb
       .from("companies")
@@ -79,7 +82,12 @@ export default async function handler(req, res) {
     );
 
     if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
+      const errorText = await aiResponse.text().catch(() => "<no body>");
+      console.error(
+        "OpenRouter non-OK response:",
+        aiResponse.status,
+        errorText,
+      );
       throw new Error(`OpenRouter Error: ${aiResponse.status} - ${errorText}`);
     }
 
