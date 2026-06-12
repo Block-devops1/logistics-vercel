@@ -1077,6 +1077,27 @@
           <div class="logo">ev<em>u</em>eo</div>
           <div class="tagline">AI · Logistics Intelligence</div>
         </div>
+        <button
+          id="theme-btn"
+          class="hamburger"
+          onclick="toggleTheme()"
+          aria-label="Toggle theme"
+          title="Toggle theme"
+        >
+          <svg
+            id="theme-icon"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="4"></circle>
+          </svg>
+        </button>
         <div class="status-pill">
           <div class="status-dot" id="status-dot"></div>
           <span id="status-text">Connecting…</span>
@@ -1193,18 +1214,116 @@
         <div class="drawer-email" id="drawer-email">you@example.com</div>
       </div>
       <div class="drawer-section">
-        <button
-          class="drawer-link"
-          onclick="window.location.href = '/dashboard'"
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+          "
         >
-          Dashboard
-        </button>
-        <button class="drawer-link" onclick="window.location.href = '/upgrade'">
-          Upgrade
-        </button>
-        <button class="drawer-link drawer-logout" onclick="logoutFromDrawer()">
-          Log out
-        </button>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <button
+              class="drawer-link"
+              onclick="window.location.href = '/dashboard'"
+            >
+              Dashboard
+            </button>
+            <button
+              class="drawer-link"
+              onclick="window.location.href = '/upgrade'"
+            >
+              Upgrade
+            </button>
+          </div>
+          <div id="drawer-tier-wrap" style="display: flex; align-items: center">
+            <div class="drawer-tier-badge" id="drawer-tier">Free</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="drawer-section">
+        <div class="drawer-label">Settings</div>
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <button class="drawer-link" onclick="changeSheetId()">
+            Change Sheet ID
+          </button>
+          <div
+            style="font-size: 0.78rem; color: var(--muted)"
+            id="drawer-sheet-id"
+          >
+            Sheet: —
+          </div>
+        </div>
+      </div>
+
+      <div class="drawer-section">
+        <div class="drawer-label">History</div>
+        <div
+          id="drawer-history"
+          style="max-height: 200px; overflow: auto; padding-top: 6px"
+        >
+          <div class="drawer-history-item">Loading…</div>
+        </div>
+      </div>
+
+      <div class="drawer-section">
+        <div class="drawer-label">Support</div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <a
+            class="drawer-link"
+            href="https://wa.me/2341111111111"
+            target="_blank"
+            rel="noopener"
+            >WhatsApp Business</a
+          >
+          <a class="drawer-link" href="mailto:support@evueo.com.ng"
+            >Email (support@evueo.com.ng)</a
+          >
+        </div>
+      </div>
+
+      <div class="drawer-section">
+        <div class="drawer-label">Legal</div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <a class="drawer-link" href="/terms.html">Terms of Use</a>
+          <a class="drawer-link" href="/privacy.html">Privacy Policy</a>
+        </div>
+      </div>
+
+      <div
+        class="drawer-section"
+        style="margin-top: auto; padding-bottom: 20px"
+      >
+        <div class="drawer-toggle-row">
+          <span>Dark / Light</span>
+          <div
+            id="drawer-theme-switch"
+            class="theme-switch"
+            onclick="toggleTheme()"
+            role="switch"
+            aria-checked="false"
+          ></div>
+        </div>
+        <div
+          style="
+            margin-top: 12px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: space-between;
+          "
+        >
+          <button
+            class="drawer-link drawer-logout"
+            onclick="logoutFromDrawer()"
+          >
+            Log out
+          </button>
+          <div style="font-size: 0.78rem; color: var(--muted)">
+            evueo © 2026
+          </div>
+        </div>
       </div>
     </aside>
 
@@ -1537,7 +1656,86 @@
         if (e.key === "Escape") closeDrawer();
       });
 
+      // Theme handling
+      function applyThemeFromStorage() {
+        try {
+          const t = localStorage.getItem("evueoTheme");
+          const htmlEl = document.documentElement;
+          const icon = document.getElementById("theme-icon");
+          const drawerSwitch = document.getElementById("drawer-theme-switch");
+          if (t === "dark") {
+            htmlEl.classList.add("dark");
+            if (icon)
+              icon.innerHTML =
+                '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+            if (drawerSwitch) drawerSwitch.classList.add("on");
+            if (drawerSwitch) drawerSwitch.setAttribute("aria-checked", "true");
+          } else {
+            htmlEl.classList.remove("dark");
+            if (icon)
+              icon.innerHTML = '<circle cx="12" cy="12" r="4"></circle>';
+            if (drawerSwitch) drawerSwitch.classList.remove("on");
+            if (drawerSwitch)
+              drawerSwitch.setAttribute("aria-checked", "false");
+          }
+        } catch (e) {}
+      }
+
+      function toggleTheme() {
+        try {
+          const htmlEl = document.documentElement;
+          const icon = document.getElementById("theme-icon");
+          const drawerSwitch = document.getElementById("drawer-theme-switch");
+          const isDark = htmlEl.classList.toggle("dark");
+          if (isDark) {
+            localStorage.setItem("evueoTheme", "dark");
+            if (icon)
+              icon.innerHTML =
+                '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+            if (drawerSwitch) drawerSwitch.classList.add("on");
+            if (drawerSwitch) drawerSwitch.setAttribute("aria-checked", "true");
+          } else {
+            localStorage.setItem("evueoTheme", "light");
+            if (icon)
+              icon.innerHTML = '<circle cx="12" cy="12" r="4"></circle>';
+            if (drawerSwitch) drawerSwitch.classList.remove("on");
+            if (drawerSwitch)
+              drawerSwitch.setAttribute("aria-checked", "false");
+          }
+        } catch (e) {}
+      }
+
+      function changeSheetId() {
+        const current = window.companySheetId || "";
+        const newId = prompt("Enter new Google Sheet ID:", current);
+        if (!newId) return;
+        window.companySheetId = newId;
+        const el = document.getElementById("drawer-sheet-id");
+        if (el) el.textContent = `Sheet: ${newId}`;
+        alert(
+          "Sheet ID updated (local only). Implement server-side save separately.",
+        );
+      }
+
+      function renderDrawerHistory(rawData) {
+        const records = toArray(rawData);
+        const out = document.getElementById("drawer-history");
+        if (!out) return;
+        const last = [...records].reverse().slice(0, 6);
+        if (!last.length) {
+          out.innerHTML = `<div class="drawer-history-item">No recent records</div>`;
+          return;
+        }
+        out.innerHTML = last
+          .map(
+            (r) =>
+              `<div class="drawer-history-item"><div class="drawer-history-route">${r.sender || "–"} → ${r.receiver || "–"}</div><div class="drawer-history-meta">${(r.date || "").split(",")[0]}</div></div>`,
+          )
+          .join("");
+      }
+
       window.onload = async function () {
+        applyThemeFromStorage();
         ["card-0", "card-1", "card-2"].forEach((id, i) =>
           setTimeout(
             () => document.getElementById(id).classList.add("in"),
@@ -1566,6 +1764,7 @@
           window.userTier = company.tier;
           window.userExtractions = company.extractions_used;
           window.companyName = company.company_name;
+          window.companySheetId = company.sheet_id || "";
 
           // Wire drawer fields
           const dc = document.getElementById("drawer-company");
@@ -1574,6 +1773,20 @@
           if (de)
             de.textContent =
               (session && session.user && session.user.email) || "";
+
+          // Drawer tier badge + sheet id
+          const dt = document.getElementById("drawer-tier");
+          const ds = document.getElementById("drawer-sheet-id");
+          if (dt) {
+            if (company.tier === "premium") {
+              dt.textContent = "Premium";
+              dt.classList.add("premium");
+            } else {
+              dt.textContent = "Free";
+              dt.classList.remove("premium");
+            }
+          }
+          if (ds) ds.textContent = `Sheet: ${window.companySheetId || "—"}`;
 
           // Show company name in header
           document.querySelector(".logo").innerHTML =
