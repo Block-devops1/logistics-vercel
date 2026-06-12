@@ -53,12 +53,242 @@
         --r: 12px;
       }
 
+      html.dark {
+        --bg: #1c1917;
+        --surface: #292524;
+        --border: #44403c;
+        --border2: #3a3633;
+        --accent: #f97316;
+        --accent2: #fb923c;
+        --accent-dim: rgba(249, 115, 22, 0.14);
+        --text: #f5f5f4;
+        --muted: #a8a29e;
+        --muted2: #78716c;
+        --success: #4ade80;
+        --error: #f87171;
+      }
+
       body {
         background: var(--bg);
         color: var(--text);
         font-family: "Figtree", sans-serif;
         min-height: 100vh;
         position: relative;
+        transition:
+          background 0.25s ease,
+          color 0.25s ease;
+      }
+
+      /* Hamburger button */
+      .hamburger {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 5px;
+        width: 38px;
+        height: 38px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        cursor: pointer;
+        padding: 0;
+        align-items: center;
+        flex-shrink: 0;
+      }
+      .hamburger span {
+        display: block;
+        width: 16px;
+        height: 2px;
+        background: var(--text);
+        border-radius: 1px;
+        transition:
+          transform 0.25s ease,
+          opacity 0.25s ease;
+      }
+      .hamburger.open span:nth-child(1) {
+        transform: translateY(7px) rotate(45deg);
+      }
+      .hamburger.open span:nth-child(2) {
+        opacity: 0;
+      }
+      .hamburger.open span:nth-child(3) {
+        transform: translateY(-7px) rotate(-45deg);
+      }
+
+      /* Drawer overlay */
+      .drawer-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.25s ease;
+        z-index: 200;
+      }
+      .drawer-overlay.show {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      /* Drawer panel */
+      .drawer {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 280px;
+        max-width: 85vw;
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        z-index: 201;
+        transform: translateX(-100%);
+        transition: transform 0.28s ease;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+      }
+      .drawer.show {
+        transform: translateX(0);
+      }
+
+      .drawer-section {
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--border2);
+      }
+      .drawer-section:last-child {
+        border-bottom: none;
+      }
+      .drawer-label {
+        font-family: "DM Mono", monospace;
+        font-size: 0.62rem;
+        color: var(--muted2);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+      }
+      .drawer-company {
+        font-family: "Syne", sans-serif;
+        font-weight: 800;
+        font-size: 1.05rem;
+        color: var(--text);
+        margin-bottom: 4px;
+      }
+      .drawer-email {
+        font-size: 0.82rem;
+        color: var(--muted);
+        word-break: break-all;
+      }
+      .drawer-tier-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-family: "DM Mono", monospace;
+        font-size: 0.68rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 4px 11px;
+        border-radius: 999px;
+        font-weight: 600;
+      }
+      .drawer-tier-badge.free {
+        background: var(--border2);
+        color: var(--muted);
+      }
+      .drawer-tier-badge.premium {
+        background: rgba(249, 115, 22, 0.1);
+        border: 1px solid rgba(249, 115, 22, 0.25);
+        color: var(--accent);
+      }
+      .drawer-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 0;
+        font-size: 0.88rem;
+        color: var(--text);
+        text-decoration: none;
+        cursor: pointer;
+        background: none;
+        border: none;
+        width: 100%;
+        text-align: left;
+        font-family: "Figtree", sans-serif;
+      }
+      .drawer-link:hover {
+        color: var(--accent);
+      }
+      .drawer-link svg {
+        flex-shrink: 0;
+        opacity: 0.7;
+      }
+      .drawer-history-item {
+        padding: 8px 0;
+        border-bottom: 1px solid var(--border2);
+        font-size: 0.78rem;
+      }
+      .drawer-history-item:last-child {
+        border-bottom: none;
+      }
+      .drawer-history-route {
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 2px;
+      }
+      .drawer-history-meta {
+        color: var(--muted2);
+        font-family: "DM Mono", monospace;
+        font-size: 0.68rem;
+      }
+      .drawer-toggle-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 9px 0;
+      }
+      .drawer-toggle-row span {
+        font-size: 0.88rem;
+        color: var(--text);
+      }
+      .theme-switch {
+        position: relative;
+        width: 42px;
+        height: 24px;
+        background: var(--border);
+        border-radius: 999px;
+        cursor: pointer;
+        transition: background 0.2s;
+        flex-shrink: 0;
+      }
+      .theme-switch.on {
+        background: var(--accent);
+      }
+      .theme-switch::after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 18px;
+        height: 18px;
+        background: #fff;
+        border-radius: 50%;
+        transition: transform 0.2s;
+      }
+      .theme-switch.on::after {
+        transform: translateX(18px);
+      }
+      .drawer-logout {
+        color: var(--error);
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Figtree", sans-serif;
+        min-height: 100vh;
+        position: relative;
+        transition:
+          background 0.25s ease,
+          color 0.25s ease;
       }
 
       body::before {
@@ -835,6 +1065,14 @@
   <body>
     <div class="page">
       <header>
+        <button
+          class="hamburger"
+          id="hamburger-btn"
+          onclick="toggleDrawer()"
+          aria-label="Menu"
+        >
+          <span></span><span></span><span></span>
+        </button>
         <div>
           <div class="logo">ev<em>u</em>eo</div>
           <div class="tagline">AI · Logistics Intelligence</div>
@@ -843,25 +1081,7 @@
           <div class="status-dot" id="status-dot"></div>
           <span id="status-text">Connecting…</span>
         </div>
-
-        <button
-          onclick="logout()"
-          style="
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--muted);
-            font-family: &quot;Figtree&quot;, sans-serif;
-            font-size: 0.8rem;
-            font-weight: 600;
-            padding: 7px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-          "
-        >
-          Log out
-        </button>
       </header>
-
       <div class="stats-strip">
         <div class="stat-card" id="sc-0">
           <div class="stat-number" id="stat-total">—</div>
