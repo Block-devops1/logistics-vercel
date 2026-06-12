@@ -1505,8 +1505,18 @@
                 },
                 body: JSON.stringify(payload),
               });
-              const j = await res.json();
-              if (!res.ok) throw new Error(j.error || "Upload failed");
+              let j;
+              try {
+                j = await res.json();
+              } catch (parseErr) {
+                const txt = await res.text().catch(() => "<no body>");
+                console.error("upload-logo non-json response:", txt);
+                throw new Error(`Upload failed: ${txt}`);
+              }
+              if (!res.ok)
+                throw new Error(
+                  j?.error || `Upload failed (status ${res.status})`,
+                );
               window.companyLogo = j.url;
               const p = document.getElementById("logo-preview");
               if (p) {
@@ -2035,8 +2045,10 @@
           let result;
           try {
             result = await res.json();
-          } catch {
-            out.innerHTML = `<div class="result-error">❌ Server timeout. Please try again.</div>`;
+          } catch (e) {
+            const txt = await res.text().catch(() => "<no body>");
+            console.error("/api/analyze non-json response:", txt);
+            out.innerHTML = `<div class="result-error">❌ Server error: ${txt}</div>`;
             return;
           }
 
