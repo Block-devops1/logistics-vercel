@@ -362,6 +362,10 @@
         line-height: 1;
         color: var(--text);
       }
+      .logo em {
+        color: var(--accent);
+        font-style: normal;
+      }
 
       .status-dot {
         width: 7px;
@@ -1458,34 +1462,56 @@
       // IS_PAID_TIER → window.userTier === "premium"
       // COMPANY_NAME → window.companyName
 
-      async function authHeaders() {
-        const {
-          data: { session },
-        } = await sb.auth.getSession();
-        return {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-        };
-      }
+      async function uploadLogo() {
+        if (!selectedLogoFile) return;
+        try {
+          const {
+            data: { session },
+          } = await sb.auth.getSession();
+          if (!session) return alert("Not authenticated");
 
-      /* ── Count up ── */
-      function countUp(el, target, delay = 0) {
-        setTimeout(() => {
-          if (target === 0) {
-            el.textContent = "0";
-            return;
-          }
-          let v = 0,
-            step = target / (900 / 16);
-          const t = setInterval(() => {
-            v = Math.min(v + step, target);
-            el.textContent = Math.floor(v);
-            if (v >= target) clearInterval(t);
-          }, 16);
-        }, delay);
-      }
+          // read file as base64 and POST to serverless endpoint
+          const reader = new FileReader();
+          reader.onload = async (ev) => {
+            try {
+              const b64 = ev.target.result.split(",")[1];
+              const payload = {
+                company_id: window.companyId || window.companySheetId || null,
+                filename: selectedLogoFile.name,
+                content_type: selectedLogoFile.type,
+                data: b64,
+              };
 
-      /* ── Normalise API response to array ── */
+              const res = await fetch("/api/upload-logo", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify(payload),
+              });
+              const j = await res.json();
+              if (!res.ok) throw new Error(j.error || "Upload failed");
+              window.companyLogo = j.url;
+              const p = document.getElementById("logo-preview");
+              if (p) {
+                p.style.display = "block";
+                p.innerHTML = `<img src="${j.url}" style="width:100%;height:auto;display:block;" crossorigin="anonymous"/>`;
+              }
+              document.getElementById("remove-logo-btn").style.display =
+                "inline-block";
+              // set watermark for receipts
+              setReceiptWatermark(j.url);
+            } catch (err) {
+              console.error("uploadLogo handler error", err);
+              alert(err.message || "Upload failed");
+            }
+          };
+          reader.readAsDataURL(selectedLogoFile);
+        } catch (e) {
+          console.error(e);
+        }
+      }
       function toArray(data) {
         if (Array.isArray(data)) return data;
         if (data && Array.isArray(data.rows)) return data.rows;
@@ -1650,8 +1676,9 @@
           card.style.maxWidth = "400px";
           card.style.opacity = "1";
 
+          const scale = Math.max(2, window.devicePixelRatio || 1);
           const canvas = await html2canvas(card, {
-            scale: 2,
+            scale,
             backgroundColor: "#ffffff",
             useCORS: true,
             allowTaint: true,
@@ -1662,8 +1689,8 @@
 
           const imgData = canvas.toDataURL("image/png");
           const { jsPDF } = window.jspdf;
-          const pxW = canvas.width / 2;
-          const pxH = canvas.height / 2;
+          const pxW = Math.round(canvas.width / scale);
+          const pxH = Math.round(canvas.height / scale);
           const pdf = new jsPDF({
             orientation: "portrait",
             unit: "px",
@@ -2178,8 +2205,9 @@
           if (document.fonts && document.fonts.ready)
             await document.fonts.ready;
 
+          const scale = Math.max(2, window.devicePixelRatio || 1);
           const canvas = await html2canvas(card, {
-            scale: Math.max(2, window.devicePixelRatio || 1),
+            scale: scale,
             useCORS: true,
             backgroundColor: "#ffffff",
             width: 400,
@@ -2207,17 +2235,15 @@
 
           const imgData = canvas.toDataURL("image/png");
           const { jsPDF } = window.jspdf;
-
-          const pdfWidth = canvas.width * 0.75 + 2; // Add some padding
-          const pdfHeight = canvas.height * 0.75;
-
+          // compute PDF size from canvas and scale to avoid cropping
+          const pdfW = Math.round(canvas.width / scale);
+          const pdfH = Math.round(canvas.height / scale);
           const pdf = new jsPDF({
             orientation: "portrait",
-            unit: "pt",
-            format: [pdfWidth, pdfHeight],
+            unit: "px",
+            format: [pdfW, pdfH],
           });
-
-          pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+          pdf.addImage(imgData, "PNG", 0, 0, pdfW, pdfH);
           pdf.save(
             `Evueo-${document.getElementById("rc-tracking").textContent}.pdf`,
           );
@@ -2225,9 +2251,7 @@
           console.error("PDF generation failed:", e);
           alert("Could not generate receipt file. Please try again.");
         }
-
-        btn.disabled = false;
-        btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Receipt`;
+        // no local btn in this scope — nothing to restore here
       }
     </script>
   </body>
