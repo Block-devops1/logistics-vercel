@@ -1173,6 +1173,41 @@
       </div>
     </div>
 
+    <!-- Drawer overlay + panel (toggled by hamburger) -->
+    <div
+      class="drawer-overlay"
+      id="drawer-overlay"
+      onclick="closeDrawer()"
+      aria-hidden="true"
+    ></div>
+    <aside
+      class="drawer"
+      id="drawer"
+      role="dialog"
+      aria-modal="true"
+      aria-hidden="true"
+    >
+      <div class="drawer-section">
+        <div class="drawer-label">Account</div>
+        <div class="drawer-company" id="drawer-company">Your Company</div>
+        <div class="drawer-email" id="drawer-email">you@example.com</div>
+      </div>
+      <div class="drawer-section">
+        <button
+          class="drawer-link"
+          onclick="window.location.href = '/dashboard'"
+        >
+          Dashboard
+        </button>
+        <button class="drawer-link" onclick="window.location.href = '/upgrade'">
+          Upgrade
+        </button>
+        <button class="drawer-link drawer-logout" onclick="logoutFromDrawer()">
+          Log out
+        </button>
+      </div>
+    </aside>
+
     <!-- Off-screen receipt for PDF capture -->
     <div
       style="
@@ -1460,6 +1495,48 @@
       }
 
       /* ── On load ── */
+      // Drawer toggle / close / logout handlers
+      function toggleDrawer() {
+        const overlay = document.getElementById("drawer-overlay");
+        const drawer = document.getElementById("drawer");
+        const btn = document.getElementById("hamburger-btn");
+        const isOpen = overlay.classList.contains("show");
+        if (isOpen) {
+          overlay.classList.remove("show");
+          drawer.classList.remove("show");
+          btn.classList.remove("open");
+          drawer.setAttribute("aria-hidden", "true");
+        } else {
+          overlay.classList.add("show");
+          drawer.classList.add("show");
+          btn.classList.add("open");
+          drawer.setAttribute("aria-hidden", "false");
+        }
+      }
+
+      function closeDrawer() {
+        const overlay = document.getElementById("drawer-overlay");
+        const drawer = document.getElementById("drawer");
+        const btn = document.getElementById("hamburger-btn");
+        overlay.classList.remove("show");
+        drawer.classList.remove("show");
+        btn.classList.remove("open");
+        drawer.setAttribute("aria-hidden", "true");
+      }
+
+      function logoutFromDrawer() {
+        (async () => {
+          try {
+            await sb.auth.signOut();
+          } catch (e) {}
+          window.location.href = "/login";
+        })();
+      }
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeDrawer();
+      });
+
       window.onload = async function () {
         ["card-0", "card-1", "card-2"].forEach((id, i) =>
           setTimeout(
@@ -1489,6 +1566,14 @@
           window.userTier = company.tier;
           window.userExtractions = company.extractions_used;
           window.companyName = company.company_name;
+
+          // Wire drawer fields
+          const dc = document.getElementById("drawer-company");
+          const de = document.getElementById("drawer-email");
+          if (dc) dc.textContent = company.company_name || "";
+          if (de)
+            de.textContent =
+              (session && session.user && session.user.email) || "";
 
           // Show company name in header
           document.querySelector(".logo").innerHTML =
