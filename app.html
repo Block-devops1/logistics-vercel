@@ -1567,6 +1567,19 @@
         return raw;
       }
 
+      function countUp(el, target, duration) {
+        if (!el) return;
+        const start = 0;
+        const startTime = performance.now();
+        function tick(now) {
+          const progress = Math.min((now - startTime) / duration, 1);
+          el.textContent = Math.floor(start + (target - start) * progress);
+          if (progress < 1) requestAnimationFrame(tick);
+          else el.textContent = target;
+        }
+        requestAnimationFrame(tick);
+      }
+
       /* ── Today count — robust date match ── */
       function countToday(records) {
         const now = new Date();
