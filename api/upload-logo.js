@@ -29,20 +29,8 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "Invalid token" });
     const uid = userData.user.id;
 
-    const body = await new Promise((resolve, reject) => {
-      let s = "";
-      req.on("data", (chunk) => (s += chunk));
-      req.on("end", () => {
-        try {
-          resolve(JSON.parse(s));
-        } catch (e) {
-          reject(e);
-        }
-      });
-      req.on("error", reject);
-    });
-
-    const { filename, content_type, data: b64 } = body || {};
+    const body = req.body || {};
+    const { filename, content_type, data: b64 } = body;
     if (!filename || !b64)
       return res.status(400).json({ error: "Missing fields" });
 
