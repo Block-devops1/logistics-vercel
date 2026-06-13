@@ -1989,8 +1989,10 @@
             headers: await authHeaders(),
             cache: "no-store",
           });
+          console.log("get-records status:", res.status, res.ok);
           if (!res.ok) throw new Error();
           const data = toArray(await res.json());
+          console.log("get-records data:", data);
 
           dot.classList.add("online");
           sText.textContent = "System Online";
