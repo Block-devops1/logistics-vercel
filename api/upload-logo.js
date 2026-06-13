@@ -42,22 +42,23 @@ export default async function handler(req, res) {
       req.on("error", reject);
     });
 
-    const { company_id, filename, content_type, data: b64 } = body || {};
-    if (!company_id || !filename || !b64)
+    const { filename, content_type, data: b64 } = body || {};
+    if (!filename || !b64)
       return res.status(400).json({ error: "Missing fields" });
 
     // ensure requester owns the company
+    // ensure requester owns the company (id == auth user id)
     const { data: company, error: cErr } = await sb
       .from("companies")
-      .select("id, owner_id")
-      .eq("id", company_id)
+      .select("id")
+      .eq("id", uid)
       .single();
     if (cErr || !company)
       return res.status(404).json({ error: "Company not found" });
-    if (String(company.owner_id) !== String(uid))
-      return res.status(403).json({ error: "Not authorized" });
 
-    const path = `company-logos/${company_id}/${Date.now()}-${filename}`;
+    const companyId = company.id;
+
+    const path = `company-logos/${companyId}/${Date.now()}-${filename}`;
 
     const buffer = Buffer.from(b64, "base64");
 
@@ -83,7 +84,7 @@ export default async function handler(req, res) {
         logo_uploaded_at: new Date().toISOString(),
         logo_url: signed.signedUrl,
       })
-      .eq("id", company_id);
+      .eq("id", companyId);
     if (upd.error)
       console.warn("Failed to persist logo_path:", upd.error.message);
 
