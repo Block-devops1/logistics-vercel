@@ -1978,7 +1978,7 @@
 
           const { data: company } = await sb
             .from("companies")
-            .select("company_name, sheet_id, tier, extractions_used")
+            .select("company_name, sheet_id, tier, extractions_used, logo_url")
             .single();
 
           window.userTier = company.tier;
@@ -1986,6 +1986,16 @@
           window.companyName = company.company_name;
           window.companySheetId = company.sheet_id || "";
           window.companyLogo = company.logo_url || null;
+
+          if (window.companyLogo) {
+            const p = document.getElementById("logo-preview");
+            if (p) {
+              p.style.display = "block";
+              p.innerHTML = `<img src="${window.companyLogo}" style="width:100%;height:auto;display:block;" crossorigin="anonymous"/>`;
+            }
+            const rb = document.getElementById("remove-logo-btn");
+            if (rb) rb.style.display = "inline-block";
+          }
 
           // Wire drawer fields
           const dc = document.getElementById("drawer-company");
