@@ -1746,9 +1746,16 @@
           card.style.maxWidth = "400px";
           card.style.opacity = "1";
 
+          const cardWidth = 400;
+          const cardHeight = card.scrollHeight;
+
           const scale = Math.max(2, window.devicePixelRatio || 1);
           const canvas = await html2canvas(card, {
             scale,
+            width: cardWidth,
+            height: cardHeight,
+            windowWidth: cardWidth,
+            windowHeight: cardHeight,
             backgroundColor: "#ffffff",
             useCORS: true,
             allowTaint: true,
@@ -1759,12 +1766,13 @@
 
           const imgData = canvas.toDataURL("image/png");
           const { jsPDF } = window.jspdf;
-          const pxW = Math.round(canvas.width / scale);
-          const pxH = Math.round(canvas.height / scale);
+          const pxW = cardWidth;
+          const pxH = Math.round((canvas.height / canvas.width) * pxW);
           const pdf = new jsPDF({
             orientation: "portrait",
             unit: "px",
             format: [pxW, pxH],
+            hotfixes: ["px_scaling"],
           });
           pdf.addImage(imgData, "PNG", 0, 0, pxW, pxH);
           pdf.save(
