@@ -1699,28 +1699,6 @@
         const isPaid = window.userTier === "premium";
         const company = window.companyName || "Your Logistics Company";
 
-        document.getElementById("receipt-header-free").style.display = isPaid
-          ? "none"
-          : "block";
-        document.getElementById("receipt-header-paid").style.display = isPaid
-          ? "block"
-          : "none";
-        document.getElementById("rc-company").textContent = company;
-        document.getElementById("rc-company-paid").textContent = company;
-        document.getElementById("rc-tracking").textContent =
-          data.tracking_number || "N/A";
-        document.getElementById("rc-sender").textContent = data.sender || "N/A";
-        document.getElementById("rc-receiver").textContent =
-          data.receiver || "N/A";
-        document.getElementById("rc-items").innerHTML = formatReceiptDesc(
-          Array.isArray(data.description)
-            ? JSON.stringify(data.description)
-            : data.description,
-        );
-
-        // set watermark if company has logo and is premium
-        setReceiptWatermark(window.companyLogo || company.logo_url || null);
-
         const now = new Date().toLocaleString("en-GB", {
           timeZone: "Africa/Lagos",
           day: "2-digit",
@@ -1729,10 +1707,20 @@
           hour: "2-digit",
           minute: "2-digit",
         });
-        document.getElementById("rc-date").innerHTML = now.replace(
-          ", ",
-          "<br>",
-        );
+
+        // Store everything downloadReceipt() needs for server-side PDF generation
+        window.lastReceiptData = {
+          companyName: company,
+          tracking: data.tracking_number || "N/A",
+          sender: data.sender || "N/A",
+          receiver: data.receiver || "N/A",
+          items: Array.isArray(data.description)
+            ? JSON.stringify(data.description)
+            : data.description || "N/A",
+          dateStr: now.replace(", ", "\n"),
+          isPaid,
+          logoUrl: window.companyLogo || null,
+        };
       }
 
       async function downloadReceipt() {
@@ -1741,61 +1729,38 @@
         btn.innerHTML = `<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div> Generating…`;
 
         try {
-          const card = document.getElementById("receipt-card");
-          card.style.width = "400px";
-          card.style.maxWidth = "400px";
-          card.style.opacity = "1";
+          const payload = window.lastReceiptData;
+          if (!payload) throw new Error("No receipt data available.");
 
-          const cardWidth = 400;
-          const cardHeight = card.scrollHeight;
-          console.log(
-            "card.scrollWidth:",
-            card.scrollWidth,
-            "card.offsetWidth:",
-            card.offsetWidth,
-            "computed width:",
-            getComputedStyle(card).width,
-          );
-
-          const scale = Math.max(2, window.devicePixelRatio || 1);
-          const canvas = await html2canvas(card, {
-            scale,
-            width: cardWidth,
-            height: cardHeight,
-            windowWidth: cardWidth,
-            windowHeight: cardHeight,
-            backgroundColor: "#ffffff",
-            useCORS: true,
-            allowTaint: true,
-            logging: false,
+          const res = await fetch("/api/generate-receipt", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
           });
 
-          card.style.opacity = "0";
-          console.log(
-            "canvas.width:",
-            canvas.width,
-            "canvas.height:",
-            canvas.height,
-            "scale:",
-            scale,
-          );
+          if (!res.ok) {
+            let msg = `Server error (${res.status})`;
+            try {
+              const j = await res.json();
+              if (j?.error) msg = j.error;
+            } catch (_) {}
+            throw new Error(msg);
+          }
 
-          const imgData = canvas.toDataURL("image/png");
-          const { jsPDF } = window.jspdf;
-          const ptW = cardWidth * 0.75;
-          const ptH = (canvas.height / canvas.width) * ptW;
-          const pdf = new jsPDF({
-            orientation: "portrait",
-            unit: "pt",
-            format: [ptW, ptH],
-          });
-          pdf.addImage(imgData, "PNG", 0, 0, ptW, ptH);
-          pdf.save(
-            `Evueo-${document.getElementById("rc-tracking").textContent}.pdf`,
-          );
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `Evueo-${payload.tracking}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
         } catch (e) {
           console.error("PDF generation failed:", e);
-          alert("Could not generate receipt file. Please try again.");
+          alert(
+            e.message || "Could not generate receipt file. Please try again.",
+          );
         }
 
         btn.disabled = false;
