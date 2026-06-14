@@ -5,14 +5,11 @@ import {
   View,
   Text,
   Image,
-  Font,
   StyleSheet,
   renderToBuffer,
 } from "@react-pdf/renderer";
 
-// ── Register fonts (DM Mono + a standard sans for body) ──
-// Using built-in Helvetica fallback avoids extra font downloads;
-// if you want exact brand fonts, register TTF URLs here.
+const e = React.createElement;
 
 const COLORS = {
   orange: "#f97316",
@@ -34,12 +31,12 @@ const styles = StyleSheet.create({
   },
   headerFree: {
     backgroundColor: COLORS.cream,
-    borderBottomWidth: 2.25, // 3px
+    borderBottomWidth: 2.25,
     borderBottomColor: COLORS.orange,
     borderBottomStyle: "solid",
-    paddingTop: 16.5, // 22px
-    paddingBottom: 13.5, // 18px
-    paddingHorizontal: 18, // 24px
+    paddingTop: 16.5,
+    paddingBottom: 13.5,
+    paddingHorizontal: 18,
     alignItems: "center",
   },
   headerPaid: {
@@ -50,7 +47,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   companyName: {
-    fontSize: 13.5, // ~1.25rem at base 16 -> 18px -> *0.75
+    fontSize: 13.5,
     fontFamily: "Helvetica-Bold",
     color: COLORS.dark,
     marginBottom: 2,
@@ -93,8 +90,8 @@ const styles = StyleSheet.create({
   },
   trackingStrip: {
     backgroundColor: COLORS.dark,
-    paddingVertical: 10.5, // 14px
-    paddingHorizontal: 15, // 20px
+    paddingVertical: 10.5,
+    paddingHorizontal: 15,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -119,14 +116,14 @@ const styles = StyleSheet.create({
     lineHeight: 1.5,
   },
   body: {
-    paddingTop: 13.5, // 18px
-    paddingHorizontal: 15, // 20px
+    paddingTop: 13.5,
+    paddingHorizontal: 15,
     paddingBottom: 13.5,
     backgroundColor: COLORS.white,
   },
   route: {
     flexDirection: "column",
-    marginBottom: 10.5, // 14px
+    marginBottom: 10.5,
     width: "100%",
   },
   partyBlock: {
@@ -141,15 +138,15 @@ const styles = StyleSheet.create({
     marginBottom: 3,
   },
   partyName: {
-    fontSize: 9.75, // 0.88rem
+    fontSize: 9.75,
     fontFamily: "Helvetica-Bold",
     color: COLORS.dark,
     lineHeight: 1.3,
   },
   itemsCard: {
     backgroundColor: COLORS.bodyBg,
-    borderRadius: 7.5, // 10px
-    padding: 10.5, // 14px 16px approx
+    borderRadius: 7.5,
+    padding: 10.5,
     paddingHorizontal: 12,
     borderWidth: 0.75,
     borderColor: COLORS.border,
@@ -164,7 +161,7 @@ const styles = StyleSheet.create({
     marginBottom: 4.5,
   },
   itemsValue: {
-    fontSize: 9, // 0.85rem
+    fontSize: 9,
     color: COLORS.text,
     lineHeight: 1.5,
   },
@@ -178,8 +175,8 @@ const styles = StyleSheet.create({
     borderBottomStyle: "solid",
   },
   footer: {
-    paddingVertical: 9, // 12px
-    paddingHorizontal: 15, // 20px
+    paddingVertical: 9,
+    paddingHorizontal: 15,
     borderTopWidth: 0.75,
     borderTopColor: "#f5f5f4",
     borderTopStyle: "solid",
@@ -217,26 +214,24 @@ const styles = StyleSheet.create({
 });
 
 // Try to break a numbered-list description into rows; otherwise plain text.
-function ItemsContent({ raw }) {
+function itemsContent(raw) {
   if (!raw || raw === "N/A") {
-    return <Text style={styles.itemsValue}>N/A</Text>;
+    return e(Text, { style: styles.itemsValue }, "N/A");
   }
   const matches = raw.match(/\d+\.\s[^0-9.][^]*?(?=\s*\d+\.|$)/g);
   if (matches && matches.length > 1) {
-    return (
-      <View>
-        {matches.map((item, i) => (
-          <Text key={i} style={styles.itemRow}>
-            {item.trim()}
-          </Text>
-        ))}
-      </View>
+    return e(
+      View,
+      null,
+      matches.map((item, i) =>
+        e(Text, { key: i, style: styles.itemRow }, item.trim()),
+      ),
     );
   }
-  return <Text style={styles.itemsValue}>{raw}</Text>;
+  return e(Text, { style: styles.itemsValue }, raw);
 }
 
-function ReceiptDocument({
+function receiptDocument({
   companyName,
   tracking,
   sender,
@@ -246,69 +241,98 @@ function ReceiptDocument({
   isPaid,
   logoUrl,
 }) {
-  return (
-    <Document>
-      <Page size={[300, 480]} style={styles.page}>
-        {/* Header */}
-        {isPaid ? (
-          <View style={styles.headerPaid}>
-            <Text style={styles.companyNamePaid}>{companyName}</Text>
-            <Text style={styles.companySubPaid}>WAYBILL RECEIPT</Text>
-          </View>
-        ) : (
-          <View style={styles.headerFree}>
-            <Text style={styles.companyName}>{companyName}</Text>
-            <Text style={styles.companySub}>WAYBILL RECEIPT</Text>
-            <Text style={styles.poweredBadge}>POWERED BY EVUEO</Text>
-          </View>
-        )}
+  const header = isPaid
+    ? e(
+        View,
+        { style: styles.headerPaid },
+        e(Text, { style: styles.companyNamePaid }, companyName),
+        e(Text, { style: styles.companySubPaid }, "WAYBILL RECEIPT"),
+      )
+    : e(
+        View,
+        { style: styles.headerFree },
+        e(Text, { style: styles.companyName }, companyName),
+        e(Text, { style: styles.companySub }, "WAYBILL RECEIPT"),
+        e(Text, { style: styles.poweredBadge }, "POWERED BY EVUEO"),
+      );
 
-        {/* Watermark (premium only) */}
-        {isPaid && logoUrl ? (
-          <View style={styles.watermark}>
-            <Image src={logoUrl} style={styles.watermarkImg} />
-          </View>
-        ) : null}
+  const watermark =
+    isPaid && logoUrl
+      ? e(
+          View,
+          { style: styles.watermark },
+          e(Image, { src: logoUrl, style: styles.watermarkImg }),
+        )
+      : null;
 
-        {/* Tracking strip */}
-        <View style={styles.trackingStrip}>
-          <View style={{ flexShrink: 1 }}>
-            <Text style={styles.trackingLabel}>TRACKING ID</Text>
-            <Text style={styles.trackingNum}>{tracking || "N/A"}</Text>
-          </View>
-          <Text style={styles.dateVal}>{dateStr}</Text>
-        </View>
+  const trackingStrip = e(
+    View,
+    { style: styles.trackingStrip },
+    e(
+      View,
+      { style: { flexShrink: 1 } },
+      e(Text, { style: styles.trackingLabel }, "TRACKING ID"),
+      e(Text, { style: styles.trackingNum }, tracking || "N/A"),
+    ),
+    e(Text, { style: styles.dateVal }, dateStr),
+  );
 
-        {/* Body */}
-        <View style={styles.body}>
-          <View style={styles.route}>
-            <View style={styles.partyBlock}>
-              <Text style={styles.partyLabel}>FROM</Text>
-              <Text style={styles.partyName}>{sender || "N/A"}</Text>
-            </View>
-            <View>
-              <Text style={styles.partyLabel}>TO</Text>
-              <Text style={styles.partyName}>{receiver || "N/A"}</Text>
-            </View>
-          </View>
+  const body = e(
+    View,
+    { style: styles.body },
+    e(
+      View,
+      { style: styles.route },
+      e(
+        View,
+        { style: styles.partyBlock },
+        e(Text, { style: styles.partyLabel }, "FROM"),
+        e(Text, { style: styles.partyName }, sender || "N/A"),
+      ),
+      e(
+        View,
+        null,
+        e(Text, { style: styles.partyLabel }, "TO"),
+        e(Text, { style: styles.partyName }, receiver || "N/A"),
+      ),
+    ),
+    e(
+      View,
+      { style: styles.itemsCard },
+      e(Text, { style: styles.itemsLabel }, "ITEMS / DESCRIPTION"),
+      itemsContent(items),
+    ),
+  );
 
-          <View style={styles.itemsCard}>
-            <Text style={styles.itemsLabel}>ITEMS / DESCRIPTION</Text>
-            <ItemsContent raw={items} />
-          </View>
-        </View>
+  const footer = e(
+    View,
+    { style: styles.footer },
+    e(
+      Text,
+      { style: styles.footerNote },
+      "This receipt confirms registration only.",
+    ),
+    e(
+      Text,
+      { style: styles.evueoBrand },
+      "ev",
+      e(Text, { style: styles.evueoBrandAccent }, "u"),
+      "eo",
+    ),
+  );
 
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerNote}>
-            This receipt confirms registration only.
-          </Text>
-          <Text style={styles.evueoBrand}>
-            ev<Text style={styles.evueoBrandAccent}>u</Text>eo
-          </Text>
-        </View>
-      </Page>
-    </Document>
+  return e(
+    Document,
+    null,
+    e(
+      Page,
+      { size: [300, 480], style: styles.page },
+      header,
+      watermark,
+      trackingStrip,
+      body,
+      footer,
+    ),
   );
 }
 
@@ -333,20 +357,16 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing tracking number" });
     }
 
-    const doc = (
-      <ReceiptDocument
-        companyName={companyName || "Your Logistics Company"}
-        tracking={tracking}
-        sender={sender}
-        receiver={receiver}
-        items={
-          typeof items === "object" ? JSON.stringify(items) : items || "N/A"
-        }
-        dateStr={dateStr || ""}
-        isPaid={!!isPaid}
-        logoUrl={isPaid ? logoUrl : null}
-      />
-    );
+    const doc = receiptDocument({
+      companyName: companyName || "Your Logistics Company",
+      tracking,
+      sender,
+      receiver,
+      items: typeof items === "object" ? JSON.stringify(items) : items || "N/A",
+      dateStr: dateStr || "",
+      isPaid: !!isPaid,
+      logoUrl: isPaid ? logoUrl : null,
+    });
 
     const buffer = await renderToBuffer(doc);
 
