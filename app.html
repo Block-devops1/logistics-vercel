@@ -1782,15 +1782,14 @@
 
           const imgData = canvas.toDataURL("image/png");
           const { jsPDF } = window.jspdf;
-          const pxW = cardWidth;
-          const pxH = Math.round((canvas.height / canvas.width) * pxW);
+          const ptW = cardWidth * 0.75;
+          const ptH = (canvas.height / canvas.width) * ptW;
           const pdf = new jsPDF({
             orientation: "portrait",
-            unit: "px",
-            format: [pxW, pxH],
-            hotfixes: ["px_scaling"],
+            unit: "pt",
+            format: [ptW, ptH],
           });
-          pdf.addImage(imgData, "PNG", 0, 0, pxW, pxH);
+          pdf.addImage(imgData, "PNG", 0, 0, ptW, ptH);
           pdf.save(
             `Evueo-${document.getElementById("rc-tracking").textContent}.pdf`,
           );
