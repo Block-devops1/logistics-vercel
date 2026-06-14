@@ -1748,6 +1748,14 @@
 
           const cardWidth = 400;
           const cardHeight = card.scrollHeight;
+          console.log(
+            "card.scrollWidth:",
+            card.scrollWidth,
+            "card.offsetWidth:",
+            card.offsetWidth,
+            "computed width:",
+            getComputedStyle(card).width,
+          );
 
           const scale = Math.max(2, window.devicePixelRatio || 1);
           const canvas = await html2canvas(card, {
