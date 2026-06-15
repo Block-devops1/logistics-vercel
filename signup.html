@@ -1009,58 +1009,37 @@
         const sheetId = document.getElementById("sheet-id").value.trim();
 
         try {
-          // 1. Create auth user in Supabase
+          // 1. Create auth user in Supabase — store all signup data in metadata
+          // so it can be used to create the companies row after email verification.
           const { data: authData, error: authError } = await sb.auth.signUp({
             email,
             password: pw,
-            options: { data: { full_name: fullName, company_name: company } },
+            options: {
+              data: {
+                full_name: fullName,
+                company_name: company,
+                sheet_id: sheetId,
+                tier: selectedPlan,
+                agreed_to_terms: true,
+                agreed_at: new Date().toISOString(),
+              },
+            },
           });
 
           if (authError) throw new Error(authError.message);
 
-          // 2. Insert company record with consent timestamp
-          const { error: dbError } = await sb.from("companies").insert({
-            id: authData.user.id,
-            email,
-            company_name: company,
-            tier: selectedPlan,
-            sheet_id: sheetId,
-            agreed_to_terms: true,
-            agreed_at: new Date().toISOString(),
-            agreed_ip: "client", // IP captured server-side in production
-          });
+          // 2. Show "check your email" message — companies row + Paystack
+          // (if premium) are handled on first verified login in app.html.
+          const a = document.getElementById("alert-step3");
+          a.className = "alert alert-success show";
+          a.innerHTML =
+            "✅ Account created! Please check your email and click the verification link to activate your account, then sign in.";
+          btn.disabled = true;
+          btn.innerHTML = "Check your email";
 
-          if (dbError) throw new Error(dbError.message);
-
-          // 3. Redirect to app
-          // 3. If premium, fire Paystack payment
-          if (selectedPlan === "premium") {
-            const handler = PaystackPop.setup({
-              key: "pk_test_3b47131d5b6c0e13b7c629fa6c8d50789d97cc91",
-              email,
-              amount: 500000, // ₦5,000 in kobo
-              currency: "NGN",
-              ref: "EVU-" + Date.now(),
-              metadata: { userId: authData.user.id },
-              onSuccess: async (transaction) => {
-                await fetch("/api/verify-payment", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    reference: transaction.reference,
-                    userId: authData.user.id,
-                  }),
-                });
-                window.location.href = "/app";
-              },
-              onCancel: () => {
-                window.location.href = "/app"; // goes as free if they cancel
-              },
-            });
-            handler.openIframe();
-          } else {
-            window.location.href = "/app";
-          }
+          setTimeout(() => {
+            window.location.href = "/login";
+          }, 4000);
         } catch (err) {
           const a = document.getElementById("alert-step3");
           a.className = "alert alert-error show";

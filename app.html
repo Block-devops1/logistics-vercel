@@ -1965,10 +1965,45 @@
             return;
           }
 
-          const { data: company } = await sb
+          let { data: company, error: companyError } = await sb
             .from("companies")
             .select("company_name, sheet_id, tier, extractions_used, logo_url")
             .single();
+
+          // First login after email verification — companies row doesn't exist yet.
+          // Create it from signup metadata stored during signUp().
+          if (companyError || !company) {
+            const meta = session.user.user_metadata || {};
+            const { data: created, error: createError } = await sb
+              .from("companies")
+              .insert({
+                id: session.user.id,
+                email: session.user.email,
+                company_name: meta.company_name || "Your Company",
+                tier: meta.tier === "premium" ? "premium" : "free",
+                sheet_id: meta.sheet_id || "",
+                agreed_to_terms: meta.agreed_to_terms || false,
+                agreed_at: meta.agreed_at || new Date().toISOString(),
+              })
+              .select(
+                "company_name, sheet_id, tier, extractions_used, logo_url",
+              )
+              .single();
+
+            if (createError || !created) {
+              console.error("Failed to create company row:", createError);
+              throw new Error(
+                "Could not set up your account. Please contact support.",
+              );
+            }
+            company = created;
+
+            // If they chose premium at signup, send them to upgrade to pay now
+            if (meta.tier === "premium") {
+              window.location.href = "/upgrade";
+              return;
+            }
+          }
 
           window.userTier = company.tier;
           window.userExtractions = company.extractions_used;
