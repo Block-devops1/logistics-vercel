@@ -58,25 +58,25 @@ export default async function handler(req, res) {
       });
     if (upErr) return res.status(500).json({ error: upErr.message });
 
-    // create signed download URL (1 hour)
-    const { data: signed, error: sErr } = await sb.storage
+    // get permanent public URL (bucket must be set to public in Supabase)
+    const { data: publicData } = sb.storage
       .from("company-logos")
-      .createSignedUrl(upData.path, 60 * 60);
-    if (sErr) return res.status(500).json({ error: sErr.message });
+      .getPublicUrl(upData.path);
+    const publicUrl = publicData.publicUrl;
 
-    // persist path & optional public URL (signed) to companies table
+    // persist path & public URL to companies table
     const upd = await sb
       .from("companies")
       .update({
         logo_path: upData.path,
         logo_uploaded_at: new Date().toISOString(),
-        logo_url: signed.signedUrl,
+        logo_url: publicUrl,
       })
       .eq("id", companyId);
     if (upd.error)
       console.warn("Failed to persist logo_path:", upd.error.message);
 
-    return res.json({ url: signed.signedUrl, path: upData.path });
+    return res.json({ url: publicUrl, path: upData.path });
   } catch (err) {
     console.error("upload-logo error:", err);
     return res.status(500).json({ error: err.message || String(err) });
