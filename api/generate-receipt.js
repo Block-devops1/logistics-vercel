@@ -8,6 +8,9 @@ import {
   StyleSheet,
   renderToBuffer,
 } from "@react-pdf/renderer";
+import QRCode from "qrcode";
+
+const VERIFY_BASE_URL = "https://evueo.com.ng/verify";
 
 const e = React.createElement;
 
@@ -196,20 +199,38 @@ const styles = StyleSheet.create({
   evueoBrandAccent: {
     color: COLORS.orange,
   },
-  watermark: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    alignItems: "center",
-    justifyContent: "center",
-    opacity: 0.06,
-  },
-  watermarkImg: {
-    width: 180,
-    height: 180,
+  headerLogo: {
+    width: 36,
+    height: 36,
     objectFit: "contain",
+    marginBottom: 6,
+  },
+  verifySection: {
+    paddingVertical: 9,
+    paddingHorizontal: 15,
+    borderTopWidth: 0.75,
+    borderTopColor: "#f5f5f4",
+    borderTopStyle: "solid",
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  verifyQr: {
+    width: 38,
+    height: 38,
+    marginRight: 9,
+  },
+  verifyTextWrap: {
+    flexShrink: 1,
+  },
+  verifyTitle: {
+    fontSize: 7,
+    fontFamily: "Helvetica-Bold",
+    color: COLORS.dark,
+    marginBottom: 1.5,
+  },
+  verifyUrl: {
+    fontSize: 6.5,
+    color: COLORS.muted,
   },
 });
 
@@ -240,11 +261,18 @@ function receiptDocument({
   dateStr,
   isPaid,
   logoUrl,
+  qrDataUrl,
 }) {
+  const logo =
+    isPaid && logoUrl
+      ? e(Image, { src: logoUrl, style: styles.headerLogo })
+      : null;
+
   const header = isPaid
     ? e(
         View,
         { style: styles.headerPaid },
+        logo,
         e(Text, { style: styles.companyNamePaid }, companyName),
         e(Text, { style: styles.companySubPaid }, "WAYBILL RECEIPT"),
       )
@@ -255,15 +283,6 @@ function receiptDocument({
         e(Text, { style: styles.companySub }, "WAYBILL RECEIPT"),
         e(Text, { style: styles.poweredBadge }, "POWERED BY EVUEO"),
       );
-
-  const watermark =
-    isPaid && logoUrl
-      ? e(
-          View,
-          { style: styles.watermark },
-          e(Image, { src: logoUrl, style: styles.watermarkImg }),
-        )
-      : null;
 
   const trackingStrip = e(
     View,
@@ -304,6 +323,24 @@ function receiptDocument({
     ),
   );
 
+  const verifySection = qrDataUrl
+    ? e(
+        View,
+        { style: styles.verifySection },
+        e(Image, { src: qrDataUrl, style: styles.verifyQr }),
+        e(
+          View,
+          { style: styles.verifyTextWrap },
+          e(Text, { style: styles.verifyTitle }, "Verify this waybill"),
+          e(
+            Text,
+            { style: styles.verifyUrl },
+            `Scan, or visit evueo.com.ng/verify and enter ${tracking || "your tracking ID"}`,
+          ),
+        ),
+      )
+    : null;
+
   const footer = e(
     View,
     { style: styles.footer },
@@ -326,11 +363,11 @@ function receiptDocument({
     null,
     e(
       Page,
-      { size: [300, 480], style: styles.page },
+      { size: [300, 535], style: styles.page },
       header,
-      watermark,
       trackingStrip,
       body,
+      verifySection,
       footer,
     ),
   );
@@ -357,6 +394,18 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing tracking number" });
     }
 
+    let qrDataUrl = null;
+    try {
+      const verifyUrl = `${VERIFY_BASE_URL}?tracking=${encodeURIComponent(tracking)}`;
+      qrDataUrl = await QRCode.toDataURL(verifyUrl, {
+        width: 300,
+        margin: 1,
+        color: { dark: "#1c1917", light: "#ffffff" },
+      });
+    } catch (qrErr) {
+      console.error("QR generation failed, continuing without it:", qrErr);
+    }
+
     const doc = receiptDocument({
       companyName: companyName || "Your Logistics Company",
       tracking,
@@ -366,6 +415,7 @@ export default async function handler(req, res) {
       dateStr: dateStr || "",
       isPaid: !!isPaid,
       logoUrl: isPaid ? logoUrl : null,
+      qrDataUrl,
     });
 
     const buffer = await renderToBuffer(doc);

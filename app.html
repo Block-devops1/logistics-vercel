@@ -2231,94 +2231,67 @@
       }
 
       /* ── Search ── */
+      function escapeHtml(s) {
+        return String(s).replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+      }
+
       async function searchSpreadsheet() {
         const query = document.getElementById("searchInput").value.trim();
-        try {
-          const card = document.getElementById("receipt-card");
+        const out = document.getElementById("search-output");
 
-          // Remember original styles to restore later
-          const wrapper = card.parentElement;
-          const origCardStyles = {
-            width: card.style.width || "",
-            maxWidth: card.style.maxWidth || "",
-            visibility: card.style.visibility || "",
-            position: card.style.position || "",
-            left: card.style.left || "",
-            top: card.style.top || "",
-            transform: card.style.transform || "",
-          };
-          const origWrapperStyles = {
-            position: wrapper.style.position || "",
-            left: wrapper.style.left || "",
-            top: wrapper.style.top || "",
-            transform: wrapper.style.transform || "",
-            zIndex: wrapper.style.zIndex || "",
-            overflow: wrapper.style.overflow || "",
-          };
-
-          // Place wrapper in viewport temporarily and make card visible but hidden from user
-          wrapper.style.position = "fixed";
-          wrapper.style.left = "50%";
-          wrapper.style.top = "40px";
-          wrapper.style.transform = "translateX(-50%)";
-          wrapper.style.zIndex = "99999";
-          wrapper.style.overflow = "visible";
-
-          card.style.width = "400px";
-          card.style.maxWidth = "400px";
-          card.style.visibility = "visible";
-
-          // Wait for fonts to be ready to avoid missing font rendering in canvas
-          if (document.fonts && document.fonts.ready)
-            await document.fonts.ready;
-
-          const scale = Math.max(2, window.devicePixelRatio || 1);
-          const canvas = await html2canvas(card, {
-            scale: scale,
-            useCORS: true,
-            backgroundColor: "#ffffff",
-            width: 400,
-            height: card.scrollHeight,
-            windowWidth: Math.max(document.documentElement.clientWidth, 1200),
-            scrollX: 0,
-            scrollY: 0,
-          });
-
-          // Restore styles
-          card.style.width = origCardStyles.width;
-          card.style.maxWidth = origCardStyles.maxWidth;
-          card.style.visibility = origCardStyles.visibility;
-          card.style.position = origCardStyles.position;
-          card.style.left = origCardStyles.left;
-          card.style.top = origCardStyles.top;
-          card.style.transform = origCardStyles.transform;
-
-          wrapper.style.position = origWrapperStyles.position;
-          wrapper.style.left = origWrapperStyles.left;
-          wrapper.style.top = origWrapperStyles.top;
-          wrapper.style.transform = origWrapperStyles.transform;
-          wrapper.style.zIndex = origWrapperStyles.zIndex;
-          wrapper.style.overflow = origWrapperStyles.overflow;
-
-          const imgData = canvas.toDataURL("image/png");
-          const { jsPDF } = window.jspdf;
-          // compute PDF size from canvas and scale to avoid cropping
-          const pdfW = Math.round(canvas.width / scale);
-          const pdfH = Math.round(canvas.height / scale);
-          const pdf = new jsPDF({
-            orientation: "portrait",
-            unit: "px",
-            format: [pdfW, pdfH],
-          });
-          pdf.addImage(imgData, "PNG", 0, 0, pdfW, pdfH);
-          pdf.save(
-            `Evueo-${document.getElementById("rc-tracking").textContent}.pdf`,
-          );
-        } catch (e) {
-          console.error("PDF generation failed:", e);
-          alert("Could not generate receipt file. Please try again.");
+        if (!query) {
+          out.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">Type a sender or receiver name to search.</div></div>`;
+          return;
         }
-        // no local btn in this scope — nothing to restore here
+
+        out.innerHTML = `<div class="spinner-wrap"><div class="spinner"></div><span class="spinner-label">Searching…</span></div>`;
+
+        try {
+          const res = await fetch("/api/get-records", {
+            headers: await authHeaders(),
+          });
+
+          if (!res.ok) {
+            let msg = `Server error (${res.status})`;
+            try {
+              const j = await res.json();
+              if (j?.error) msg = j.error;
+            } catch (_) {}
+            throw new Error(msg);
+          }
+
+          const records = toArray(await res.json());
+          const q = query.toLowerCase();
+          const matches = records.filter(
+            (r) =>
+              (r.sender || "").toLowerCase().includes(q) ||
+              (r.receiver || "").toLowerCase().includes(q) ||
+              (r.tracking_number || "").toLowerCase().includes(q),
+          );
+
+          if (!matches.length) {
+            out.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No records match "${escapeHtml(query)}".</div></div>`;
+            return;
+          }
+
+          out.innerHTML = `<div class="records-list">${[...matches]
+            .reverse()
+            .map(recordCardHTML)
+            .join("")}</div>`;
+        } catch (err) {
+          console.error("searchSpreadsheet error:", err);
+          out.innerHTML = `<div class="result-error">❌ ${escapeHtml(err.message || "Could not search records.")}</div>`;
+        }
       }
     </script>
   </body>
