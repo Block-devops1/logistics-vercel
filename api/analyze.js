@@ -140,6 +140,14 @@ export default async function handler(req, res) {
           : String(extracted.description || "N/A"),
     });
 
+    // Index the tracking number for public verification (verify.evueo.com.ng)
+    if (extracted.tracking_number && extracted.tracking_number !== "N/A") {
+      await sb.from("waybill_index").insert({
+        tracking_number: String(extracted.tracking_number),
+        company_id: user.id,
+      });
+    }
+
     // 6. Increment extraction counter
     await sb
       .from("companies")

@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Evueo — Verify a Receipt</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Figtree:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --bg: #faf8f5;
+        --surface: #fff;
+        --border: #e8e2d9;
+        --accent: #f97316;
+        --accent2: #ea6c00;
+        --text: #1c1917;
+        --muted: #78716c;
+        --muted2: #a8a29e;
+        --success: #16a34a;
+        --error: #dc2626;
+        --r: 12px;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Figtree", sans-serif;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 24px;
+      }
+      nav {
+        width: 100%;
+        max-width: 480px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 4px;
+      }
+      .logo {
+        font-family: "Syne", sans-serif;
+        font-weight: 800;
+        font-size: 1.3rem;
+        color: var(--text);
+        text-decoration: none;
+      }
+      .logo em {
+        color: var(--accent);
+        font-style: normal;
+      }
+      .back-link {
+        font-size: 0.85rem;
+        color: var(--muted);
+        text-decoration: none;
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 36px;
+        max-width: 480px;
+        width: 100%;
+        margin-top: 24px;
+        text-align: center;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+      }
+      h1 {
+        font-family: "Syne", sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        margin-bottom: 8px;
+      }
+      .subtitle {
+        color: var(--muted);
+        font-size: 0.88rem;
+        margin-bottom: 24px;
+        line-height: 1.5;
+      }
+      .search-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      input {
+        flex: 1;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        color: var(--text);
+        font-family: "DM Mono", monospace;
+        font-size: 0.92rem;
+        padding: 12px 14px;
+        outline: none;
+        text-align: center;
+      }
+      input:focus {
+        border-color: rgba(249, 115, 22, 0.5);
+        box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.07);
+      }
+      .btn {
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        border-radius: var(--r);
+        padding: 12px 22px;
+        font-family: "Figtree", sans-serif;
+        font-size: 0.92rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+      .btn:hover {
+        background: var(--accent2);
+      }
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .result {
+        border-radius: 12px;
+        padding: 22px;
+        text-align: left;
+        display: none;
+      }
+      .result.show {
+        display: block;
+        animation: fadeUp 0.3s ease;
+      }
+      .result-verified {
+        background: rgba(22, 163, 74, 0.05);
+        border: 1px solid rgba(22, 163, 74, 0.2);
+      }
+      .result-not-found {
+        background: rgba(220, 38, 38, 0.05);
+        border: 1px solid rgba(220, 38, 38, 0.2);
+      }
+      .result-icon {
+        font-size: 1.8rem;
+        margin-bottom: 8px;
+      }
+      .result-title {
+        font-weight: 700;
+        font-size: 1rem;
+        margin-bottom: 12px;
+      }
+      .result-title.verified {
+        color: var(--success);
+      }
+      .result-title.not-found {
+        color: var(--error);
+      }
+      .result-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.85rem;
+        padding: 6px 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      }
+      .result-row:last-child {
+        border-bottom: none;
+      }
+      .result-label {
+        color: var(--muted);
+      }
+      .result-value {
+        font-weight: 600;
+        text-align: right;
+      }
+      .result-note {
+        font-size: 0.78rem;
+        color: var(--muted);
+        margin-top: 14px;
+        line-height: 1.5;
+      }
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <a href="/" class="logo">ev<em>u</em>eo</a>
+      <a href="/" class="back-link">← Back home</a>
+    </nav>
+
+    <div class="card">
+      <h1>Verify a Receipt</h1>
+      <p class="subtitle">
+        Enter the tracking ID from an Evueo receipt to confirm it's genuine.
+      </p>
+
+      <div class="search-row">
+        <input
+          type="text"
+          id="trackingInput"
+          placeholder="e.g. EVU-2026-9841-KG"
+          onkeydown="if (event.key === 'Enter') verify();"
+        />
+        <button class="btn" id="verifyBtn" onclick="verify()">Verify</button>
+      </div>
+
+      <div id="result"></div>
+    </div>
+
+    <script>
+      async function verify() {
+        const input = document.getElementById("trackingInput");
+        const btn = document.getElementById("verifyBtn");
+        const resultEl = document.getElementById("result");
+        const tracking = input.value.trim();
+
+        if (!tracking) return;
+
+        btn.disabled = true;
+        btn.textContent = "Checking…";
+        resultEl.innerHTML = "";
+
+        try {
+          const res = await fetch(
+            `/api/verify-waybill?tracking=${encodeURIComponent(tracking)}`,
+          );
+          const data = await res.json();
+
+          if (data.found) {
+            const date = new Date(data.created_at).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            });
+            resultEl.innerHTML = `
+              <div class="result result-verified show">
+                <div class="result-icon">✅</div>
+                <div class="result-title verified">Verified Genuine Receipt</div>
+                <div class="result-row">
+                  <span class="result-label">Tracking ID</span>
+                  <span class="result-value">${data.tracking_number}</span>
+                </div>
+                <div class="result-row">
+                  <span class="result-label">Issued by</span>
+                  <span class="result-value">${data.company_name}</span>
+                </div>
+                <div class="result-row">
+                  <span class="result-label">Date created</span>
+                  <span class="result-value">${date}</span>
+                </div>
+                <div class="result-note">
+                  This receipt was generated through Evueo's platform by the company shown above. If anyone is asking you for extra fees to "release" or "clear" this package, that is a scam — Evueo and legitimate couriers never charge fees through this page.
+                </div>
+              </div>`;
+          } else {
+            resultEl.innerHTML = `
+              <div class="result result-not-found show">
+                <div class="result-icon">⚠️</div>
+                <div class="result-title not-found">Not Found</div>
+                <div class="result-note">
+                  We could not verify this tracking ID. Double-check it was typed correctly. If you received this from someone asking for payment to release a package, please be cautious — this may be a scam.
+                </div>
+              </div>`;
+          }
+        } catch (e) {
+          resultEl.innerHTML = `
+            <div class="result result-not-found show">
+              <div class="result-note">Something went wrong. Please try again.</div>
+            </div>`;
+        }
+
+        btn.disabled = false;
+        btn.textContent = "Verify";
+      }
+
+      // Auto-fill from URL query param (?tracking=XXX) for QR code scans
+      window.onload = function () {
+        const params = new URLSearchParams(window.location.search);
+        const t = params.get("tracking");
+        if (t) {
+          document.getElementById("trackingInput").value = t;
+          verify();
+        }
+      };
+    </script>
+  </body>
+</html>
