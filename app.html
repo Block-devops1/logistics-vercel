@@ -1714,6 +1714,8 @@
           tracking: data.tracking_number || "N/A",
           sender: data.sender || "N/A",
           receiver: data.receiver || "N/A",
+          receiverPhone: data.receiver_phone || "",
+          landmark: data.landmark || "",
           items: Array.isArray(data.description)
             ? JSON.stringify(data.description)
             : data.description || "N/A",

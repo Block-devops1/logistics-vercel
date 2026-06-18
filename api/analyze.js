@@ -59,7 +59,10 @@ export default async function handler(req, res) {
 
     // 4. Call AI
     const systemPrompt =
-      "You are a logistics data extractor. The text contains business waybill information including names and addresses which are necessary for delivery purposes. Extract these fields: sender, receiver, tracking_number, description. Return ONLY raw JSON. No markdown.";
+      "You are a logistics data extractor. The text contains business waybill information including names and addresses which are necessary for delivery purposes. Extract these fields: sender, receiver, tracking_number, description, receiver_phone, landmark. " +
+      "receiver_phone is the recipient's phone number if mentioned, otherwise an empty string. " +
+      "landmark is any delivery directions, nearby landmark, or drop-off instructions mentioned (e.g. 'opposite the central mosque, Mile 1, Diobu'), otherwise an empty string — do not repeat the phone number inside this field. " +
+      "Return ONLY raw JSON. No markdown.";
     const aiResponse = await fetch(
       "https://openrouter.ai/api/v1/chat/completions",
       {
@@ -113,19 +116,26 @@ export default async function handler(req, res) {
     await doc.loadInfo();
     const sheet = doc.sheetsByIndex[0];
 
-    // Auto-create headers if sheet is empty
+    // Auto-create / extend headers. New columns are appended at the end
+    // (not inserted mid-sheet) so sheets created before phone/landmark
+    // extraction existed stay backward-compatible.
     const headers = [
       "Date",
       "Sender",
       "Receiver",
       "Tracking Number",
       "Description",
+      "Receiver Phone",
+      "Landmark",
     ];
     await sheet.loadHeaderRow().catch(async () => {
       await sheet.setHeaderRow(headers);
     });
 
-    if (!sheet.headerValues || sheet.headerValues.length === 0) {
+    const hasAllHeaders =
+      sheet.headerValues &&
+      headers.every((h) => sheet.headerValues.includes(h));
+    if (!hasAllHeaders) {
       await sheet.setHeaderRow(headers);
     }
 
@@ -138,6 +148,8 @@ export default async function handler(req, res) {
         typeof extracted.description === "object"
           ? JSON.stringify(extracted.description)
           : String(extracted.description || "N/A"),
+      "Receiver Phone": String(extracted.receiver_phone || "N/A"),
+      Landmark: String(extracted.landmark || "N/A"),
     });
 
     // Index the tracking number for public verification (verify.evueo.com.ng)
