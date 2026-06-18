@@ -67,6 +67,8 @@ export default async function handler(req, res) {
       receiver: row[2] || "N/A",
       tracking_number: row[3] || "N/A",
       description: row[4] || "N/A",
+      receiver_phone: row[5] || "N/A",
+      landmark: row[6] || "N/A",
     }));
 
     res.status(200).json(data);

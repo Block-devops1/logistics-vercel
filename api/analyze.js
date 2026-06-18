@@ -153,11 +153,22 @@ export default async function handler(req, res) {
     });
 
     // Index the tracking number for public verification (verify.evueo.com.ng)
+    // Uses the service-role key (not the user's RLS-scoped `sb` client) since
+    // this is a trusted server-side write — the user's identity was already
+    // verified above, and we don't want a missing/misconfigured RLS policy
+    // on waybill_index to silently drop the index row.
     if (extracted.tracking_number && extracted.tracking_number !== "N/A") {
-      await sb.from("waybill_index").insert({
+      const sbAdmin = createClient(
+        process.env.SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY,
+      );
+      const { error: indexErr } = await sbAdmin.from("waybill_index").insert({
         tracking_number: String(extracted.tracking_number),
         company_id: user.id,
       });
+      if (indexErr) {
+        console.error("waybill_index insert failed:", indexErr.message);
+      }
     }
 
     // 6. Increment extraction counter
