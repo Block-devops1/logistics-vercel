@@ -1916,16 +1916,33 @@
         } catch (e) {}
       }
 
-      function changeSheetId() {
+      async function changeSheetId() {
         const current = window.companySheetId || "";
         const newId = prompt("Enter new Google Sheet ID:", current);
-        if (!newId) return;
-        window.companySheetId = newId;
+        if (!newId || newId.trim() === current) return;
+
         const el = document.getElementById("drawer-sheet-id");
-        if (el) el.textContent = `Sheet: ${newId}`;
-        alert(
-          "Sheet ID updated (local only). Implement server-side save separately.",
-        );
+        if (el) el.textContent = "Sheet: saving…";
+
+        try {
+          const res = await fetch("/api/update-sheet", {
+            method: "POST",
+            headers: await authHeaders(),
+            body: JSON.stringify({ sheet_id: newId.trim() }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Could not save sheet ID.");
+
+          // Persisted — sync local state from the server's normalised value
+          window.companySheetId = data.sheet_id;
+          if (el) el.textContent = `Sheet: ${data.sheet_id}`;
+          alert(
+            "✅ Sheet ID updated. Make sure this new sheet is shared with the Evueo service account as Editor.",
+          );
+        } catch (e) {
+          if (el) el.textContent = `Sheet: ${current || "—"}`;
+          alert(e.message || "Could not save sheet ID.");
+        }
       }
 
       function renderDrawerHistory(rawData) {
@@ -1969,7 +1986,9 @@
 
           let { data: company, error: companyError } = await sb
             .from("companies")
-            .select("company_name, sheet_id, tier, extractions_used, logo_url")
+            .select(
+              "company_name, sheet_id, tier, extractions_used, logo_url, premium_until",
+            )
             .single();
 
           // First login after email verification — companies row doesn't exist yet.
@@ -2005,6 +2024,21 @@
               window.location.href = "/upgrade";
               return;
             }
+          }
+
+          // Premium lapses when premium_until passes. Downgrade the row so the
+          // badge, premium tagline, and receipt watermark all reflect reality.
+          // (analyze.js does the same server-side; this keeps the UI honest.)
+          if (
+            company.tier === "premium" &&
+            (!company.premium_until ||
+              new Date(company.premium_until) <= new Date())
+          ) {
+            company.tier = "free";
+            sb.from("companies")
+              .update({ tier: "free" })
+              .eq("id", session.user.id)
+              .then(() => {});
           }
 
           window.userTier = company.tier;

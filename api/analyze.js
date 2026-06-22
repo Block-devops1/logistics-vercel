@@ -32,7 +32,7 @@ export default async function handler(req, res) {
 
     const { data: profile, error: profileError } = await sb
       .from("companies")
-      .select("sheet_id, tier, extractions_used")
+      .select("sheet_id, tier, extractions_used, premium_until")
       .single();
 
     if (profileError || !profile?.sheet_id) {
@@ -41,8 +41,22 @@ export default async function handler(req, res) {
 
     const sheetId = profile.sheet_id;
 
+    // Premium is only active while premium_until is in the future. A user who
+    // paid once but whose month has lapsed falls back to free — without this
+    // check, tier stays "premium" forever and the paywall never re-applies.
+    const premiumActive =
+      profile.tier === "premium" &&
+      profile.premium_until &&
+      new Date(profile.premium_until) > new Date();
+
+    // Lazily downgrade an expired premium row so the badge, receipts, and model
+    // selection all see "free" from now on (single source of truth = the DB).
+    if (profile.tier === "premium" && !premiumActive) {
+      await sb.from("companies").update({ tier: "free" }).eq("id", user.id);
+    }
+
     // Enforce free tier limit
-    const isFree = !profile.tier || profile.tier === "free";
+    const isFree = !premiumActive;
     const usedCount = profile.extractions_used || 0;
     if (isFree && usedCount >= 10) {
       return res.status(403).json({ error: "LIMIT_REACHED" });
@@ -74,8 +88,7 @@ export default async function handler(req, res) {
           "X-Title": "Evueo",
         },
         body: JSON.stringify({
-          model:
-            profile.tier === "premium" ? "openrouter/auto" : "openrouter/free",
+          model: premiumActive ? "openrouter/auto" : "openrouter/free",
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: text },
