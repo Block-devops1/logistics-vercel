@@ -152,6 +152,21 @@ const styles = StyleSheet.create({
     lineHeight: 1.4,
     marginTop: 2,
   },
+  partyPhone: {
+    fontSize: 8.25,
+    fontFamily: "Helvetica-Bold",
+    color: COLORS.dark,
+    lineHeight: 1.3,
+    marginTop: 2,
+    letterSpacing: 0.3,
+  },
+  partyHint: {
+    fontSize: 7.75,
+    fontFamily: "Helvetica-Oblique",
+    color: COLORS.muted,
+    lineHeight: 1.4,
+    marginTop: 2,
+  },
   metaRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -304,6 +319,8 @@ function receiptDocument({
   tracking,
   sender,
   receiver,
+  receiverPhone,
+  landmark,
   items,
   dateStr,
   isPaid,
@@ -352,9 +369,22 @@ function receiptDocument({
   // Premium-only fragments. A field renders only when it has a real value, so
   // a premium receipt with sparse data still looks clean (no empty rows).
   const has = (v) => isPaid && v && String(v).trim() && v !== "N/A";
+  // Tier-agnostic presence check — used for fields that render on every
+  // receipt (e.g. receiver phone) regardless of premium status.
+  const present = (v) => v && String(v).trim() && v !== "N/A";
+
+  const phoneLine = present(receiverPhone)
+    ? e(Text, { style: styles.partyPhone }, String(receiverPhone))
+    : null;
 
   const addressLine = has(deliveryAddress)
     ? e(Text, { style: styles.partyDetail }, String(deliveryAddress))
+    : null;
+
+  // Landmark is rider-facing operations info — premium only, matches how the
+  // tier is positioned ("for full operation").
+  const landmarkLine = has(landmark)
+    ? e(Text, { style: styles.partyHint }, String(landmark))
     : null;
 
   const route =
@@ -424,7 +454,9 @@ function receiptDocument({
         null,
         e(Text, { style: styles.partyLabel }, "TO"),
         e(Text, { style: styles.partyName }, receiver || "N/A"),
+        phoneLine,
         addressLine,
+        landmarkLine,
       ),
     ),
     metaRow,
@@ -498,6 +530,8 @@ export default async function handler(req, res) {
       tracking,
       sender,
       receiver,
+      receiverPhone,
+      landmark,
       items,
       dateStr,
       isPaid,
@@ -536,8 +570,10 @@ export default async function handler(req, res) {
       isPaid: !!isPaid,
       logoUrl: isPaid ? logoUrl : null,
       qrDataUrl,
-      // Premium-only fields; ignored when isPaid is false (receiptDocument
-      // gates each one on isPaid).
+      // Tier-agnostic: phone always renders when present (free + premium).
+      receiverPhone,
+      // Premium-only fields; receiptDocument gates each one on isPaid.
+      landmark,
       weight,
       deliveryAddress,
       origin,
