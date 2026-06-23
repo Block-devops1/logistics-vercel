@@ -1,4 +1,3 @@
-import { google } from "googleapis";
 import { createClient } from "@supabase/supabase-js";
 
 // Public endpoint — no auth. Given a tracking number, finds which company's
@@ -24,7 +23,7 @@ export default async function handler(req, res) {
     // Populated by analyze.js whenever a new extraction is saved (see step 2 below).
     const { data: indexRow, error: indexErr } = await sb
       .from("waybill_index")
-      .select("company_id, created_at")
+      .select("company_id, created_at, status, status_updated_at")
       .eq("tracking_number", tracking)
       .single();
 
@@ -47,6 +46,11 @@ export default async function handler(req, res) {
       tracking_number: tracking,
       company_name: company.company_name,
       created_at: indexRow.created_at,
+      // Public delivery status. PII-free by design — just the stage and when it
+      // was last advanced. Falls back to "registered" for any legacy row that
+      // pre-dates migration 002.
+      status: indexRow.status || "registered",
+      status_updated_at: indexRow.status_updated_at || null,
     });
   } catch (error) {
     console.error("verify-waybill error:", error.message);

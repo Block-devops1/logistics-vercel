@@ -53,7 +53,7 @@ export default async function handler(req, res) {
 
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: "Sheet1!A:G",
+      range: "Sheet1!A:M",
     });
 
     const rows = response.data.values;
@@ -61,6 +61,8 @@ export default async function handler(req, res) {
       return res.status(200).json([]);
     }
 
+    // Columns H–M are premium-only and absent on older 7-column sheets — they
+    // default to "N/A" so legacy sheets keep reading without errors.
     const data = rows.slice(1).map((row) => ({
       date: row[0] || "N/A",
       sender: row[1] || "N/A",
@@ -69,6 +71,12 @@ export default async function handler(req, res) {
       description: row[4] || "N/A",
       receiver_phone: row[5] || "N/A",
       landmark: row[6] || "N/A",
+      weight: row[7] || "N/A",
+      delivery_address: row[8] || "N/A",
+      origin: row[9] || "N/A",
+      destination: row[10] || "N/A",
+      delivery_fee: row[11] || "N/A",
+      payment_status: row[12] || "N/A",
     }));
 
     res.status(200).json(data);

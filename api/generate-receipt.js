@@ -146,6 +146,53 @@ const styles = StyleSheet.create({
     color: COLORS.dark,
     lineHeight: 1.3,
   },
+  partyDetail: {
+    fontSize: 8,
+    color: COLORS.text,
+    lineHeight: 1.4,
+    marginTop: 2,
+  },
+  metaRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 10.5,
+  },
+  metaBlock: {
+    flexShrink: 1,
+    paddingRight: 8,
+  },
+  feeStrip: {
+    backgroundColor: COLORS.cream,
+    borderRadius: 7.5,
+    padding: 10.5,
+    paddingHorizontal: 12,
+    marginTop: 10.5,
+    borderWidth: 0.75,
+    borderColor: COLORS.border,
+    borderStyle: "solid",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  feeValue: {
+    fontSize: 11,
+    fontFamily: "Helvetica-Bold",
+    color: COLORS.dark,
+  },
+  feePaid: {
+    fontSize: 7.5,
+    fontFamily: "Helvetica-Bold",
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    color: "#16a34a",
+  },
+  feePod: {
+    fontSize: 7.5,
+    fontFamily: "Helvetica-Bold",
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    color: COLORS.orange,
+  },
   itemsCard: {
     backgroundColor: COLORS.bodyBg,
     borderRadius: 7.5,
@@ -262,6 +309,12 @@ function receiptDocument({
   isPaid,
   logoUrl,
   qrDataUrl,
+  weight,
+  deliveryAddress,
+  origin,
+  destination,
+  deliveryFee,
+  paymentStatus,
 }) {
   const logo =
     isPaid && logoUrl
@@ -296,6 +349,64 @@ function receiptDocument({
     e(Text, { style: styles.dateVal }, dateStr),
   );
 
+  // Premium-only fragments. A field renders only when it has a real value, so
+  // a premium receipt with sparse data still looks clean (no empty rows).
+  const has = (v) => isPaid && v && String(v).trim() && v !== "N/A";
+
+  const addressLine = has(deliveryAddress)
+    ? e(Text, { style: styles.partyDetail }, String(deliveryAddress))
+    : null;
+
+  const route =
+    origin || destination ? `${origin || "?"} → ${destination || "?"}` : "";
+  const showMeta = has(weight) || (isPaid && route);
+  const metaRow = showMeta
+    ? e(
+        View,
+        { style: styles.metaRow },
+        has(weight)
+          ? e(
+              View,
+              { style: styles.metaBlock },
+              e(Text, { style: styles.partyLabel }, "WEIGHT"),
+              e(Text, { style: styles.partyName }, String(weight)),
+            )
+          : null,
+        isPaid && route
+          ? e(
+              View,
+              { style: styles.metaBlock },
+              e(Text, { style: styles.partyLabel }, "ROUTE"),
+              e(Text, { style: styles.partyName }, route),
+            )
+          : null,
+      )
+    : null;
+
+  const feeStrip = has(deliveryFee)
+    ? e(
+        View,
+        { style: styles.feeStrip },
+        e(
+          View,
+          { style: { flexShrink: 1 } },
+          e(Text, { style: styles.partyLabel }, "DELIVERY FEE"),
+          e(Text, { style: styles.feeValue }, String(deliveryFee)),
+        ),
+        has(paymentStatus)
+          ? e(
+              Text,
+              {
+                style: /paid/i.test(String(paymentStatus))
+                  ? styles.feePaid
+                  : styles.feePod,
+              },
+              String(paymentStatus),
+            )
+          : null,
+      )
+    : null;
+
   const body = e(
     View,
     { style: styles.body },
@@ -313,14 +424,17 @@ function receiptDocument({
         null,
         e(Text, { style: styles.partyLabel }, "TO"),
         e(Text, { style: styles.partyName }, receiver || "N/A"),
+        addressLine,
       ),
     ),
+    metaRow,
     e(
       View,
       { style: styles.itemsCard },
       e(Text, { style: styles.itemsLabel }, "ITEMS / DESCRIPTION"),
       itemsContent(items),
     ),
+    feeStrip,
   );
 
   const verifySection = qrDataUrl
@@ -388,6 +502,12 @@ export default async function handler(req, res) {
       dateStr,
       isPaid,
       logoUrl,
+      weight,
+      deliveryAddress,
+      origin,
+      destination,
+      deliveryFee,
+      paymentStatus,
     } = req.body || {};
 
     if (!tracking) {
@@ -416,6 +536,14 @@ export default async function handler(req, res) {
       isPaid: !!isPaid,
       logoUrl: isPaid ? logoUrl : null,
       qrDataUrl,
+      // Premium-only fields; ignored when isPaid is false (receiptDocument
+      // gates each one on isPaid).
+      weight,
+      deliveryAddress,
+      origin,
+      destination,
+      deliveryFee,
+      paymentStatus,
     });
 
     const buffer = await renderToBuffer(doc);

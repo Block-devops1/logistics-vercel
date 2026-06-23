@@ -69,13 +69,30 @@ export default async function handler(req, res) {
       throw new Error("Missing API Keys in Vercel Settings!");
     }
 
+    // Manual money fields (premium only) — never AI-extracted, so the AI can
+    // never print an invented amount on a financial document.
+    const deliveryFee = premiumActive ? String(req.body.deliveryFee || "") : "";
+    const paymentStatus = premiumActive
+      ? String(req.body.paymentStatus || "")
+      : "";
+
     const GOOGLE_KEY = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n");
 
-    // 4. Call AI
+    // 4. Call AI. Premium accounts extract extra descriptive fields (weight,
+    // delivery address, origin/destination); free accounts get the base set.
+    const premiumFields = premiumActive
+      ? "Also extract these fields: weight, delivery_address, origin, destination. " +
+        "weight is the parcel weight if stated (e.g. '5kg'), otherwise an empty string. " +
+        "delivery_address is the receiver's full street/delivery address if given, otherwise an empty string. " +
+        "origin is the pickup city/town and destination is the delivery city/town if mentioned, otherwise empty strings. " +
+        "Never guess or invent any of these — return an empty string when not clearly present. "
+      : "";
+
     const systemPrompt =
       "You are a logistics data extractor. The text contains business waybill information including names and addresses which are necessary for delivery purposes. Extract these fields: sender, receiver, tracking_number, description, receiver_phone, landmark. " +
       "receiver_phone is the recipient's phone number if mentioned, otherwise an empty string. " +
       "landmark is any delivery directions, nearby landmark, or drop-off instructions mentioned (e.g. 'opposite the central mosque, Mile 1, Diobu'), otherwise an empty string — do not repeat the phone number inside this field. " +
+      premiumFields +
       "Return ONLY raw JSON. No markdown.";
     const aiResponse = await fetch(
       "https://openrouter.ai/api/v1/chat/completions",
@@ -140,6 +157,12 @@ export default async function handler(req, res) {
       "Description",
       "Receiver Phone",
       "Landmark",
+      "Weight",
+      "Delivery Address",
+      "Origin",
+      "Destination",
+      "Delivery Fee",
+      "Payment Status",
     ];
     await sheet.loadHeaderRow().catch(async () => {
       await sheet.setHeaderRow(headers);
@@ -163,6 +186,14 @@ export default async function handler(req, res) {
           : String(extracted.description || "N/A"),
       "Receiver Phone": String(extracted.receiver_phone || "N/A"),
       Landmark: String(extracted.landmark || "N/A"),
+      // Premium-only columns. Blank for free accounts (premiumFields prompt was
+      // empty, so these stay "") and for the manual fee/payment fields.
+      Weight: String(extracted.weight || ""),
+      "Delivery Address": String(extracted.delivery_address || ""),
+      Origin: String(extracted.origin || ""),
+      Destination: String(extracted.destination || ""),
+      "Delivery Fee": deliveryFee,
+      "Payment Status": paymentStatus,
     });
 
     // Index the tracking number for public verification (verify.evueo.com.ng)
@@ -178,6 +209,7 @@ export default async function handler(req, res) {
       const { error: indexErr } = await sbAdmin.from("waybill_index").insert({
         tracking_number: String(extracted.tracking_number),
         company_id: user.id,
+        status: "registered",
       });
       if (indexErr) {
         console.error("waybill_index insert failed:", indexErr.message);
@@ -190,7 +222,15 @@ export default async function handler(req, res) {
       .update({ extractions_used: (profile.extractions_used || 0) + 1 })
       .eq("id", user.id);
 
-    return res.status(200).json({ message: "Success!", data: extracted });
+    // Merge the manual fee/payment fields into the returned data so the client
+    // can render them on the receipt without a second round-trip.
+    const responseData = {
+      ...extracted,
+      delivery_fee: deliveryFee,
+      payment_status: paymentStatus,
+    };
+
+    return res.status(200).json({ message: "Success!", data: responseData });
   } catch (error) {
     console.error("API Error:", error.message);
     return res.status(500).json({ error: error.message });

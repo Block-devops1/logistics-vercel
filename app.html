@@ -806,6 +806,33 @@
         color: var(--accent);
         opacity: 0.8;
       }
+      .record-status-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+        flex-wrap: wrap;
+      }
+      .status-pill {
+        display: inline-block;
+        padding: 3px 9px;
+        border-radius: 999px;
+        font-size: 0.66rem;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+      }
+      .status-select {
+        font-family: "Figtree", sans-serif;
+        font-size: 0.74rem;
+        padding: 4px 8px;
+        border-radius: 7px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        color: var(--text);
+        cursor: pointer;
+        outline: none;
+      }
 
       .empty-state {
         text-align: center;
@@ -1182,6 +1209,80 @@
           id="messyInput"
           placeholder="e.g. Recv: Mr. James at 45 Lekki Phase 1. Sender: Chidi Okafor. Tracking EV-2041. 3 cartons of tiles..."
         ></textarea>
+
+        <!-- Premium-only manual fields. Money is never AI-extracted, so the
+             courier types/confirms it here before it prints on the receipt.
+             Hidden for free accounts (shown in onload when tier is premium). -->
+        <div id="premium-fields" style="display: none">
+          <div
+            style="
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 10px;
+              margin-bottom: 12px;
+            "
+          >
+            <div>
+              <label
+                style="
+                  display: block;
+                  font-size: 0.72rem;
+                  font-weight: 600;
+                  color: var(--muted);
+                  margin-bottom: 5px;
+                "
+                >Delivery fee (optional)</label
+              >
+              <input
+                type="text"
+                id="deliveryFeeInput"
+                inputmode="decimal"
+                placeholder="e.g. ₦2,000"
+                style="
+                  width: 100%;
+                  background: var(--bg);
+                  border: 1px solid var(--border);
+                  border-radius: 9px;
+                  color: var(--text);
+                  font-family: 'Figtree', sans-serif;
+                  font-size: 0.9rem;
+                  padding: 11px 13px;
+                  outline: none;
+                "
+              />
+            </div>
+            <div>
+              <label
+                style="
+                  display: block;
+                  font-size: 0.72rem;
+                  font-weight: 600;
+                  color: var(--muted);
+                  margin-bottom: 5px;
+                "
+                >Payment status</label
+              >
+              <select
+                id="paymentStatusInput"
+                style="
+                  width: 100%;
+                  background: var(--bg);
+                  border: 1px solid var(--border);
+                  border-radius: 9px;
+                  color: var(--text);
+                  font-family: 'Figtree', sans-serif;
+                  font-size: 0.9rem;
+                  padding: 11px 13px;
+                  outline: none;
+                "
+              >
+                <option value="">—</option>
+                <option value="Paid">Paid</option>
+                <option value="Pay on Delivery">Pay on Delivery</option>
+              </select>
+            </div>
+          </div>
+        </div>
         <button class="btn" onclick="analyzeData()">
           <svg
             width="14"
@@ -1204,7 +1305,9 @@
         <div class="section-label">Activity</div>
         <div class="section-title">Recent Records</div>
         <div class="section-desc">
-          Last 5 entries — loaded automatically on every visit.
+          Last 5 entries — loaded automatically on every visit. Tap the status
+          dropdown on any record to update where the package is — your customer
+          sees it instantly on the verify page.
         </div>
         <div id="recent-output">
           <div class="spinner-wrap">
@@ -1654,7 +1757,105 @@
       }
 
       /* ── Record card HTML ── */
+      // Delivery status — labels + colours mirror verify.html and the values
+      // accepted by /api/update-status. window.statusMap is keyed by tracking
+      // number and populated by loadStatuses() from /api/get-statuses.
+      const STATUS_LABELS = {
+        registered: { label: "Registered", bg: "#f5f5f4", fg: "#57534e" },
+        in_transit: { label: "In transit", bg: "#dbeafe", fg: "#1d4ed8" },
+        out_for_delivery: {
+          label: "Out for delivery",
+          bg: "#ffedd5",
+          fg: "#c2410c",
+        },
+        delivered: { label: "Delivered", bg: "#dcfce7", fg: "#15803d" },
+      };
+      window.statusMap = window.statusMap || {};
+
+      async function loadStatuses() {
+        try {
+          const res = await fetch("/api/get-statuses", {
+            headers: await authHeaders(),
+            cache: "no-store",
+          });
+          if (!res.ok) return;
+          const rows = await res.json();
+          const map = {};
+          for (const r of rows || []) {
+            if (r && r.tracking_number) {
+              map[r.tracking_number] = {
+                status: r.status || "registered",
+                status_updated_at: r.status_updated_at || null,
+              };
+            }
+          }
+          window.statusMap = map;
+        } catch (e) {
+          console.error("loadStatuses error:", e);
+        }
+      }
+
+      async function updateRecordStatus(selectEl, tracking) {
+        const newStatus = selectEl.value;
+        if (!STATUS_LABELS[newStatus]) return;
+        const prev = (window.statusMap[tracking] || {}).status || "registered";
+        selectEl.disabled = true;
+        try {
+          const res = await fetch("/api/update-status", {
+            method: "POST",
+            headers: await authHeaders(),
+            body: JSON.stringify({
+              tracking_number: tracking,
+              status: newStatus,
+            }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.error || "Could not update status.");
+          window.statusMap[tracking] = {
+            status: data.record?.status || newStatus,
+            status_updated_at:
+              data.record?.status_updated_at || new Date().toISOString(),
+          };
+          // Re-paint the pill in place — find the sibling element in the row.
+          const row = selectEl.closest(".record-status-row");
+          if (row) {
+            const pill = row.querySelector(".status-pill");
+            const s = STATUS_LABELS[window.statusMap[tracking].status];
+            if (pill && s) {
+              pill.textContent = s.label;
+              pill.style.background = s.bg;
+              pill.style.color = s.fg;
+            }
+          }
+        } catch (e) {
+          selectEl.value = prev;
+          alert(e.message || "Could not update status.");
+        } finally {
+          selectEl.disabled = false;
+        }
+      }
+
       function recordCardHTML(r) {
+        const tracking = r.tracking_number || "";
+        const known = window.statusMap[tracking];
+        const current = known?.status || "registered";
+        const s = STATUS_LABELS[current] || STATUS_LABELS.registered;
+        // The status control only renders when we actually have a tracking
+        // number (verify-able shipments). The select is unobtrusive but lets
+        // the courier advance the stage in one tap.
+        const statusRow = tracking
+          ? `<div class="record-status-row">
+              <span class="status-pill" style="background:${s.bg};color:${s.fg};">${s.label}</span>
+              <select class="status-select" onchange="updateRecordStatus(this, '${tracking.replace(/'/g, "\\'")}')">
+                ${Object.entries(STATUS_LABELS)
+                  .map(
+                    ([v, info]) =>
+                      `<option value="${v}"${v === current ? " selected" : ""}>${info.label}</option>`,
+                  )
+                  .join("")}
+              </select>
+            </div>`
+          : "";
         return `<div class="record-card">
         <div class="record-header">
           <div class="record-route">${r.sender || "?"}<span class="arrow">→</span>${r.receiver || "?"}</div>
@@ -1662,6 +1863,7 @@
         </div>
         <div class="record-items">${formatDesc(r.description)}</div>
         <div class="record-tracking">⬡ ${r.tracking_number || "N/A"}</div>
+        ${statusRow}
       </div>`;
       }
 
@@ -1722,6 +1924,16 @@
           dateStr: now.replace(", ", "\n"),
           isPaid,
           logoUrl: window.companyLogo || null,
+          // Premium-only fields. AI-extracted (weight/address/route) come back
+          // in the analyze response; fee/payment are the manual inputs echoed
+          // back by the server. Sent regardless — the receipt API gates them on
+          // isPaid, so they're inert for free accounts.
+          weight: data.weight || "",
+          deliveryAddress: data.delivery_address || "",
+          origin: data.origin || "",
+          destination: data.destination || "",
+          deliveryFee: data.delivery_fee || "",
+          paymentStatus: data.payment_status || "",
         };
       }
 
@@ -2057,6 +2269,14 @@
             if (rb) rb.style.display = "inline-block";
           }
 
+          // Reveal premium-only manual fields (delivery fee + payment status).
+          // company.tier is already expiry-corrected above, so lapsed premium
+          // accounts correctly see the free experience.
+          if (company.tier === "premium") {
+            const pf = document.getElementById("premium-fields");
+            if (pf) pf.style.display = "block";
+          }
+
           // Wire drawer fields
           const dc = document.getElementById("drawer-company");
           const de = document.getElementById("drawer-email");
@@ -2128,6 +2348,7 @@
             document.getElementById("stat-last").textContent = lastDate;
           }, 300);
 
+          await loadStatuses();
           renderRecent(data);
         } catch {
           dot.classList.add("offline");
@@ -2153,11 +2374,18 @@
 
         out.innerHTML = `<div class="spinner-wrap"><div class="spinner"></div><span class="spinner-label">AI extracting data…</span></div>`;
 
+        // Premium-only manual fields. Inputs only exist/are visible for premium;
+        // the server ignores them for free accounts regardless.
+        const feeEl = document.getElementById("deliveryFeeInput");
+        const payEl = document.getElementById("paymentStatusInput");
+        const deliveryFee = feeEl ? feeEl.value.trim() : "";
+        const paymentStatus = payEl ? payEl.value : "";
+
         try {
           const res = await fetch("/api/analyze", {
             method: "POST",
             headers: await authHeaders(),
-            body: JSON.stringify({ text }),
+            body: JSON.stringify({ text, deliveryFee, paymentStatus }),
           });
           let result;
           try {
@@ -2248,6 +2476,7 @@
             });
             if (r2.ok) {
               const d2 = toArray(await r2.json());
+              await loadStatuses();
               renderRecent(d2);
               const totalEl = document.getElementById("stat-total");
               const todayEl = document.getElementById("stat-today");
@@ -2320,6 +2549,8 @@
             return;
           }
 
+          // Refresh statuses so search-result cards show the current stage.
+          await loadStatuses();
           out.innerHTML = `<div class="records-list">${[...matches]
             .reverse()
             .map(recordCardHTML)
