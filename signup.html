@@ -1018,6 +1018,9 @@
             email,
             password: pw,
             options: {
+              // Explicit redirect — independent of Supabase's Site URL setting,
+              // so verification always lands on /app even if that setting changes.
+              emailRedirectTo: window.location.origin + "/app",
               data: {
                 full_name: fullName,
                 company_name: company,
