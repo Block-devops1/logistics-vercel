@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
 // Allowed delivery statuses. Kept in sync with verify.html / app.html labels.
-const ALLOWED = ["registered", "in_transit", "out_for_delivery", "delivered"];
+const ALLOWED = ["registered", "picked_up", "out_for_delivery", "delivered"];
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
