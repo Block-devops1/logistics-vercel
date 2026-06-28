@@ -2215,13 +2215,19 @@
           // Create it from signup metadata stored during signUp().
           if (companyError || !company) {
             const meta = session.user.user_metadata || {};
+            // Always insert as "free" — even when the user picked premium at
+            // signup. /api/verify-payment is the only thing that should ever
+            // promote to "premium" (and set premium_until). The intent to be
+            // premium is preserved in meta.tier and used below to redirect to
+            // /upgrade. This keeps the DB honest: tier="premium" always means
+            // a paid, active subscription.
             const { data: created, error: createError } = await sb
               .from("companies")
               .insert({
                 id: session.user.id,
                 email: session.user.email,
                 company_name: meta.company_name || "Your Company",
-                tier: meta.tier === "premium" ? "premium" : "free",
+                tier: "free",
                 sheet_id: meta.sheet_id || "",
                 agreed_to_terms: meta.agreed_to_terms || false,
                 agreed_at: meta.agreed_at || new Date().toISOString(),
