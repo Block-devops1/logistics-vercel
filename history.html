@@ -142,12 +142,28 @@
       .search-input:focus {
         border-color: var(--accent);
       }
-      .group-select {
+      .group-wrap {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
         background: var(--surface);
         border: 1px solid var(--border);
         border-radius: 9px;
-        padding: 11px 14px;
-        font-size: 0.86rem;
+        padding: 0 4px 0 12px;
+      }
+      .group-label {
+        font-family: "DM Mono", monospace;
+        font-size: 0.7rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted2);
+        white-space: nowrap;
+      }
+      .group-select {
+        background: transparent;
+        border: none;
+        padding: 10px 8px 10px 0;
+        font-size: 0.88rem;
         color: var(--text);
         font-family: "Figtree", sans-serif;
         font-weight: 600;
@@ -178,6 +194,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        -webkit-user-select: none;
         user-select: none;
       }
       .group-title {
@@ -390,7 +407,7 @@
   <body>
     <div class="page">
       <header>
-        <button class="back-btn" onclick="window.location.href='/app'">
+        <button type="button" class="back-btn" onclick="window.location.href='/app'">
           ← Dashboard
         </button>
         <div class="logo">ev<span>u</span>eo</div>
@@ -410,22 +427,24 @@
           placeholder="Search sender, receiver, or tracking ID…"
           oninput="onSearchChange()"
         />
-        <select
-          class="group-select"
-          id="group-by"
-          onchange="onGroupChange()"
-          title="Group records by period"
-        >
-          <option value="monthly" selected>Group: Monthly</option>
-          <option value="weekly">Group: Weekly</option>
-          <option value="daily">Group: Daily</option>
-          <option value="none">No grouping</option>
-        </select>
+        <div class="group-wrap">
+          <label class="group-label" for="group-by">Group by</label>
+          <select
+            class="group-select"
+            id="group-by"
+            onchange="onGroupChange()"
+            title="Group records by period"
+          >
+            <option value="monthly" selected>Monthly</option>
+            <option value="weekly">Weekly</option>
+            <option value="daily">Daily</option>
+            <option value="none">None</option>
+          </select>
+        </div>
       </div>
 
       <div class="meta-row">
         <span id="record-count">Loading…</span>
-        <span id="tier-tag"></span>
       </div>
 
       <div id="history-list">
@@ -540,9 +559,6 @@
           data.premium_until &&
           new Date(data.premium_until) > new Date();
         isPremium = !!stillPremium;
-        const tag = document.getElementById("tier-tag");
-        if (tag)
-          tag.textContent = isPremium ? "PREMIUM VIEW" : "FREE VIEW";
       }
 
       async function loadStatuses() {
