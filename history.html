@@ -1,0 +1,863 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>History — Evueo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&family=Figtree:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      const sb = supabase.createClient(
+        "https://pyoijoamwgkyszlcgblk.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB5b2lqb2Ftd2dreXN6bGNnYmxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MTk4NTcsImV4cCI6MjA5NjA5NTg1N30.SFTZ6Ae22Ln4lzYATubf-7h_LdvZxzBPJzxINJuzcZk",
+      );
+      async function authHeaders() {
+        try {
+          const { data } = await sb.auth.getSession();
+          const token = data?.session?.access_token;
+          if (!token) return { "Content-Type": "application/json" };
+          return {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          };
+        } catch (e) {
+          return { "Content-Type": "application/json" };
+        }
+      }
+      (async () => {
+        const { data } = await sb.auth.getSession();
+        if (!data.session) window.location.href = "/login";
+      })();
+    </script>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --bg: #faf8f5;
+        --surface: #ffffff;
+        --border: #e8e2d9;
+        --border2: #f0ebe3;
+        --accent: #f97316;
+        --text: #1c1917;
+        --muted: #78716c;
+        --muted2: #a8a29e;
+        --r: 12px;
+      }
+      html.dark {
+        --bg: #1c1917;
+        --surface: #292524;
+        --border: #44403c;
+        --border2: #3a3633;
+        --accent: #f97316;
+        --text: #f5f5f4;
+        --muted: #a8a29e;
+        --muted2: #78716c;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Figtree", sans-serif;
+        min-height: 100vh;
+      }
+      .page {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 28px 20px 80px;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 22px;
+      }
+      .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        padding: 9px 14px;
+        color: var(--text);
+        text-decoration: none;
+        font-size: 0.86rem;
+        font-weight: 600;
+        font-family: "Figtree", sans-serif;
+        cursor: pointer;
+        transition: border-color 0.18s ease;
+      }
+      .back-btn:hover {
+        border-color: var(--accent);
+      }
+      .logo {
+        font-family: "Syne", sans-serif;
+        font-weight: 800;
+        font-size: 1.5rem;
+        color: var(--text);
+      }
+      .logo span {
+        color: var(--accent);
+      }
+      .page-title {
+        font-family: "Syne", sans-serif;
+        font-weight: 700;
+        font-size: 1.7rem;
+        margin-bottom: 6px;
+      }
+      .page-sub {
+        color: var(--muted);
+        font-size: 0.92rem;
+        margin-bottom: 22px;
+      }
+      .controls {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
+      }
+      .search-input {
+        flex: 1;
+        min-width: 200px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        padding: 11px 14px;
+        font-size: 0.92rem;
+        color: var(--text);
+        font-family: "Figtree", sans-serif;
+        outline: none;
+        transition: border-color 0.18s ease;
+      }
+      .search-input:focus {
+        border-color: var(--accent);
+      }
+      .group-select {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        padding: 11px 14px;
+        font-size: 0.86rem;
+        color: var(--text);
+        font-family: "Figtree", sans-serif;
+        font-weight: 600;
+        outline: none;
+        cursor: pointer;
+      }
+      .meta-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 12px;
+        font-size: 0.78rem;
+        color: var(--muted2);
+        font-family: "DM Mono", monospace;
+        letter-spacing: 0.05em;
+      }
+      .group {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r);
+        margin-bottom: 12px;
+        overflow: hidden;
+      }
+      .group-header {
+        padding: 12px 16px;
+        background: var(--border2);
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        user-select: none;
+      }
+      .group-title {
+        font-weight: 700;
+        font-size: 0.92rem;
+      }
+      .group-count {
+        font-family: "DM Mono", monospace;
+        font-size: 0.74rem;
+        color: var(--muted);
+      }
+      .group-chevron {
+        display: inline-block;
+        transition: transform 0.2s ease;
+        margin-left: 8px;
+        color: var(--muted);
+      }
+      .group.collapsed .group-chevron {
+        transform: rotate(-90deg);
+      }
+      .group.collapsed .group-body {
+        display: none;
+      }
+      .group-body {
+        padding: 4px 0;
+      }
+      .record {
+        padding: 14px 16px;
+        border-top: 1px solid var(--border2);
+      }
+      .record:first-child {
+        border-top: none;
+      }
+      .record-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 10px;
+        margin-bottom: 4px;
+      }
+      .record-route {
+        font-weight: 600;
+        font-size: 0.95rem;
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .record-route .arrow {
+        color: var(--accent);
+        margin: 0 6px;
+      }
+      .record-date {
+        font-family: "DM Mono", monospace;
+        font-size: 0.74rem;
+        color: var(--muted2);
+        white-space: nowrap;
+      }
+      .record-items {
+        font-size: 0.82rem;
+        color: var(--muted);
+        line-height: 1.45;
+        margin-bottom: 6px;
+      }
+      .record-tracking {
+        font-family: "DM Mono", monospace;
+        font-size: 0.78rem;
+        color: var(--text);
+        margin-bottom: 8px;
+      }
+      .premium-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 14px;
+        font-size: 0.76rem;
+        color: var(--muted);
+        margin-bottom: 8px;
+      }
+      .premium-row strong {
+        color: var(--text);
+        font-weight: 600;
+        margin-right: 4px;
+      }
+      .premium-address {
+        font-size: 0.78rem;
+        color: var(--muted);
+        margin-bottom: 4px;
+      }
+      .premium-landmark {
+        font-size: 0.76rem;
+        color: var(--muted2);
+        font-style: italic;
+        margin-bottom: 8px;
+      }
+      .record-bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .status-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .status-pill {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+      .status-select {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        padding: 5px 8px;
+        font-size: 0.74rem;
+        color: var(--text);
+        font-family: "Figtree", sans-serif;
+        cursor: pointer;
+      }
+      .actions {
+        display: flex;
+        gap: 6px;
+      }
+      .action-btn {
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        padding: 5px 10px;
+        font-size: 0.74rem;
+        color: var(--text);
+        font-family: "Figtree", sans-serif;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition:
+          border-color 0.18s ease,
+          color 0.18s ease;
+      }
+      .action-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .action-btn:disabled {
+        opacity: 0.5;
+        cursor: wait;
+      }
+      .empty {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--muted);
+      }
+      .empty-icon {
+        font-size: 2.4rem;
+        margin-bottom: 10px;
+      }
+      .loading {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      .spinner {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid var(--border);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        vertical-align: middle;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @media (max-width: 500px) {
+        .page {
+          padding: 20px 12px 60px;
+        }
+        .page-title {
+          font-size: 1.4rem;
+        }
+        .record-top {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 2px;
+        }
+        .record-bottom {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .status-row,
+        .actions {
+          width: 100%;
+        }
+        .actions {
+          justify-content: flex-end;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <button class="back-btn" onclick="window.location.href='/app'">
+          ← Dashboard
+        </button>
+        <div class="logo">ev<span>u</span>eo</div>
+      </header>
+
+      <h1 class="page-title">History</h1>
+      <p class="page-sub" id="page-sub">
+        All your past waybills — update status, re-download receipts, copy
+        tracking IDs.
+      </p>
+
+      <div class="controls">
+        <input
+          type="text"
+          class="search-input"
+          id="search"
+          placeholder="Search sender, receiver, or tracking ID…"
+          oninput="onSearchChange()"
+        />
+        <select
+          class="group-select"
+          id="group-by"
+          onchange="onGroupChange()"
+          title="Group records by period"
+        >
+          <option value="monthly" selected>Group: Monthly</option>
+          <option value="weekly">Group: Weekly</option>
+          <option value="daily">Group: Daily</option>
+          <option value="none">No grouping</option>
+        </select>
+      </div>
+
+      <div class="meta-row">
+        <span id="record-count">Loading…</span>
+        <span id="tier-tag"></span>
+      </div>
+
+      <div id="history-list">
+        <div class="loading"><span class="spinner"></span> Loading records…</div>
+      </div>
+    </div>
+
+    <script>
+      // Status taxonomy — kept identical to app.html / verify.html /
+      // api/update-status.js so labels and colours stay in sync.
+      const STATUS_LABELS = {
+        registered: { label: "Registered", bg: "#f5f5f4", fg: "#57534e" },
+        picked_up: { label: "Picked up", bg: "#dbeafe", fg: "#1d4ed8" },
+        out_for_delivery: {
+          label: "Out for delivery",
+          bg: "#ffedd5",
+          fg: "#c2410c",
+        },
+        delivered: { label: "Delivered", bg: "#dcfce7", fg: "#15803d" },
+      };
+
+      // Theme — mirror whatever the user set on /app.
+      (function applyTheme() {
+        try {
+          if (localStorage.getItem("evueo-theme") === "dark")
+            document.documentElement.classList.add("dark");
+        } catch (e) {}
+      })();
+
+      // Module state — populated once on load, then re-filtered locally.
+      let allRecords = [];
+      let statusMap = {};
+      let isPremium = false;
+      let companyName = "Your Logistics Company";
+      let companyLogo = null;
+
+      // ── Helpers ──
+      function toArray(data) {
+        if (Array.isArray(data)) return data;
+        if (data && Array.isArray(data.records)) return data.records;
+        if (data && Array.isArray(data.data)) return data.data;
+        return [];
+      }
+
+      // The sheet stores date as "DD/MM/YYYY, HH:MM" (Africa/Lagos). Parse to
+      // a real Date so we can group by day/week/month. Returns null if unparseable.
+      function parseRecordDate(s) {
+        if (!s) return null;
+        const datePart = String(s).split(",")[0].trim();
+        const [d, m, y] = datePart.split("/").map((x) => parseInt(x, 10));
+        if (!d || !m || !y) return null;
+        const dt = new Date(y, m - 1, d);
+        return isNaN(dt.getTime()) ? null : dt;
+      }
+
+      // Group key + display label for a given grouping mode.
+      function groupKey(dt, mode) {
+        if (!dt) return { key: "unknown", label: "Unknown date" };
+        const pad = (n) => String(n).padStart(2, "0");
+        const monthNames = [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ];
+        if (mode === "daily") {
+          const key = `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`;
+          const label = dt.toLocaleDateString("en-GB", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          });
+          return { key, label };
+        }
+        if (mode === "weekly") {
+          // ISO-ish week — Monday as week start. Good enough for grouping.
+          const tmp = new Date(dt);
+          const day = tmp.getDay() === 0 ? 6 : tmp.getDay() - 1;
+          tmp.setDate(tmp.getDate() - day);
+          const end = new Date(tmp);
+          end.setDate(end.getDate() + 6);
+          const key = `${tmp.getFullYear()}-W${pad(tmp.getMonth() + 1)}${pad(tmp.getDate())}`;
+          const label = `Week of ${tmp.getDate()} ${monthNames[tmp.getMonth()].slice(0, 3)} – ${end.getDate()} ${monthNames[end.getMonth()].slice(0, 3)}, ${end.getFullYear()}`;
+          return { key, label };
+        }
+        // monthly (default)
+        const key = `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}`;
+        const label = `${monthNames[dt.getMonth()]} ${dt.getFullYear()}`;
+        return { key, label };
+      }
+
+      // ── Load company + status + records on boot ──
+      async function loadCompany() {
+        const { data } = await sb
+          .from("companies")
+          .select("company_name, tier, premium_until, logo_url")
+          .single();
+        if (!data) return;
+        companyName = data.company_name || companyName;
+        companyLogo = data.logo_url || null;
+        const stillPremium =
+          data.tier === "premium" &&
+          data.premium_until &&
+          new Date(data.premium_until) > new Date();
+        isPremium = !!stillPremium;
+        const tag = document.getElementById("tier-tag");
+        if (tag)
+          tag.textContent = isPremium ? "PREMIUM VIEW" : "FREE VIEW";
+      }
+
+      async function loadStatuses() {
+        try {
+          const res = await fetch("/api/get-statuses", {
+            method: "GET",
+            headers: await authHeaders(),
+          });
+          if (!res.ok) return;
+          const data = await res.json();
+          const map = {};
+          (data.statuses || []).forEach((s) => {
+            if (s.tracking_number)
+              map[s.tracking_number] = {
+                status: s.status || "registered",
+                status_updated_at: s.status_updated_at,
+              };
+          });
+          statusMap = map;
+        } catch (e) {}
+      }
+
+      async function loadRecords() {
+        const res = await fetch("/api/get-records", {
+          method: "GET",
+          headers: await authHeaders(),
+        });
+        if (!res.ok) {
+          if (res.status === 401) {
+            window.location.href = "/login";
+            return [];
+          }
+          throw new Error("Could not load records.");
+        }
+        return toArray(await res.json());
+      }
+
+      async function boot() {
+        try {
+          await Promise.all([loadCompany(), loadStatuses()]);
+          allRecords = await loadRecords();
+          render();
+        } catch (e) {
+          document.getElementById("history-list").innerHTML =
+            `<div class="empty"><div class="empty-icon">⚠️</div><div>${(e && e.message) || "Failed to load records."}</div></div>`;
+        }
+      }
+
+      // ── Render pipeline ──
+      function currentFiltered() {
+        const q = (document.getElementById("search").value || "")
+          .trim()
+          .toLowerCase();
+        if (!q) return allRecords;
+        return allRecords.filter((r) => {
+          const hay = [r.sender, r.receiver, r.tracking_number]
+            .map((x) => String(x || "").toLowerCase())
+            .join(" ");
+          return hay.includes(q);
+        });
+      }
+
+      function render() {
+        const mode = document.getElementById("group-by").value;
+        const list = [...currentFiltered()].reverse(); // newest first
+        const out = document.getElementById("history-list");
+        const countEl = document.getElementById("record-count");
+
+        if (!allRecords.length) {
+          countEl.textContent = "0 records";
+          out.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><div>No records yet. Analyze your first waybill on the dashboard.</div></div>`;
+          return;
+        }
+        if (!list.length) {
+          countEl.textContent = `0 of ${allRecords.length} match`;
+          out.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div>No matches. Try a different search.</div></div>`;
+          return;
+        }
+        countEl.textContent =
+          list.length === allRecords.length
+            ? `${list.length} ${list.length === 1 ? "record" : "records"}`
+            : `${list.length} of ${allRecords.length} match`;
+
+        if (mode === "none") {
+          out.innerHTML = `<div class="group"><div class="group-body">${list.map(recordHTML).join("")}</div></div>`;
+          return;
+        }
+
+        // Group while preserving (already-reversed) order.
+        const groups = [];
+        const idx = {};
+        for (const r of list) {
+          const dt = parseRecordDate(r.date);
+          const { key, label } = groupKey(dt, mode);
+          if (idx[key] === undefined) {
+            idx[key] = groups.length;
+            groups.push({ key, label, items: [] });
+          }
+          groups[idx[key]].items.push(r);
+        }
+        out.innerHTML = groups
+          .map(
+            (g, i) => `
+            <div class="group${i === 0 ? "" : " collapsed"}" data-key="${g.key}">
+              <div class="group-header" onclick="toggleGroup(this)">
+                <div>
+                  <span class="group-title">${g.label}</span>
+                  <span class="group-chevron">▾</span>
+                </div>
+                <span class="group-count">${g.items.length} ${g.items.length === 1 ? "record" : "records"}</span>
+              </div>
+              <div class="group-body">${g.items.map(recordHTML).join("")}</div>
+            </div>`,
+          )
+          .join("");
+      }
+
+      function toggleGroup(headerEl) {
+        const group = headerEl.parentElement;
+        group.classList.toggle("collapsed");
+      }
+
+      // ── Record card ──
+      function escapeAttr(s) {
+        return String(s || "").replace(/'/g, "\\'").replace(/"/g, "&quot;");
+      }
+      function fmtDesc(raw) {
+        if (!raw || raw === "N/A") return "";
+        return String(raw);
+      }
+      function recordHTML(r) {
+        const tracking = r.tracking_number || "";
+        const current = (statusMap[tracking] || {}).status || "registered";
+        const s = STATUS_LABELS[current] || STATUS_LABELS.registered;
+        const statusControl = tracking
+          ? `<div class="status-row">
+              <span class="status-pill" style="background:${s.bg};color:${s.fg};">${s.label}</span>
+              <select class="status-select" onchange="updateStatus(this, '${escapeAttr(tracking)}')">
+                ${Object.entries(STATUS_LABELS)
+                  .map(
+                    ([v, info]) =>
+                      `<option value="${v}"${v === current ? " selected" : ""}>${info.label}</option>`,
+                  )
+                  .join("")}
+              </select>
+            </div>`
+          : `<div class="status-row"></div>`;
+
+        // Premium-only extra rows. Only render lines with real values so the
+        // card stays clean when fields are missing.
+        const premiumBits = [];
+        if (isPremium) {
+          const fee = r.delivery_fee && r.delivery_fee !== "N/A";
+          const wt = r.weight && r.weight !== "N/A";
+          const pay = r.payment_status && r.payment_status !== "N/A";
+          if (fee || wt || pay) {
+            const parts = [];
+            if (fee) parts.push(`<span><strong>Fee:</strong>${r.delivery_fee}</span>`);
+            if (wt) parts.push(`<span><strong>Weight:</strong>${r.weight}</span>`);
+            if (pay) parts.push(`<span><strong>${r.payment_status}</strong></span>`);
+            premiumBits.push(`<div class="premium-row">${parts.join("")}</div>`);
+          }
+          if (r.delivery_address && r.delivery_address !== "N/A") {
+            premiumBits.push(`<div class="premium-address">${r.delivery_address}</div>`);
+          }
+          if (r.landmark && r.landmark !== "N/A") {
+            premiumBits.push(`<div class="premium-landmark">${r.landmark}</div>`);
+          }
+        }
+
+        const actions = `<div class="actions">
+          ${tracking ? `<button class="action-btn" onclick="copyTracking('${escapeAttr(tracking)}', this)" title="Copy tracking ID">⧉ Copy</button>` : ""}
+          <button class="action-btn" onclick="redownload(this, ${recordIndexAttr(r)})" title="Re-download PDF receipt">⬇ Receipt</button>
+        </div>`;
+
+        return `<div class="record">
+          <div class="record-top">
+            <div class="record-route">${r.sender || "?"}<span class="arrow">→</span>${r.receiver || "?"}</div>
+            <div class="record-date">${(r.date || "").split(",")[0]}</div>
+          </div>
+          ${fmtDesc(r.description) ? `<div class="record-items">${fmtDesc(r.description)}</div>` : ""}
+          <div class="record-tracking">⬡ ${tracking || "N/A"}</div>
+          ${premiumBits.join("")}
+          <div class="record-bottom">
+            ${statusControl}
+            ${actions}
+          </div>
+        </div>`;
+      }
+
+      // We pass the record index (into allRecords) instead of stringifying the
+      // full object into an HTML attribute. Safer + smaller DOM.
+      function recordIndexAttr(r) {
+        return allRecords.indexOf(r);
+      }
+
+      // ── Actions ──
+      async function updateStatus(selectEl, tracking) {
+        const newStatus = selectEl.value;
+        if (!STATUS_LABELS[newStatus]) return;
+        const prev = (statusMap[tracking] || {}).status || "registered";
+        selectEl.disabled = true;
+        try {
+          const res = await fetch("/api/update-status", {
+            method: "POST",
+            headers: await authHeaders(),
+            body: JSON.stringify({
+              tracking_number: tracking,
+              status: newStatus,
+            }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok)
+            throw new Error(data.error || "Could not update status.");
+          statusMap[tracking] = {
+            status: data.record?.status || newStatus,
+            status_updated_at:
+              data.record?.status_updated_at || new Date().toISOString(),
+          };
+          const pill = selectEl.parentElement.querySelector(".status-pill");
+          const s = STATUS_LABELS[statusMap[tracking].status];
+          if (pill && s) {
+            pill.textContent = s.label;
+            pill.style.background = s.bg;
+            pill.style.color = s.fg;
+          }
+        } catch (e) {
+          selectEl.value = prev;
+          alert(e.message || "Could not update status.");
+        } finally {
+          selectEl.disabled = false;
+        }
+      }
+
+      async function copyTracking(tracking, btn) {
+        try {
+          await navigator.clipboard.writeText(tracking);
+          const original = btn.innerHTML;
+          btn.innerHTML = "✓ Copied";
+          setTimeout(() => {
+            btn.innerHTML = original;
+          }, 1400);
+        } catch (e) {
+          alert("Tracking: " + tracking);
+        }
+      }
+
+      async function redownload(btn, idx) {
+        const r = allRecords[idx];
+        if (!r) return;
+        const original = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner"></span> PDF…`;
+
+        // Mirror app.html buildReceiptCard — same field shape the
+        // /api/generate-receipt endpoint expects.
+        const now = new Date().toLocaleString("en-GB", {
+          timeZone: "Africa/Lagos",
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        const payload = {
+          companyName,
+          tracking: r.tracking_number || "N/A",
+          sender: r.sender || "N/A",
+          receiver: r.receiver || "N/A",
+          receiverPhone: r.receiver_phone || "",
+          landmark: r.landmark || "",
+          items: r.description || "N/A",
+          dateStr: (r.date || now).replace(", ", "\n"),
+          isPaid: isPremium,
+          logoUrl: isPremium ? companyLogo : null,
+          weight: r.weight || "",
+          deliveryAddress: r.delivery_address || "",
+          origin: r.origin || "",
+          destination: r.destination || "",
+          deliveryFee: r.delivery_fee || "",
+          paymentStatus: r.payment_status || "",
+        };
+
+        try {
+          const res = await fetch("/api/generate-receipt", {
+            method: "POST",
+            headers: await authHeaders(),
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) throw new Error("Receipt failed.");
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `${r.tracking_number || "receipt"}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        } catch (e) {
+          alert(e.message || "Could not generate receipt.");
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = original;
+        }
+      }
+
+      function onSearchChange() {
+        render();
+      }
+      function onGroupChange() {
+        render();
+      }
+
+      boot();
+    </script>
+  </body>
+</html>

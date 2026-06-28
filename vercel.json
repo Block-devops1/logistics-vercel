@@ -3,6 +3,7 @@
   "routes": [
     { "src": "/upgrade", "dest": "/upgrade.html" },
     { "src": "/signup", "dest": "/signup.html" },
-    { "src": "/verify", "dest": "/verify.html" }
+    { "src": "/verify", "dest": "/verify.html" },
+    { "src": "/history", "dest": "/history.html" }
   ]
 }
