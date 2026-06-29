@@ -2363,7 +2363,9 @@
 
               case "SHEET_FORBIDDEN":
                 sText.innerHTML = `<span style="color:#dc2626;">Sheet Not Accessible</span>`;
-                const serviceEmail = err.serviceAccount || "logistics-sheets-bot@logistics-ai-484915.iam.gserviceaccount.com";
+                const serviceEmail =
+                  err.serviceAccount ||
+                  "logistics-sheets-bot@logistics-ai-484915.iam.gserviceaccount.com";
                 document.getElementById("recent-output").innerHTML = `
                   <div class="empty-state">
                     <div class="empty-icon">🔒</div>
