@@ -387,8 +387,11 @@ function receiptDocument({
     ? e(Text, { style: styles.partyHint }, String(landmark))
     : null;
 
+  // Use ASCII "->" instead of Unicode "→" — Helvetica (the default @react-pdf
+  // font) doesn't include U+2192, so the arrow was rendering as a stray
+  // apostrophe in some PDF viewers.
   const route =
-    origin || destination ? `${origin || "?"} → ${destination || "?"}` : "";
+    origin || destination ? `${origin || "?"} -> ${destination || "?"}` : "";
   const showMeta = has(weight) || (isPaid && route);
   const metaRow = showMeta
     ? e(
