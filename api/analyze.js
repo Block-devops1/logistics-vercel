@@ -184,14 +184,23 @@ export default async function handler(req, res) {
         typeof extracted.description === "object"
           ? JSON.stringify(extracted.description)
           : String(extracted.description || "N/A"),
-      "Receiver Phone": String(extracted.receiver_phone || "N/A"),
+      // Prefix phone with ' to force Google Sheets to treat as text (preserves leading 0)
+      "Receiver Phone": extracted.receiver_phone
+        ? "'" + String(extracted.receiver_phone)
+        : "N/A",
       Landmark: String(extracted.landmark || "N/A"),
       // Premium-only columns. Blank for free accounts (premiumFields prompt was
       // empty, so these stay "") and for the manual fee/payment fields.
+      // Clean origin/destination: strip stray quotes/apostrophes that the AI
+      // sometimes picks up from punctuation in the raw text.
       Weight: String(extracted.weight || ""),
       "Delivery Address": String(extracted.delivery_address || ""),
-      Origin: String(extracted.origin || ""),
-      Destination: String(extracted.destination || ""),
+      Origin: (extracted.origin || "")
+        .trim()
+        .replace(/^['"`]+|['"`]+$/g, ""),
+      Destination: (extracted.destination || "")
+        .trim()
+        .replace(/^['"`]+|['"`]+$/g, ""),
       "Delivery Fee": deliveryFee,
       "Payment Status": paymentStatus,
     });
