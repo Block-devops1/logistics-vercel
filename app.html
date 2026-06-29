@@ -2338,7 +2338,81 @@
             cache: "no-store",
           });
           console.log("get-records status:", res.status, res.ok);
-          if (!res.ok) throw new Error();
+
+          // Parse structured errors from the new get-records API. Each error
+          // code maps to a specific UI message + action so the user knows
+          // exactly what to fix, instead of a vague "System Offline".
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            const code = err.code || "UNKNOWN";
+            console.error("get-records error:", code, err.error);
+            dot.classList.add("offline");
+
+            // Render code-specific messages with actionable fixes.
+            switch (code) {
+              case "SHEET_NOT_CONNECTED":
+                sText.innerHTML = `<span style="color:#f97316;">No Sheet Connected</span>`;
+                document.getElementById("recent-output").innerHTML = `
+                  <div class="empty-state">
+                    <div class="empty-icon">📎</div>
+                    <div class="empty-text">Connect your Google Sheet to begin.</div>
+                    <button class="btn" style="margin-top:12px;" onclick="document.querySelector('.drawer-link[onclick*=changeSheetId]').click()">Connect Sheet Now</button>
+                  </div>`;
+                break;
+
+              case "SHEET_FORBIDDEN":
+                sText.innerHTML = `<span style="color:#dc2626;">Sheet Not Accessible</span>`;
+                const serviceEmail = err.serviceAccount || "logistics-sheets-bot@logistics-ai-484915.iam.gserviceaccount.com";
+                document.getElementById("recent-output").innerHTML = `
+                  <div class="empty-state">
+                    <div class="empty-icon">🔒</div>
+                    <div class="empty-text" style="max-width:420px;">Your sheet isn't shared with the Evueo service account. Open your Google Sheet → <strong>Share</strong> → paste this email → set to <strong>Editor</strong> → Done.</div>
+                    <div style="display:flex;align-items:center;gap:8px;margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-family:'DM Mono',monospace;font-size:0.8rem;">
+                      <span id="service-email-copy" style="color:var(--accent);user-select:all;">${serviceEmail}</span>
+                      <button class="btn" style="padding:6px 12px;font-size:0.78rem;" onclick="navigator.clipboard.writeText(document.getElementById('service-email-copy').textContent).then(()=>alert('Email copied!')).catch(()=>{})">Copy</button>
+                    </div>
+                  </div>`;
+                break;
+
+              case "SHEET_NOT_FOUND":
+                sText.innerHTML = `<span style="color:#dc2626;">Sheet Not Found</span>`;
+                document.getElementById("recent-output").innerHTML = `
+                  <div class="empty-state">
+                    <div class="empty-icon">🔍</div>
+                    <div class="empty-text">The Sheet ID in your settings doesn't match a real sheet. Check the ID and try again.</div>
+                    <button class="btn" style="margin-top:12px;" onclick="document.querySelector('.drawer-link[onclick*=changeSheetId]').click()">Update Sheet ID</button>
+                  </div>`;
+                break;
+
+              case "UNAUTHORIZED":
+                sText.textContent = "Session Expired";
+                document.getElementById("recent-output").innerHTML = `
+                  <div class="empty-state">
+                    <div class="empty-icon">🔑</div>
+                    <div class="empty-text">Your session expired. Sign in again.</div>
+                    <button class="btn" style="margin-top:12px;" onclick="window.location.href='/login'">Sign In</button>
+                  </div>`;
+                break;
+
+              default:
+                // Network, 500, or unrecognized error — the actual server/network issue case
+                sText.textContent = "System Offline";
+                document.getElementById("recent-output").innerHTML = `
+                  <div class="empty-state">
+                    <div class="empty-icon">⚠️</div>
+                    <div class="empty-text">Can't reach server. Check your network or try again in a moment.</div>
+                  </div>`;
+            }
+
+            [0, 1, 2].forEach((i) =>
+              setTimeout(
+                () => document.getElementById(`sc-${i}`).classList.add("in"),
+                i * 100,
+              ),
+            );
+            return;
+          }
+
           const data = toArray(await res.json());
           console.log("get-records data:", data);
 
@@ -2365,7 +2439,11 @@
           await loadStatuses();
           renderRecent(data);
           renderDrawerHistory(data);
-        } catch {
+        } catch (e) {
+          // Catch-all for anything that throws outside the fetch (shouldn't
+          // happen now that we parse structured errors above, but keeps the
+          // bootstrap resilient).
+          console.error("Bootstrap catch-all:", e);
           dot.classList.add("offline");
           sText.textContent = "System Offline";
           [0, 1, 2].forEach((i) =>
@@ -2375,7 +2453,7 @@
             ),
           );
           document.getElementById("recent-output").innerHTML =
-            `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">Could not connect. Check your network.</div></div>`;
+            `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">Could not load. Check your network or try again.</div></div>`;
         }
       };
       /* ── Analyze ── */
