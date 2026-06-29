@@ -2231,6 +2231,7 @@
                 sheet_id: meta.sheet_id || "",
                 agreed_to_terms: meta.agreed_to_terms || false,
                 agreed_at: meta.agreed_at || new Date().toISOString(),
+                agreed_ip: meta.agreed_ip || null,
               })
               .select(
                 "company_name, sheet_id, tier, extractions_used, logo_url",

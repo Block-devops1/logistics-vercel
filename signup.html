@@ -1014,6 +1014,17 @@
         try {
           // 1. Create auth user in Supabase — store all signup data in metadata
           // so it can be used to create the companies row after email verification.
+
+          // Fetch user's IP for audit trail (best-effort; won't block signup if it fails)
+          let userIp = null;
+          try {
+            const ipRes = await fetch("https://api.ipify.org?format=json");
+            const ipData = await ipRes.json();
+            userIp = ipData.ip || null;
+          } catch (e) {
+            // Silent fail — IP capture is nice-to-have, not required
+          }
+
           const { data: authData, error: authError } = await sb.auth.signUp({
             email,
             password: pw,
@@ -1028,6 +1039,7 @@
                 tier: selectedPlan,
                 agreed_to_terms: true,
                 agreed_at: new Date().toISOString(),
+                agreed_ip: userIp,
               },
             },
           });
