@@ -215,11 +215,18 @@ export default async function handler(req, res) {
         process.env.SUPABASE_URL,
         process.env.SUPABASE_SERVICE_ROLE_KEY,
       );
-      const { error: indexErr } = await sbAdmin.from("waybill_index").insert({
-        tracking_number: String(extracted.tracking_number),
-        company_id: user.id,
-        status: "registered",
-      });
+      // Upsert, not insert: re-analyzing the same waybill (common when a
+      // merchant fixes a typo and pastes again) must not create a duplicate
+      // row — duplicates make verify.html's .single() lookup fail, which
+      // showed customers "not found" for a genuinely registered waybill.
+      const { error: indexErr } = await sbAdmin.from("waybill_index").upsert(
+        {
+          tracking_number: String(extracted.tracking_number),
+          company_id: user.id,
+          status: "registered",
+        },
+        { onConflict: "tracking_number" },
+      );
       if (indexErr) {
         console.error("waybill_index insert failed:", indexErr.message);
       }
