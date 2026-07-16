@@ -32,7 +32,22 @@ export default async function handler(req, res) {
       process.env.SUPABASE_SERVICE_ROLE_KEY,
     );
 
-    const premiumUntil = new Date();
+    // Extend from the CURRENT expiry when renewing early, so a customer who
+    // pays 7 days before lapsing keeps those 7 days (expiry Jul 23 + renew
+    // Jul 16 → new expiry Aug 23, not Aug 16). Lapsed/first-time payments
+    // start from today.
+    const { data: existing } = await sb
+      .from("companies")
+      .select("premium_until")
+      .eq("id", userId)
+      .single();
+
+    const now = new Date();
+    const base =
+      existing?.premium_until && new Date(existing.premium_until) > now
+        ? new Date(existing.premium_until)
+        : now;
+    const premiumUntil = new Date(base);
     premiumUntil.setMonth(premiumUntil.getMonth() + 1);
 
     await sb

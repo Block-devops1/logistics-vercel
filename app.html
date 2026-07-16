@@ -1183,6 +1183,37 @@
           </div>
         </div>
       </header>
+      <div
+        id="renew-banner"
+        style="
+          display: none;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          flex-wrap: wrap;
+          background: rgba(249, 115, 22, 0.09);
+          border: 1px solid rgba(249, 115, 22, 0.3);
+          border-radius: 10px;
+          padding: 10px 14px;
+          margin-bottom: 14px;
+          font-size: 0.85rem;
+        "
+      >
+        <span id="renew-banner-text"></span>
+        <a
+          href="/upgrade"
+          style="
+            background: var(--accent);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            white-space: nowrap;
+          "
+          >Renew Now — ₦5,000</a
+        >
+      </div>
       <div class="stats-strip">
         <div class="stat-card" id="sc-0">
           <div class="stat-number" id="stat-total">—</div>
@@ -2269,6 +2300,25 @@
           }
 
           window.userTier = company.tier;
+
+          // Renewal reminder: show a banner when premium expires in ≤7, ≤3,
+          // or ≤1 day(s). Renewing early extends from the current expiry
+          // (verify-payment adds 30 days on top), so no days are lost.
+          if (company.tier === "premium" && company.premium_until) {
+            const msLeft = new Date(company.premium_until) - new Date();
+            const daysLeft = Math.ceil(msLeft / 86400000);
+            if (daysLeft <= 7 && daysLeft > 0) {
+              const banner = document.getElementById("renew-banner");
+              const txt = document.getElementById("renew-banner-text");
+              if (banner && txt) {
+                txt.textContent =
+                  daysLeft === 1
+                    ? "⏳ Your Premium expires tomorrow. Renew now to keep your logo, tracking extras and unlimited extractions — your remaining time carries over."
+                    : `⏳ Your Premium expires in ${daysLeft} days. Renew early — the new 30 days are added on top, nothing is lost.`;
+                banner.style.display = "flex";
+              }
+            }
+          }
           window.userExtractions = company.extractions_used;
           window.companyName = company.company_name;
           window.companySheetId = company.sheet_id || "";
