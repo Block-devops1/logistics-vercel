@@ -10,6 +10,7 @@ import {
   renderToBuffer,
 } from "@react-pdf/renderer";
 import QRCode from "qrcode";
+import path from "path";
 Font.register({
   family: "NotoSans",
   fonts: [

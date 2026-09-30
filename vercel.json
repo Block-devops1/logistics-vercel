@@ -5,5 +5,10 @@
     { "src": "/signup", "dest": "/signup.html" },
     { "src": "/verify", "dest": "/verify.html" },
     { "src": "/history", "dest": "/history.html" }
-  ]
+  ],
+  "functions": {
+    "api/generate-receipt.js": {
+      "includeFiles": "api/fonts/**"
+    }
+  }
 }
