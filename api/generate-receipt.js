@@ -6,6 +6,7 @@ import {
   Text,
   Image,
   StyleSheet,
+  Font,
   renderToBuffer,
 } from "@react-pdf/renderer";
 import QRCode from "qrcode";
