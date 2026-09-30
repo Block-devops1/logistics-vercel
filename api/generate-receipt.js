@@ -11,6 +11,7 @@ import {
 } from "@react-pdf/renderer";
 import QRCode from "qrcode";
 import path from "path";
+
 Font.register({
   family: "NotoSans",
   fonts: [
@@ -45,7 +46,7 @@ const styles = StyleSheet.create({
   page: {
     width: 300, // 400px @ 0.75pt/px = 300pt
     paddingBottom: 0,
-    fontFamily: "Helvetica",
+    fontFamily: "NotoSans",
   },
   headerFree: {
     backgroundColor: COLORS.cream,
@@ -66,14 +67,16 @@ const styles = StyleSheet.create({
   },
   companyName: {
     fontSize: 13.5,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSans",
+    fontWeight: 700,
     color: COLORS.dark,
     marginBottom: 2,
     textAlign: "center",
   },
   companyNamePaid: {
     fontSize: 13.5,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSans",
+    fontWeight: 700,
     color: COLORS.white,
     marginBottom: 2,
     textAlign: "center",
@@ -123,7 +126,8 @@ const styles = StyleSheet.create({
   },
   trackingNum: {
     fontSize: 11,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSans",
+    fontWeight: 700,
     color: COLORS.orange,
     letterSpacing: 0.5,
   },
@@ -149,7 +153,8 @@ const styles = StyleSheet.create({
   },
   partyLabel: {
     fontSize: 6.5,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSans",
+    fontWeight: 700,
     letterSpacing: 1,
     textTransform: "uppercase",
     color: COLORS.muted,
@@ -157,7 +162,8 @@ const styles = StyleSheet.create({
   },
   partyName: {
     fontSize: 9.75,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSans",
+    fontWeight: 700,
     color: COLORS.dark,
     lineHeight: 1.3,
   },
@@ -169,7 +175,8 @@ const styles = StyleSheet.create({
   },
   partyPhone: {
     fontSize: 8.25,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSans",
+    fontWeight: 700,
     color: COLORS.dark,
     lineHeight: 1.3,
     marginTop: 2,
@@ -177,7 +184,7 @@ const styles = StyleSheet.create({
   },
   partyHint: {
     fontSize: 7.75,
-    fontFamily: "Helvetica-Oblique",
+    fontFamily: "NotoSans",
     color: COLORS.muted,
     lineHeight: 1.4,
     marginTop: 2,
@@ -206,19 +213,22 @@ const styles = StyleSheet.create({
   },
   feeValue: {
     fontSize: 11,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSans",
+    fontWeight: 700,
     color: COLORS.dark,
   },
   feePaid: {
     fontSize: 7.5,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSans",
+    fontWeight: 700,
     letterSpacing: 1,
     textTransform: "uppercase",
     color: "#16a34a",
   },
   feePod: {
     fontSize: 7.5,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSans",
+    fontWeight: 700,
     letterSpacing: 1,
     textTransform: "uppercase",
     color: COLORS.orange,
@@ -234,7 +244,8 @@ const styles = StyleSheet.create({
   },
   itemsLabel: {
     fontSize: 6.5,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSans",
+    fontWeight: 700,
     letterSpacing: 1,
     textTransform: "uppercase",
     color: COLORS.muted,
@@ -270,7 +281,8 @@ const styles = StyleSheet.create({
   },
   evueoBrand: {
     fontSize: 8.25,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSans",
+    fontWeight: 700,
     color: COLORS.mutedLight,
   },
   evueoBrandAccent: {
@@ -301,7 +313,8 @@ const styles = StyleSheet.create({
   },
   verifyTitle: {
     fontSize: 7,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSans",
+    fontWeight: 700,
     color: COLORS.dark,
     marginBottom: 1.5,
   },

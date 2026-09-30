@@ -8,7 +8,7 @@
   ],
   "functions": {
     "api/generate-receipt.js": {
-      "includeFiles": "api/fonts/**"
+      "includeFiles": "{api/fonts/**,node_modules/pdfkit/js/standard-fonts/**}"
     }
   }
 }
