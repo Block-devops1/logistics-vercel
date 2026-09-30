@@ -9,6 +9,19 @@ import {
   renderToBuffer,
 } from "@react-pdf/renderer";
 import QRCode from "qrcode";
+Font.register({
+  family: "NotoSans",
+  fonts: [
+    {
+      src: path.join(process.cwd(), "api/fonts/NotoSans-Regular.ttf"),
+      fontWeight: 400,
+    },
+    {
+      src: path.join(process.cwd(), "api/fonts/NotoSans-Bold.ttf"),
+      fontWeight: 700,
+    },
+  ],
+});
 
 const VERIFY_BASE_URL = "https://evueo.com.ng/verify";
 
