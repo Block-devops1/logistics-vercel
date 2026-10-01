@@ -30,6 +30,16 @@ const VERIFY_BASE_URL = "https://evueo.com.ng/verify";
 
 const e = React.createElement;
 
+// Show fees as "₦3,500" whether the input is "3500", "3,500", "N3,500" or "₦3500".
+// Non-numeric text is shown as typed.
+function formatFee(v) {
+  const raw = String(v).trim();
+  if (!/^(\u20A6|NGN|N)?\s*\d[\d,]*(\.\d+)?$/i.test(raw)) return raw;
+  const n = Number(raw.replace(/[^0-9.]/g, ""));
+  if (!Number.isFinite(n)) return raw;
+  return "\u20A6" + n.toLocaleString("en-US", { maximumFractionDigits: 2 });
+}
+
 const COLORS = {
   orange: "#f97316",
   dark: "#1c1917",
@@ -452,7 +462,7 @@ function receiptDocument({
           View,
           { style: { flexShrink: 1 } },
           e(Text, { style: styles.partyLabel }, "DELIVERY FEE"),
-          e(Text, { style: styles.feeValue }, String(deliveryFee)),
+          e(Text, { style: styles.feeValue }, formatFee(deliveryFee)),
         ),
         has(paymentStatus)
           ? e(
