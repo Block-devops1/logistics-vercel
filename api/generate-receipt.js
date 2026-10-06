@@ -28,8 +28,6 @@ Font.register({
 
 const VERIFY_BASE_URL = "https://evueo.com.ng/verify";
 
-Font.registerHyphenationCallback((word) => [word]);
-
 const e = React.createElement;
 
 // Show fees as "₦3,500" whether the input is "3500", "3,500", "N3,500" or "₦3500".
@@ -336,28 +334,19 @@ const styles = StyleSheet.create({
   },
 });
 
-// Break a description into rows when it is a numbered list ("1. x 2. y"),
-// or when items are separated by semicolons or new lines; otherwise plain text.
+// Try to break a numbered-list description into rows; otherwise plain text.
 function itemsContent(raw) {
   if (!raw || raw === "N/A") {
     return e(Text, { style: styles.itemsValue }, "N/A");
   }
-  let parts = null;
-  const numbered = raw.match(/\d+\.\s[^0-9.][^]*?(?=\s*\d+\.|$)/g);
-  if (numbered && numbered.length > 1) {
-    parts = numbered.map((s) => s.trim());
-  } else {
-    const split = raw
-      .split(/\s*;\s*|\r?\n/)
-      .map((s) => s.trim())
-      .filter(Boolean);
-    if (split.length > 1) parts = split;
-  }
-  if (parts) {
+  const matches = raw.match(/\d+\.\s[^0-9.][^]*?(?=\s*\d+\.|$)/g);
+  if (matches && matches.length > 1) {
     return e(
       View,
       null,
-      parts.map((item, i) => e(Text, { key: i, style: styles.itemRow }, item)),
+      matches.map((item, i) =>
+        e(Text, { key: i, style: styles.itemRow }, item.trim()),
+      ),
     );
   }
   return e(Text, { style: styles.itemsValue }, raw);

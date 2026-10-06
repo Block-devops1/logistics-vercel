@@ -1,16 +1,23 @@
 import { createClient } from "@supabase/supabase-js";
 
-// Public endpoint — no auth. Given a tracking number, finds which company's
-// sheet it belongs to (we store a lightweight index in Supabase) and returns
-// only safe, non-sensitive confirmation fields.
+// Public endpoint — no auth. Given a tracking number, finds which company (or
+// companies) registered it and returns only safe, non-sensitive confirmation
+// fields. Tracking text comes from pasted waybills, so two companies can end
+// up with the same ID; when that happens we return every match instead of
+// guessing, and the page asks the visitor which company sent their parcel.
 
 export default async function handler(req, res) {
   if (req.method !== "GET")
     return res.status(405).json({ error: "Method Not Allowed" });
 
-  const tracking = (req.query.tracking || "").trim();
+  res.setHeader("Cache-Control", "no-store");
+
+  const tracking = String(req.query.tracking || "").trim();
   if (!tracking) {
     return res.status(400).json({ error: "Missing tracking number" });
+  }
+  if (tracking.length > 64) {
+    return res.status(404).json({ found: false });
   }
 
   try {
@@ -19,38 +26,54 @@ export default async function handler(req, res) {
       process.env.SUPABASE_SERVICE_ROLE_KEY,
     );
 
-    // Lightweight public index table: waybill_index(tracking_number, company_id, created_at)
-    // Populated by analyze.js whenever a new extraction is saved (see step 2 below).
-    const { data: indexRow, error: indexErr } = await sb
+    // waybill_index: one row per (company_id, tracking_number).
+    const { data: rows, error: indexErr } = await sb
       .from("waybill_index")
       .select("company_id, created_at, status, status_updated_at")
       .eq("tracking_number", tracking)
-      .single();
+      .order("created_at", { ascending: false })
+      .limit(5);
 
-    if (indexErr || !indexRow) {
+    if (indexErr || !rows || rows.length === 0) {
       return res.status(404).json({ found: false });
     }
 
-    const { data: company, error: companyErr } = await sb
+    const ids = [...new Set(rows.map((r) => r.company_id))];
+    const { data: companies, error: companyErr } = await sb
       .from("companies")
-      .select("company_name")
-      .eq("id", indexRow.company_id)
-      .single();
+      .select("id, company_name")
+      .in("id", ids);
 
-    if (companyErr || !company) {
+    if (companyErr || !companies || companies.length === 0) {
+      return res.status(404).json({ found: false });
+    }
+
+    const nameById = Object.fromEntries(
+      companies.map((c) => [c.id, c.company_name]),
+    );
+
+    // PII-free by design: company, stage, and when it was last advanced.
+    // Falls back to "registered" for any legacy row without a status.
+    const matches = rows
+      .filter((r) => nameById[r.company_id])
+      .map((r) => ({
+        company_name: nameById[r.company_id],
+        created_at: r.created_at,
+        status: r.status || "registered",
+        status_updated_at: r.status_updated_at || null,
+      }));
+
+    if (matches.length === 0) {
       return res.status(404).json({ found: false });
     }
 
     return res.status(200).json({
       found: true,
       tracking_number: tracking,
-      company_name: company.company_name,
-      created_at: indexRow.created_at,
-      // Public delivery status. PII-free by design — just the stage and when it
-      // was last advanced. Falls back to "registered" for any legacy row that
-      // pre-dates migration 002.
-      status: indexRow.status || "registered",
-      status_updated_at: indexRow.status_updated_at || null,
+      ambiguous: matches.length > 1,
+      matches,
+      // Single-match fields kept at the top level for older clients.
+      ...(matches.length === 1 ? matches[0] : {}),
     });
   } catch (error) {
     console.error("verify-waybill error:", error.message);

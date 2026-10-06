@@ -2,6 +2,49 @@ import { GoogleSpreadsheet } from "google-spreadsheet";
 import { JWT } from "google-auth-library";
 import { createClient } from "@supabase/supabase-js";
 
+// One pinned model for every tier. Set AI_MODEL in Vercel to change it on
+// purpose; never let the router pick (accuracy and cost would drift silently).
+const AI_MODEL = process.env.AI_MODEL || "google/gemini-2.5-flash-lite";
+
+// Waybill text is untrusted. Google Sheets treats a leading = + - @ as a
+// formula, so prefix those with an apostrophe to force plain text.
+function safeCell(v) {
+  const s = String(v ?? "");
+  return /^[=+\-@\t\r]/.test(s) ? "'" + s : s;
+}
+
+// Call OpenRouter with a timeout and one retry on timeouts, 429 and 5xx.
+async function callAI(body) {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 25000);
+    try {
+      const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        signal: ctrl.signal,
+        headers: {
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://evueo.com.ng",
+          "X-Title": "Evueo",
+        },
+        body: JSON.stringify(body),
+      });
+      if (r.ok) return r;
+      const errText = await r.text().catch(() => "<no body>");
+      console.error("OpenRouter non-OK response:", r.status, errText);
+      if (r.status !== 429 && r.status < 500) break;
+    } catch (e) {
+      console.error("OpenRouter request failed:", e.name, e.message);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  throw new Error(
+    "The AI service is busy right now. Please try again in a moment.",
+  );
+}
+
 export const config = { maxDuration: 60 };
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -94,46 +137,32 @@ export default async function handler(req, res) {
       "landmark is any delivery directions, nearby landmark, or drop-off instructions mentioned (e.g. 'opposite the central mosque, Mile 1, Diobu'), otherwise an empty string — do not repeat the phone number inside this field. " +
       premiumFields +
       "Return ONLY raw JSON. No markdown.";
-    const aiResponse = await fetch(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": "https://evueo.com.ng",
-          "X-Title": "Evueo",
-        },
-        body: JSON.stringify({
-          model: premiumActive ? "openrouter/auto" : "openrouter/free",
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: text },
-          ],
-        }),
-      },
-    );
-
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text().catch(() => "<no body>");
-      console.error(
-        "OpenRouter non-OK response:",
-        aiResponse.status,
-        errorText,
-      );
-      throw new Error(`OpenRouter Error: ${aiResponse.status} - ${errorText}`);
-    }
+    const aiResponse = await callAI({
+      model: AI_MODEL,
+      temperature: 0,
+      // Only route to providers that do not store or train on prompts.
+      provider: { data_collection: "deny" },
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: text },
+      ],
+    });
 
     const aiData = await aiResponse.json();
-    let content = aiData.choices[0].message.content;
+    const content = aiData?.choices?.[0]?.message?.content || "";
     const jsonStart = content.indexOf("{");
     const jsonEnd = content.lastIndexOf("}");
 
-    if (jsonStart === -1 || jsonEnd === -1) {
-      throw new Error("AI returned invalid JSON: " + content);
+    let extracted;
+    try {
+      if (jsonStart === -1 || jsonEnd === -1) throw new Error("no JSON found");
+      extracted = JSON.parse(content.substring(jsonStart, jsonEnd + 1));
+    } catch (e) {
+      console.error("AI returned unusable output:", e.message, content);
+      throw new Error(
+        "We could not read that waybill. Please check the text and try again.",
+      );
     }
-
-    const extracted = JSON.parse(content.substring(jsonStart, jsonEnd + 1));
 
     // 5. Write to the user's own sheet
     const auth = new JWT({
@@ -177,32 +206,37 @@ export default async function handler(req, res) {
 
     await sheet.addRow({
       Date: new Date().toLocaleString("en-GB", { timeZone: "Africa/Lagos" }),
-      Sender: String(extracted.sender || "N/A"),
-      Receiver: String(extracted.receiver || "N/A"),
-      "Tracking Number": String(extracted.tracking_number || "N/A"),
-      Description:
+      Sender: safeCell(extracted.sender || "N/A"),
+      Receiver: safeCell(extracted.receiver || "N/A"),
+      "Tracking Number": safeCell(extracted.tracking_number || "N/A"),
+      Description: safeCell(
         typeof extracted.description === "object"
           ? JSON.stringify(extracted.description)
-          : String(extracted.description || "N/A"),
+          : extracted.description || "N/A",
+      ),
       // Prefix phone with ' to force Google Sheets to treat as text (preserves leading 0)
       "Receiver Phone": extracted.receiver_phone
         ? "'" + String(extracted.receiver_phone)
         : "N/A",
-      Landmark: String(extracted.landmark || "N/A"),
+      Landmark: safeCell(extracted.landmark || "N/A"),
       // Premium-only columns. Blank for free accounts (premiumFields prompt was
       // empty, so these stay "") and for the manual fee/payment fields.
       // Clean origin/destination: strip stray quotes/apostrophes that the AI
       // sometimes picks up from punctuation in the raw text.
-      Weight: String(extracted.weight || ""),
-      "Delivery Address": String(extracted.delivery_address || ""),
-      Origin: (extracted.origin || "")
-        .trim()
-        .replace(/^['"`]+|['"`]+$/g, ""),
-      Destination: (extracted.destination || "")
-        .trim()
-        .replace(/^['"`]+|['"`]+$/g, ""),
-      "Delivery Fee": deliveryFee,
-      "Payment Status": paymentStatus,
+      Weight: safeCell(extracted.weight || ""),
+      "Delivery Address": safeCell(extracted.delivery_address || ""),
+      Origin: safeCell(
+        String(extracted.origin || "")
+          .trim()
+          .replace(/^['"`]+|['"`]+$/g, ""),
+      ),
+      Destination: safeCell(
+        String(extracted.destination || "")
+          .trim()
+          .replace(/^['"`]+|['"`]+$/g, ""),
+      ),
+      "Delivery Fee": safeCell(deliveryFee),
+      "Payment Status": safeCell(paymentStatus),
     });
 
     // Index the tracking number for public verification (verify.evueo.com.ng)
@@ -215,17 +249,18 @@ export default async function handler(req, res) {
         process.env.SUPABASE_URL,
         process.env.SUPABASE_SERVICE_ROLE_KEY,
       );
-      // Upsert, not insert: re-analyzing the same waybill (common when a
-      // merchant fixes a typo and pastes again) must not create a duplicate
-      // row — duplicates make verify.html's .single() lookup fail, which
-      // showed customers "not found" for a genuinely registered waybill.
+      // One row per (company, tracking number). A different company using the
+      // same tracking text gets its own row and can never overwrite or reset
+      // someone else's record. Re-analysing the same waybill is a no-op, so the
+      // delivery status is not reset. Needs the unique constraint on
+      // (company_id, tracking_number) -- run the SQL migration first.
       const { error: indexErr } = await sbAdmin.from("waybill_index").upsert(
         {
           tracking_number: String(extracted.tracking_number),
           company_id: user.id,
           status: "registered",
         },
-        { onConflict: "tracking_number" },
+        { onConflict: "company_id,tracking_number", ignoreDuplicates: true },
       );
       if (indexErr) {
         console.error("waybill_index insert failed:", indexErr.message);

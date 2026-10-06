@@ -214,7 +214,8 @@
     <div class="card">
       <h1>Verify a Receipt</h1>
       <p class="subtitle">
-        Enter the tracking ID from an Evueo receipt to confirm it's genuine.
+        Enter the tracking ID from an Evueo receipt to see which company
+        registered it and where the parcel is.
       </p>
 
       <div class="search-row">
@@ -231,6 +232,85 @@
     </div>
 
     <script>
+      // Everything shown on this page comes from user-entered data (company
+      // names, tracking text), so it is always escaped before going into HTML.
+      function esc(v) {
+        return String(v ?? "").replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+      }
+
+      // Friendly label + colour per status. Kept in sync with the values
+      // accepted by /api/update-status.
+      const STATUS = {
+        registered: { label: "Registered", bg: "#f5f5f4", fg: "#57534e" },
+        picked_up: { label: "Picked up", bg: "#dbeafe", fg: "#1d4ed8" },
+        out_for_delivery: {
+          label: "Out for delivery",
+          bg: "#ffedd5",
+          fg: "#c2410c",
+        },
+        delivered: { label: "Delivered", bg: "#dcfce7", fg: "#15803d" },
+      };
+
+      const fmtDate = (v) =>
+        v
+          ? new Date(v).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
+          : "";
+      const fmtDateTime = (v) =>
+        v
+          ? new Date(v).toLocaleString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : "";
+
+      function recordRows(m) {
+        const s = STATUS[m.status] || STATUS.registered;
+        const updated = fmtDateTime(m.status_updated_at);
+        return `
+                <div class="result-row">
+                  <span class="result-label">Registered by</span>
+                  <span class="result-value">${esc(m.company_name)}</span>
+                </div>
+                <div class="result-row">
+                  <span class="result-label">Delivery status</span>
+                  <span class="result-value"><span class="status-pill" style="background:${s.bg};color:${s.fg};">${s.label}</span></span>
+                </div>
+                ${
+                  updated
+                    ? `<div class="result-row">
+                  <span class="result-label">Status updated</span>
+                  <span class="result-value">${esc(updated)}</span>
+                </div>`
+                    : ""
+                }
+                <div class="result-row">
+                  <span class="result-label">Date registered</span>
+                  <span class="result-value">${esc(fmtDate(m.created_at))}</span>
+                </div>`;
+      }
+
+      const SAFETY_NOTE = `
+                <div class="result-note">
+                  This waybill was registered on Evueo by the company shown above. Evueo does not check who a company is, so confirm with them directly before you pay anything. If anyone asks you for extra fees to "release" or "clear" this package, that is a scam. Evueo and legitimate couriers never charge fees through this page.
+                </div>`;
+
       async function verify() {
         const input = document.getElementById("trackingInput");
         const btn = document.getElementById("verifyBtn");
@@ -249,63 +329,36 @@
           );
           const data = await res.json();
 
-          if (data.found) {
-            const date = new Date(data.created_at).toLocaleDateString("en-GB", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            });
-
-            // Friendly label + colour per status. Kept in sync with the values
-            // accepted by /api/update-status.
-            const STATUS = {
-              registered: { label: "Registered", bg: "#f5f5f4", fg: "#57534e" },
-              picked_up: { label: "Picked up", bg: "#dbeafe", fg: "#1d4ed8" },
-              out_for_delivery: { label: "Out for delivery", bg: "#ffedd5", fg: "#c2410c" },
-              delivered: { label: "Delivered", bg: "#dcfce7", fg: "#15803d" },
-            };
-            const s = STATUS[data.status] || STATUS.registered;
-            const updated = data.status_updated_at
-              ? new Date(data.status_updated_at).toLocaleString("en-GB", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
-              : null;
-
+          if (data.found && data.ambiguous) {
+            resultEl.innerHTML = `
+              <div class="result result-verified show">
+                <div class="result-icon">ℹ️</div>
+                <div class="result-title verified">More than one company uses this ID</div>
+                <div class="result-row">
+                  <span class="result-label">Tracking ID</span>
+                  <span class="result-value">${esc(data.tracking_number)}</span>
+                </div>
+                <div class="result-note">Pick the company that sent your parcel.</div>
+                ${data.matches
+                  .map(
+                    (m) =>
+                      `<div style="margin-top:14px;padding-top:6px;border-top:1px solid rgba(0,0,0,0.08);">${recordRows(m)}</div>`,
+                  )
+                  .join("")}
+                ${SAFETY_NOTE}
+              </div>`;
+          } else if (data.found) {
+            const m = data.matches ? data.matches[0] : data;
             resultEl.innerHTML = `
               <div class="result result-verified show">
                 <div class="result-icon">✅</div>
-                <div class="result-title verified">Verified Genuine Receipt</div>
+                <div class="result-title verified">Waybill found</div>
                 <div class="result-row">
                   <span class="result-label">Tracking ID</span>
-                  <span class="result-value">${data.tracking_number}</span>
+                  <span class="result-value">${esc(data.tracking_number)}</span>
                 </div>
-                <div class="result-row">
-                  <span class="result-label">Issued by</span>
-                  <span class="result-value">${data.company_name}</span>
-                </div>
-                <div class="result-row">
-                  <span class="result-label">Delivery status</span>
-                  <span class="result-value"><span class="status-pill" style="background:${s.bg};color:${s.fg};">${s.label}</span></span>
-                </div>
-                ${
-                  updated
-                    ? `<div class="result-row">
-                  <span class="result-label">Status updated</span>
-                  <span class="result-value">${updated}</span>
-                </div>`
-                    : ""
-                }
-                <div class="result-row">
-                  <span class="result-label">Date created</span>
-                  <span class="result-value">${date}</span>
-                </div>
-                <div class="result-note">
-                  This receipt was generated through Evueo's platform by the company shown above. If anyone is asking you for extra fees to "release" or "clear" this package, that is a scam — Evueo and legitimate couriers never charge fees through this page.
-                </div>
+                ${recordRows(m)}
+                ${SAFETY_NOTE}
               </div>`;
           } else {
             resultEl.innerHTML = `
@@ -313,7 +366,7 @@
                 <div class="result-icon">⚠️</div>
                 <div class="result-title not-found">Not Found</div>
                 <div class="result-note">
-                  We could not verify this tracking ID. Double-check it was typed correctly. If you received this from someone asking for payment to release a package, please be cautious — this may be a scam.
+                  We could not find this tracking ID. Double-check it was typed correctly. If you received this from someone asking for payment to release a package, please be cautious — this may be a scam.
                 </div>
               </div>`;
           }
