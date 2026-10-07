@@ -28,6 +28,8 @@ Font.register({
 
 const VERIFY_BASE_URL = "https://evueo.com.ng/verify";
 
+Font.registerHyphenationCallback((word) => [word]);
+
 const e = React.createElement;
 
 // Show fees as "₦3,500" whether the input is "3500", "3,500", "N3,500" or "₦3500".
@@ -334,19 +336,55 @@ const styles = StyleSheet.create({
   },
 });
 
-// Try to break a numbered-list description into rows; otherwise plain text.
+// Split on commas, semicolons and new lines, but not inside brackets
+// ("Cable (10m, shielded)") and not between digits ("1,500").
+function splitItems(raw) {
+  const out = [];
+  let depth = 0;
+  let cur = "";
+  for (let i = 0; i < raw.length; i++) {
+    const ch = raw[i];
+    if (ch === "(" || ch === "[") depth++;
+    else if (ch === ")" || ch === "]") depth = Math.max(0, depth - 1);
+    const digitComma =
+      ch === "," && /\d/.test(raw[i - 1] || "") && /\d/.test(raw[i + 1] || "");
+    if (depth === 0 && !digitComma && /[,;\n\r]/.test(ch)) {
+      out.push(cur);
+      cur = "";
+    } else {
+      cur += ch;
+    }
+  }
+  out.push(cur);
+  return out.map((x) => x.trim().replace(/^(and|&)\s+/i, "")).filter(Boolean);
+}
+
+// One numbered row per item, with a divider between rows. Numbered lists
+// ("1. x 2. y") keep their own numbers; anything else that holds two or more
+// items is split and numbered automatically.
 function itemsContent(raw) {
   if (!raw || raw === "N/A") {
     return e(Text, { style: styles.itemsValue }, "N/A");
   }
-  const matches = raw.match(/\d+\.\s[^0-9.][^]*?(?=\s*\d+\.|$)/g);
-  if (matches && matches.length > 1) {
+  let rows = null;
+  const numbered = raw.match(/\d+\.\s[^0-9.][^]*?(?=\s*\d+\.|$)/g);
+  if (numbered && numbered.length > 1) {
+    rows = numbered.map((x) => x.trim());
+  } else {
+    const parts = splitItems(raw);
+    // A comma inside ordinary prose is not a list: only split on commas when
+    // every piece is short, or when items are separated by ; or new lines.
+    const hardBreaks = /[;\n\r]/.test(raw);
+    const looksLikeList = hardBreaks || parts.every((x) => x.length <= 70);
+    if (parts.length > 1 && looksLikeList) {
+      rows = parts.map((x, i) => `${i + 1}. ${x}`);
+    }
+  }
+  if (rows) {
     return e(
       View,
       null,
-      matches.map((item, i) =>
-        e(Text, { key: i, style: styles.itemRow }, item.trim()),
-      ),
+      rows.map((item, i) => e(Text, { key: i, style: styles.itemRow }, item)),
     );
   }
   return e(Text, { style: styles.itemsValue }, raw);
