@@ -43,9 +43,20 @@ export default async function handler(req, res) {
       .update({ sheet_id: sheetId })
       .eq("id", user.id);
 
-    if (updateErr) throw new Error(updateErr.message);
+    if (updateErr) {
+      // 23505 = unique_violation: this sheet is already connected to an account.
+      if (updateErr.code === "23505") {
+        return res.status(409).json({
+          error:
+            "That sheet is already connected to another account. Use a sheet that only belongs to you.",
+        });
+      }
+      throw new Error(updateErr.message);
+    }
 
-    return res.status(200).json({ message: "Sheet ID updated.", sheet_id: sheetId });
+    return res
+      .status(200)
+      .json({ message: "Sheet ID updated.", sheet_id: sheetId });
   } catch (error) {
     console.error("update-sheet error:", error.message);
     const status = error.message?.startsWith("Unauthorized") ? 401 : 500;
