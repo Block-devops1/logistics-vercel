@@ -1,6 +1,41 @@
 import { GoogleSpreadsheet } from "google-spreadsheet";
 import { JWT } from "google-auth-library";
 import { createClient } from "@supabase/supabase-js";
+import { randomInt } from "crypto";
+
+// Tracking IDs for waybills that arrive without one (booking forms usually
+// have none). Format: <company prefix>-<6 characters>, e.g. ADE-7K2M9Q. The
+// alphabet leaves out 0/O/1/I/L so it reads clearly over the phone, and the
+// random part keeps IDs hard to guess (no ADE-0001, ADE-0002 counting).
+const ID_ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
+function trackingPrefix(name) {
+  const p = String(name || "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 3);
+  return p.length >= 2 ? p : "EV";
+}
+function randomSuffix(len = 6) {
+  let out = "";
+  for (let i = 0; i < len; i++)
+    out += ID_ALPHABET[randomInt(ID_ALPHABET.length)];
+  return out;
+}
+async function makeTrackingId(sbAdmin, companyId, companyName) {
+  const prefix = trackingPrefix(companyName);
+  for (let i = 0; i < 5; i++) {
+    const candidate = `${prefix}-${randomSuffix()}`;
+    const { data } = await sbAdmin
+      .from("waybill_index")
+      .select("tracking_number")
+      .eq("company_id", companyId)
+      .eq("tracking_number", candidate)
+      .limit(1);
+    if (!data || data.length === 0) return candidate;
+  }
+  return `${prefix}-${randomSuffix(8)}`;
+}
+const NO_TRACKING = /^(n\/?a|none|null|unknown|nil|-+)$/i;
 
 // One pinned model for every tier. Set AI_MODEL in Vercel to change it on
 // purpose; never let the router pick (accuracy and cost would drift silently).
@@ -75,7 +110,7 @@ export default async function handler(req, res) {
 
     const { data: profile, error: profileError } = await sb
       .from("companies")
-      .select("sheet_id, tier, extractions_used, premium_until")
+      .select("sheet_id, tier, extractions_used, premium_until, company_name")
       .single();
 
     if (profileError || !profile?.sheet_id) {
@@ -158,10 +193,32 @@ export default async function handler(req, res) {
       if (jsonStart === -1 || jsonEnd === -1) throw new Error("no JSON found");
       extracted = JSON.parse(content.substring(jsonStart, jsonEnd + 1));
     } catch (e) {
-      console.error("AI returned unusable output:", e.message, content);
+      console.error(
+        "AI returned unusable output:",
+        e.message,
+        "chars:",
+        content.length,
+      );
       throw new Error(
         "We could not read that waybill. Please check the text and try again.",
       );
+    }
+
+    // 4b. No tracking number in the text? Make one, so the receipt, the QR
+    // code and the public verify page all work for this waybill.
+    const givenTracking = String(extracted.tracking_number ?? "").trim();
+    if (!givenTracking || NO_TRACKING.test(givenTracking)) {
+      const sbIds = createClient(
+        process.env.SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY,
+      );
+      extracted.tracking_number = await makeTrackingId(
+        sbIds,
+        user.id,
+        profile.company_name,
+      );
+    } else {
+      extracted.tracking_number = givenTracking.slice(0, 64);
     }
 
     // 5. Write to the user's own sheet

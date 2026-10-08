@@ -1698,7 +1698,7 @@
           const p = document.getElementById("logo-preview");
           if (p) {
             p.style.display = "block";
-            p.innerHTML = `<img src="${j.url}" style="width:100%;height:auto;display:block;" crossorigin="anonymous"/>`;
+            p.innerHTML = `<img src="${esc(j.url)}" style="width:100%;height:auto;display:block;" crossorigin="anonymous"/>`;
           }
           document.getElementById("remove-logo-btn").style.display =
             "inline-block";
@@ -1715,6 +1715,21 @@
         if (data && Array.isArray(data.records)) return data.records;
         if (data && Array.isArray(data.data)) return data.data;
         return [];
+      }
+
+      /* ── Escape anything that came from pasted waybill text ── */
+      function esc(v) {
+        return String(v ?? "").replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
       }
 
       /* ── Format description ── */
@@ -1884,7 +1899,7 @@
         const statusRow = tracking
           ? `<div class="record-status-row">
               <span class="status-pill" style="background:${s.bg};color:${s.fg};">${s.label}</span>
-              <select class="status-select" onchange="updateRecordStatus(this, '${tracking.replace(/'/g, "\\'")}')">
+              <select class="status-select" data-tracking="${esc(tracking)}" onchange="updateRecordStatus(this, this.dataset.tracking)">
                 ${Object.entries(STATUS_LABELS)
                   .map(
                     ([v, info]) =>
@@ -1896,11 +1911,11 @@
           : "";
         return `<div class="record-card">
         <div class="record-header">
-          <div class="record-route">${r.sender || "?"}<span class="arrow">→</span>${r.receiver || "?"}</div>
-          <div class="record-date">${(r.date || "").split(",")[0]}</div>
+          <div class="record-route">${esc(r.sender || "?")}<span class="arrow">→</span>${esc(r.receiver || "?")}</div>
+          <div class="record-date">${esc((r.date || "").split(",")[0])}</div>
         </div>
-        <div class="record-items">${formatDesc(r.description)}</div>
-        <div class="record-tracking">⬡ ${r.tracking_number || "N/A"}</div>
+        <div class="record-items">${esc(formatDesc(r.description))}</div>
+        <div class="record-tracking">⬡ ${esc(r.tracking_number || "N/A")}</div>
         ${statusRow}
       </div>`;
       }
@@ -1926,7 +1941,7 @@
           return numbered
             .map(
               (item) =>
-                `<div style="padding:4px 0;border-bottom:1px solid #f0ebe3;font-size:0.81rem;line-height:1.5;color:#374151;">${item.trim()}</div>`,
+                `<div style="padding:4px 0;border-bottom:1px solid #f0ebe3;font-size:0.81rem;line-height:1.5;color:#374151;">${esc(item.trim())}</div>`,
             )
             .join("");
         }
@@ -2208,7 +2223,7 @@
         out.innerHTML = last
           .map(
             (r) =>
-              `<div class="drawer-history-item"><div class="drawer-history-route">${r.sender || "–"} → ${r.receiver || "–"}</div><div class="drawer-history-meta">${(r.date || "").split(",")[0]}</div></div>`,
+              `<div class="drawer-history-item"><div class="drawer-history-route">${esc(r.sender || "–")} → ${esc(r.receiver || "–")}</div><div class="drawer-history-meta">${esc((r.date || "").split(",")[0])}</div></div>`,
           )
           .join("");
       }
@@ -2328,7 +2343,7 @@
             const p = document.getElementById("logo-preview");
             if (p) {
               p.style.display = "block";
-              p.innerHTML = `<img src="${window.companyLogo}" style="width:100%;height:auto;display:block;" crossorigin="anonymous"/>`;
+              p.innerHTML = `<img src="${esc(window.companyLogo)}" style="width:100%;height:auto;display:block;" crossorigin="anonymous"/>`;
             }
             const rb = document.getElementById("remove-logo-btn");
             if (rb) rb.style.display = "inline-block";
@@ -2366,7 +2381,7 @@
 
           // Show company name in header
           document.querySelector(".logo").innerHTML =
-            `ev<em>u</em>eo <span style="font-size:0.7rem;font-weight:500;color:var(--muted);letter-spacing:0;font-family:'Figtree',sans-serif;">· ${company.company_name}</span>`;
+            `ev<em>u</em>eo <span style="font-size:0.7rem;font-weight:500;color:var(--muted);letter-spacing:0;font-family:'Figtree',sans-serif;">· ${esc(company.company_name)}</span>`;
 
           // Premium badge
           if (company.tier === "premium") {
@@ -2421,7 +2436,7 @@
                     <div class="empty-icon">🔒</div>
                     <div class="empty-text" style="max-width:420px;">Your sheet isn't shared with the Evueo service account. Open your Google Sheet → <strong>Share</strong> → paste this email → set to <strong>Editor</strong> → Done.</div>
                     <div style="display:flex;align-items:center;gap:8px;margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-family:'DM Mono',monospace;font-size:0.8rem;">
-                      <span id="service-email-copy" style="color:var(--accent);user-select:all;">${serviceEmail}</span>
+                      <span id="service-email-copy" style="color:var(--accent);user-select:all;">${esc(serviceEmail)}</span>
                       <button class="btn" style="padding:6px 12px;font-size:0.78rem;" onclick="navigator.clipboard.writeText(document.getElementById('service-email-copy').textContent).then(()=>alert('Email copied!')).catch(()=>{})">Copy</button>
                     </div>
                   </div>`;
@@ -2539,7 +2554,7 @@
           } catch (e) {
             const txt = await res.text().catch(() => "<no body>");
             console.error("/api/analyze non-json response:", txt);
-            out.innerHTML = `<div class="result-error">❌ Server error: ${txt}</div>`;
+            out.innerHTML = `<div class="result-error">❌ Server error: ${esc(String(txt).slice(0, 300))}</div>`;
             return;
           }
 
@@ -2594,10 +2609,10 @@
             <div class="result-badge">✓ Saved to Google Sheets</div>
             <div class="fields-grid">
               <div><div class="field-label">Date</div><div class="field-value">${now}</div></div>
-              <div><div class="field-label">Tracking</div><div class="field-value"><span class="tracking-chip">${d.tracking_number || "N/A"}</span></div></div>
-              <div><div class="field-label">Sender</div><div class="field-value">${d.sender || "N/A"}</div></div>
-              <div><div class="field-label">Receiver</div><div class="field-value">${d.receiver || "N/A"}</div></div>
-              <div class="field-full"><div class="field-label">Items</div><div class="field-value">${desc}</div></div>
+              <div><div class="field-label">Tracking</div><div class="field-value"><span class="tracking-chip">${esc(d.tracking_number || "N/A")}</span></div></div>
+              <div><div class="field-label">Sender</div><div class="field-value">${esc(d.sender || "N/A")}</div></div>
+              <div><div class="field-label">Receiver</div><div class="field-value">${esc(d.receiver || "N/A")}</div></div>
+              <div class="field-full"><div class="field-label">Items</div><div class="field-value">${esc(desc)}</div></div>
             </div>
           </div>
           <div class="receipt-section">
@@ -2634,7 +2649,7 @@
                 lastEl.textContent = shortDate(d2[d2.length - 1].date);
             }
           } else {
-            out.innerHTML = `<div class="result-error">❌ ${result.error || "Server error."}</div>`;
+            out.innerHTML = `<div class="result-error">❌ ${esc(result.error || "Server error.")}</div>`;
           }
         } catch (err) {
           console.error("analyzeData error:", err);
