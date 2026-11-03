@@ -1135,6 +1135,45 @@
         text-align: center;
         padding: 20px 0; /* Optional: adds some breathing room at the bottom */
       }
+      /* Brand colour picker */
+      .swatches {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+      }
+      .swatch {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: 2px solid transparent;
+        cursor: pointer;
+        padding: 0;
+      }
+      .swatch[aria-pressed="true"] {
+        box-shadow:
+          0 0 0 2px var(--surface, #fff),
+          0 0 0 4px var(--text, #1c1917);
+      }
+      .swatch:focus-visible {
+        outline: 2px solid var(--text, #1c1917);
+        outline-offset: 3px;
+      }
+      .brand-preview {
+        margin-top: 12px;
+        border-radius: 8px;
+        padding: 10px 12px;
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-align: center;
+        background: #f97316;
+      }
+      .brand-note {
+        font-size: 0.78rem;
+        color: var(--muted);
+        margin-top: 8px;
+      }
     </style>
   </head>
   <body>
@@ -1447,6 +1486,20 @@
         </div>
       </div>
       <div class="drawer-section">
+        <div class="drawer-label">Brand colour</div>
+        <div
+          class="swatches"
+          id="brand-swatches"
+          role="group"
+          aria-label="Brand colour"
+        ></div>
+        <div class="brand-preview" id="brand-preview">Your company</div>
+        <div class="brand-note" id="brand-note">
+          Premium receipts use this colour. Free receipts stay Evueo orange.
+        </div>
+      </div>
+
+      <div class="drawer-section">
         <div
           style="
             display: flex;
@@ -1732,6 +1785,82 @@
         );
       }
 
+      /* ── Brand colour (settings drawer) ── */
+      const BRAND_PALETTE = [
+        "#f97316",
+        "#2563eb",
+        "#15803d",
+        "#dc2626",
+        "#7c3aed",
+        "#0f766e",
+        "#b45309",
+        "#1c1917",
+        "#1e3a8a",
+        "#9f1239",
+      ];
+      const BRAND_NAMES = {
+        "#f97316": "Orange",
+        "#2563eb": "Blue",
+        "#15803d": "Green",
+        "#dc2626": "Red",
+        "#7c3aed": "Purple",
+        "#0f766e": "Teal",
+        "#b45309": "Brown",
+        "#1c1917": "Charcoal",
+        "#1e3a8a": "Navy",
+        "#9f1239": "Maroon",
+      };
+
+      function renderBrandPalette() {
+        const wrap = document.getElementById("brand-swatches");
+        if (!wrap) return;
+        const current = (window.brandColor || "#f97316").toLowerCase();
+        wrap.innerHTML = BRAND_PALETTE.map(
+          (hex) =>
+            `<button type="button" class="swatch" data-color="${hex}" style="background:${hex}" aria-label="${BRAND_NAMES[hex]}" aria-pressed="${hex === current}"></button>`,
+        ).join("");
+        wrap
+          .querySelectorAll(".swatch")
+          .forEach((b) =>
+            b.addEventListener("click", () => saveBrandColor(b.dataset.color)),
+          );
+        const prev = document.getElementById("brand-preview");
+        if (prev) {
+          prev.style.background = current;
+          prev.textContent = window.companyName || "Your company";
+        }
+      }
+
+      async function saveBrandColor(hex) {
+        if (!BRAND_PALETTE.includes(hex)) return;
+        const before = window.brandColor || "#f97316";
+        window.brandColor = hex; // show it straight away
+        renderBrandPalette();
+        const note = document.getElementById("brand-note");
+        try {
+          const { data } = await sb.auth.getSession();
+          const token = data?.session?.access_token;
+          if (!token) throw new Error("Please log in again.");
+          const res = await fetch("/api/update-brand", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ brand_color: hex }),
+          });
+          const j = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(j.error || "Could not save the colour.");
+          if (note)
+            note.textContent = `Saved: ${BRAND_NAMES[hex]}. Premium receipts use this colour.`;
+        } catch (e) {
+          window.brandColor = before; // put it back if saving failed
+          renderBrandPalette();
+          if (note)
+            note.textContent = e.message || "Could not save the colour.";
+        }
+      }
+
       /* ── Format description ── */
       function formatDesc(raw) {
         if (!raw || raw === "N/A") return "N/A";
@@ -1977,6 +2106,7 @@
           dateStr: now.replace(", ", "\n"),
           isPaid,
           logoUrl: window.companyLogo || null,
+          brandColor: window.brandColor || "#f97316",
           // Premium-only fields. AI-extracted (weight/address/route) come back
           // in the analyze response; fee/payment are the manual inputs echoed
           // back by the server. Sent regardless — the receipt API gates them on
@@ -2253,7 +2383,7 @@
           let { data: company, error: companyError } = await sb
             .from("companies")
             .select(
-              "company_name, sheet_id, tier, extractions_used, logo_url, premium_until",
+              "company_name, sheet_id, tier, extractions_used, logo_url, premium_until, brand_color",
             )
             .single();
 
@@ -2278,9 +2408,14 @@
                 agreed_to_terms: meta.agreed_to_terms || false,
                 agreed_at: meta.agreed_at || new Date().toISOString(),
                 agreed_ip: meta.agreed_ip || null,
+                brand_color: BRAND_PALETTE.includes(
+                  String(meta.brand_color || "").toLowerCase(),
+                )
+                  ? String(meta.brand_color).toLowerCase()
+                  : "#f97316",
               })
               .select(
-                "company_name, sheet_id, tier, extractions_used, logo_url",
+                "company_name, sheet_id, tier, extractions_used, logo_url, brand_color",
               )
               .single();
 
@@ -2338,6 +2473,8 @@
           window.companyName = company.company_name;
           window.companySheetId = company.sheet_id || "";
           window.companyLogo = company.logo_url || null;
+          window.brandColor = company.brand_color || "#f97316";
+          renderBrandPalette();
 
           if (window.companyLogo) {
             const p = document.getElementById("logo-preview");
@@ -2525,7 +2662,7 @@
         }
       };
       /* ── Analyze ── */
-      async function analyzeData() {
+      async function analyzeData(allowDuplicate) {
         const out = document.getElementById("analyze-output");
         const text = document.getElementById("messyInput").value.trim();
         if (!text) {
@@ -2546,7 +2683,12 @@
           const res = await fetch("/api/analyze", {
             method: "POST",
             headers: await authHeaders(),
-            body: JSON.stringify({ text, deliveryFee, paymentStatus }),
+            body: JSON.stringify({
+              text,
+              deliveryFee,
+              paymentStatus,
+              allow_duplicate: allowDuplicate === true,
+            }),
           });
           let result;
           try {
@@ -2555,6 +2697,22 @@
             const txt = await res.text().catch(() => "<no body>");
             console.error("/api/analyze non-json response:", txt);
             out.innerHTML = `<div class="result-error">❌ Server error: ${esc(String(txt).slice(0, 300))}</div>`;
+            return;
+          }
+
+          // ── Possible duplicate (409): ask before saving it again ──
+          if (res.status === 409 && result.code === "DUPLICATE") {
+            out.innerHTML = "";
+            if (
+              confirm(
+                (result.error ||
+                  "This looks like a waybill you already saved.") +
+                  "\n\nSave it again anyway?",
+              )
+            ) {
+              return analyzeData(true);
+            }
+            out.innerHTML = `<div class="result-error" style="border-color:rgba(249,115,22,0.3);background:rgba(249,115,22,0.05);">Not saved. This waybill is already in your records${result.tracking_number ? " (" + esc(result.tracking_number) + ")" : ""}.</div>`;
             return;
           }
 

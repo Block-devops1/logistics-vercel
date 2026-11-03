@@ -30,6 +30,40 @@ const VERIFY_BASE_URL = "https://evueo.com.ng/verify";
 
 Font.registerHyphenationCallback((word) => [word]);
 
+// Brand colours a Premium company can choose. The page sends one of these and
+// anything else falls back to Evueo orange, so a bad value can never reach the PDF.
+const BRAND_PALETTE = [
+  "#f97316",
+  "#2563eb",
+  "#15803d",
+  "#dc2626",
+  "#7c3aed",
+  "#0f766e",
+  "#b45309",
+  "#1c1917",
+  "#1e3a8a",
+  "#9f1239",
+];
+function safeBrand(v) {
+  const c = String(v || "")
+    .trim()
+    .toLowerCase();
+  return BRAND_PALETTE.includes(c) ? c : "#f97316";
+}
+function lum(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+    .map((v) => {
+      const c = v / 255;
+      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    })
+    .reduce((a, c, i) => a + c * [0.2126, 0.7152, 0.0722][i], 0);
+}
+function contrast(a, b) {
+  const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
 const e = React.createElement;
 
 // Show fees as "₦3,500" whether the input is "3500", "3,500", "N3,500" or "₦3500".
@@ -400,6 +434,7 @@ function receiptDocument({
   items,
   dateStr,
   isPaid,
+  brandColor,
   logoUrl,
   qrDataUrl,
   weight,
@@ -414,10 +449,11 @@ function receiptDocument({
       ? e(Image, { src: logoUrl, style: styles.headerLogo })
       : null;
 
+  const brand = safeBrand(brandColor);
   const header = isPaid
     ? e(
         View,
-        { style: styles.headerPaid },
+        { style: [styles.headerPaid, { backgroundColor: brand }] },
         logo,
         e(Text, { style: styles.companyNamePaid }, companyName),
         e(Text, { style: styles.companySubPaid }, "WAYBILL RECEIPT"),
@@ -437,7 +473,19 @@ function receiptDocument({
       View,
       { style: { flexShrink: 1 } },
       e(Text, { style: styles.trackingLabel }, "TRACKING ID"),
-      e(Text, { style: styles.trackingNum }, tracking || "N/A"),
+      e(
+        Text,
+        {
+          style: [
+            styles.trackingNum,
+            // Brand colour on the dark tracking bar, unless it would be hard to read.
+            isPaid
+              ? { color: contrast(brand, "#1c1917") >= 4.5 ? brand : "#ffffff" }
+              : {},
+          ],
+        },
+        tracking || "N/A",
+      ),
     ),
     e(Text, { style: styles.dateVal }, dateStr),
   );
@@ -614,6 +662,7 @@ export default async function handler(req, res) {
       items,
       dateStr,
       isPaid,
+      brandColor,
       logoUrl,
       weight,
       deliveryAddress,
@@ -647,6 +696,7 @@ export default async function handler(req, res) {
       items: typeof items === "object" ? JSON.stringify(items) : items || "N/A",
       dateStr: dateStr || "",
       isPaid: !!isPaid,
+      brandColor,
       logoUrl: isPaid ? logoUrl : null,
       qrDataUrl,
       // Tier-agnostic: phone always renders when present (free + premium).
