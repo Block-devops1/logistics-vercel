@@ -137,12 +137,19 @@
         background: rgba(0, 0, 0, 0.4);
         opacity: 0;
         visibility: hidden;
-        transition: opacity 0.25s ease;
+        pointer-events: none;
+        backdrop-filter: blur(0px);
+        transition:
+          opacity 0.25s ease,
+          visibility 0.25s ease,
+          backdrop-filter 0.25s ease;
         z-index: 200;
       }
       .drawer-overlay.show {
         opacity: 1;
         visibility: visible;
+        pointer-events: auto;
+        backdrop-filter: blur(2px);
       }
 
       /* Drawer panel */
@@ -156,19 +163,57 @@
         background: var(--surface);
         border-right: 1px solid var(--border);
         z-index: 201;
-        transform: translateX(-100%);
-        transition: transform 0.28s ease;
+        transform: translateX(-104%);
+        transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
         display: flex;
         flex-direction: column;
         overflow-y: auto;
+        box-shadow: none;
       }
       .drawer.show {
         transform: translateX(0);
+        box-shadow: 14px 0 28px rgba(15, 23, 42, 0.18);
       }
 
       .drawer-section {
         padding: 18px 20px;
         border-bottom: 1px solid var(--border2);
+        opacity: 0;
+        transform: translateX(-8px);
+        transition:
+          opacity 0.2s ease,
+          transform 0.2s ease;
+      }
+      .drawer.show .drawer-section {
+        opacity: 1;
+        transform: translateX(0);
+      }
+      .drawer.show .drawer-section:nth-child(1) {
+        transition-delay: 0.04s;
+      }
+      .drawer.show .drawer-section:nth-child(2) {
+        transition-delay: 0.08s;
+      }
+      .drawer.show .drawer-section:nth-child(3) {
+        transition-delay: 0.12s;
+      }
+      .drawer.show .drawer-section:nth-child(4) {
+        transition-delay: 0.16s;
+      }
+      .drawer.show .drawer-section:nth-child(5) {
+        transition-delay: 0.2s;
+      }
+      .drawer.show .drawer-section:nth-child(6) {
+        transition-delay: 0.24s;
+      }
+      .drawer.show .drawer-section:nth-child(7) {
+        transition-delay: 0.28s;
+      }
+      .drawer.show .drawer-section:nth-child(8) {
+        transition-delay: 0.32s;
+      }
+      .drawer.show .drawer-section:nth-child(9) {
+        transition-delay: 0.36s;
       }
       .drawer-section:last-child {
         border-bottom: none;
@@ -293,6 +338,34 @@
       }
       .drawer-logout {
         color: var(--error);
+      }
+
+      #renew-banner {
+        background: linear-gradient(
+          90deg,
+          rgba(249, 115, 22, 0.08),
+          rgba(249, 115, 22, 0.04)
+        );
+        border: 1px solid rgba(249, 115, 22, 0.28);
+        border-left: 4px solid var(--accent);
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(249, 115, 22, 0.08);
+      }
+      #renew-banner a {
+        background: var(--accent);
+        color: #fff;
+        padding: 7px 14px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        white-space: nowrap;
+        transition:
+          filter 0.2s ease,
+          transform 0.2s ease;
+      }
+      #renew-banner a:hover {
+        filter: brightness(0.98);
+        transform: translateY(-1px);
       }
 
       body {
@@ -1250,7 +1323,7 @@
             font-weight: 600;
             white-space: nowrap;
           "
-          >Renew Now — ₦5,000</a
+          >Renew Now for ₦5,000</a
         >
       </div>
       <div class="stats-strip">
@@ -1272,7 +1345,7 @@
         <div class="section-label">Extract</div>
         <div class="section-title">Analyze Waybill / Invoice</div>
         <div class="section-desc">
-          Paste raw text — Evueo extracts the fields, saves to your sheet, and
+          Paste raw text, Evueo extracts the fields, saves to your sheet, and
           generates a receipt instantly.
         </div>
         <textarea
@@ -1481,12 +1554,37 @@
             "
           ></div>
           <div style="font-size: 0.78rem; color: var(--muted)">
-            Premium logos will appear on receipts as a faint watermark.
+            Premium logos appear on receipts as a watermark on premium plans.
           </div>
         </div>
       </div>
+
       <div class="drawer-section">
-        <div class="drawer-label">Brand colour</div>
+        <div class="drawer-label">Operations</div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <button
+            class="drawer-link"
+            onclick="window.location.href = '/dashboard'"
+          >
+            Dashboard
+          </button>
+          <button
+            class="drawer-link"
+            onclick="window.location.href = '/history'"
+          >
+            History
+          </button>
+          <button
+            class="drawer-link"
+            onclick="window.location.href = '/upgrade'"
+          >
+            Billing
+          </button>
+        </div>
+      </div>
+
+      <div class="drawer-section">
+        <div class="drawer-label">Branding</div>
         <div
           class="swatches"
           id="brand-swatches"
@@ -1495,11 +1593,31 @@
         ></div>
         <div class="brand-preview" id="brand-preview">Your company</div>
         <div class="brand-note" id="brand-note">
-          Premium receipts use this colour. Free receipts stay Evueo orange.
+          Choose the colour used on premium receipts and branded PDFs.
         </div>
       </div>
 
       <div class="drawer-section">
+        <div class="drawer-label">Support</div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <a
+            class="drawer-link"
+            href="https://wa.me/2349042698417"
+            target="_blank"
+            rel="noopener"
+          >
+            WhatsApp Business
+          </a>
+          <a class="drawer-link" href="mailto:support@evueo.com.ng">
+            support@evueo.com.ng
+          </a>
+          <a class="drawer-link" href="/terms.html">Terms</a>
+          <a class="drawer-link" href="/privacy.html">Privacy</a>
+        </div>
+      </div>
+
+      <div class="drawer-section">
+        <div class="drawer-label">Plan</div>
         <div
           style="
             display: flex;
@@ -1509,24 +1627,14 @@
           "
         >
           <div style="display: flex; flex-direction: column; gap: 6px">
-            <button
-              class="drawer-link"
-              onclick="window.location.href = '/dashboard'"
+            <div
+              style="font-size: 0.82rem; color: var(--text); font-weight: 600"
             >
-              Dashboard
-            </button>
-            <button
-              class="drawer-link"
-              onclick="window.location.href = '/history'"
-            >
-              History
-            </button>
-            <button
-              class="drawer-link"
-              onclick="window.location.href = '/upgrade'"
-            >
-              Upgrade
-            </button>
+              Premium pass
+            </div>
+            <div style="font-size: 0.76rem; color: var(--muted)">
+              Active for 30 days
+            </div>
           </div>
           <div id="drawer-tier-wrap" style="display: flex; align-items: center">
             <div class="drawer-tier-badge" id="drawer-tier">Free</div>
@@ -1550,36 +1658,12 @@
       </div>
 
       <div class="drawer-section">
-        <div class="drawer-label">History</div>
+        <div class="drawer-label">Recent history</div>
         <div
           id="drawer-history"
           style="max-height: 200px; overflow: auto; padding-top: 6px"
         >
           <div class="drawer-history-item">Loading…</div>
-        </div>
-      </div>
-
-      <div class="drawer-section">
-        <div class="drawer-label">Support</div>
-        <div style="display: flex; flex-direction: column; gap: 6px">
-          <a
-            class="drawer-link"
-            href="https://wa.me/2349042698417"
-            target="_blank"
-            rel="noopener"
-            >WhatsApp Business</a
-          >
-          <a class="drawer-link" href="mailto:support@evueo.com.ng"
-            >Email (support@evueo.com.ng)</a
-          >
-        </div>
-      </div>
-
-      <div class="drawer-section">
-        <div class="drawer-label">Legal</div>
-        <div style="display: flex; flex-direction: column; gap: 6px">
-          <a class="drawer-link" href="/terms.html">Terms of Use</a>
-          <a class="drawer-link" href="/privacy.html">Privacy Policy</a>
         </div>
       </div>
 
@@ -2214,7 +2298,7 @@
           const url = ev.target.result;
           const p = document.getElementById("logo-preview");
           p.style.display = "block";
-          p.innerHTML = `<img src="${url}" style="width:100%;height:auto;display:block;"/>`;
+          p.innerHTML = `<img src="${url}" style="width:100%;height:auto;display:block;" crossorigin="anonymous"/>`;
           document.getElementById("remove-logo-btn").style.display =
             "inline-block";
           document.getElementById("remove-logo-btn").dataset.preview = url;
