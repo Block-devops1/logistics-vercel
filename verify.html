@@ -339,32 +339,32 @@
         const s = STATUS[m.status] || STATUS.registered;
         const updated = fmtDateTime(m.status_updated_at);
         return `
-                <div class="result-row">
-                  <span class="result-label">Registered by</span>
-                  <span class="result-value">${esc(m.company_name)}</span>
-                </div>
-                <div class="result-row">
-                  <span class="result-label">Delivery status</span>
-                  <span class="result-value"><span class="status-pill" style="background:${s.bg};color:${s.fg};">${s.label}</span></span>
-                </div>
-                ${
-                  updated
-                    ? `<div class="result-row">
-                  <span class="result-label">Status updated</span>
-                  <span class="result-value">${esc(updated)}</span>
-                </div>`
-                    : ""
-                }
-                <div class="result-row">
-                  <span class="result-label">Date registered</span>
-                  <span class="result-value">${esc(fmtDate(m.created_at))}</span>
-                </div>`;
+               <div class="result-row">
+                 <span class="result-label">Registered by</span>
+                 <span class="result-value">${esc(m.company_name)}</span>
+               </div>
+               <div class="result-row">
+                 <span class="result-label">Delivery status</span>
+                 <span class="result-value"><span class="status-pill" style="background:${s.bg};color:${s.fg};">${s.label}</span></span>
+               </div>
+               ${
+                 updated
+                   ? `<div class="result-row">
+                 <span class="result-label">Status updated</span>
+                 <span class="result-value">${esc(updated)}</span>
+               </div>`
+                   : ""
+               }
+               <div class="result-row">
+                 <span class="result-label">Date registered</span>
+                 <span class="result-value">${esc(fmtDate(m.created_at))}</span>
+               </div>`;
       }
-      //danvcing like barbie
+
       const SAFETY_NOTE = `
-                <div class="result-note">
-                  This waybill was registered on Evueo by the company shown above. Evueo does not check who a company is, so confirm with them directly before you pay anything. If anyone asks you for extra fees to "release" or "clear" this package, that is a scam. Evueo and legitimate couriers never charge fees through this page.
-                </div>`;
+               <div class="result-note">
+                 This waybill was registered on Evueo by the company shown above. Evueo does not check who a company is, so confirm with them directly before you pay anything. If anyone asks you for extra fees to "release" or "clear" this package, that is a scam. Evueo and legitimate couriers never charge fees through this page.
+               </div>`;
 
       async function verify() {
         const input = document.getElementById("trackingInput");
@@ -386,50 +386,50 @@
 
           if (data.found && data.ambiguous) {
             resultEl.innerHTML = `
-              <div class="result result-verified show">
-                <div class="result-icon">ℹ️</div>
-                <div class="result-title verified">More than one company uses this ID</div>
-                <div class="result-row">
-                  <span class="result-label">Tracking ID</span>
-                  <span class="result-value">${esc(data.tracking_number)}</span>
-                </div>
-                <div class="result-note">Pick the company that sent your parcel.</div>
-                ${data.matches
-                  .map(
-                    (m) =>
-                      `<div style="margin-top:14px;padding-top:6px;border-top:1px solid rgba(0,0,0,0.08);">${recordRows(m)}</div>`,
-                  )
-                  .join("")}
-                ${SAFETY_NOTE}
-              </div>`;
+             <div class="result result-verified show">
+               <div class="result-icon">ℹ️</div>
+               <div class="result-title verified">More than one company uses this ID</div>
+               <div class="result-row">
+                 <span class="result-label">Tracking ID</span>
+                 <span class="result-value">${esc(data.tracking_number)}</span>
+               </div>
+               <div class="result-note">Pick the company that sent your parcel.</div>
+               ${data.matches
+                 .map(
+                   (m) =>
+                     `<div style="margin-top:14px;padding-top:6px;border-top:1px solid rgba(0,0,0,0.08);">${recordRows(m)}</div>`,
+                 )
+                 .join("")}
+               ${SAFETY_NOTE}
+             </div>`;
           } else if (data.found) {
             const m = data.matches ? data.matches[0] : data;
             resultEl.innerHTML = `
-              <div class="result result-verified show">
-                <div class="result-icon">✅</div>
-                <div class="result-title verified">Waybill found</div>
-                <div class="result-row">
-                  <span class="result-label">Tracking ID</span>
-                  <span class="result-value">${esc(data.tracking_number)}</span>
-                </div>
-                ${recordRows(m)}
-                ${SAFETY_NOTE}
-              </div>`;
+             <div class="result result-verified show">
+               <div class="result-icon">✅</div>
+               <div class="result-title verified">Waybill found</div>
+               <div class="result-row">
+                 <span class="result-label">Tracking ID</span>
+                 <span class="result-value">${esc(data.tracking_number)}</span>
+               </div>
+               ${recordRows(m)}
+               ${SAFETY_NOTE}
+             </div>`;
           } else {
             resultEl.innerHTML = `
-              <div class="result result-not-found show">
-                <div class="result-icon">⚠️</div>
-                <div class="result-title not-found">Not Found</div>
-                <div class="result-note">
-                  We could not find this tracking ID. Double-check it was typed correctly. If you received this from someone asking for payment to release a package, please be cautious — this may be a scam.
-                </div>
-              </div>`;
+             <div class="result result-not-found show">
+               <div class="result-icon">⚠️</div>
+               <div class="result-title not-found">Not Found</div>
+               <div class="result-note">
+                 We could not find this tracking ID. Double-check it was typed correctly. If you received this from someone asking for payment to release a package, please be cautious — this may be a scam.
+               </div>
+             </div>`;
           }
         } catch (e) {
           resultEl.innerHTML = `
-            <div class="result result-not-found show">
-              <div class="result-note">Something went wrong. Please try again.</div>
-            </div>`;
+           <div class="result result-not-found show">
+             <div class="result-note">Something went wrong. Please try again.</div>
+           </div>`;
         }
 
         btn.disabled = false;

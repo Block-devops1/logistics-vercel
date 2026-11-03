@@ -1,183 +1,186 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Evueo — Logistics Intelligence</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&family=Figtree:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" href="/favicon.svg" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-      const sb = supabase.createClient(
-        "https://pyoijoamwgkyszlcgblk.supabase.co",
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB5b2lqb2Ftd2dreXN6bGNnYmxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MTk4NTcsImV4cCI6MjA5NjA5NTg1N30.SFTZ6Ae22Ln4lzYATubf-7h_LdvZxzBPJzxINJuzcZk",
-      );
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Evueo — Logistics Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link
+href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&family=Figtree:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
+rel="stylesheet"
+/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/favicon.svg" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const sb = supabase.createClient(
+"https://pyoijoamwgkyszlcgblk.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB5b2lqb2Ftd2dreXN6bGNnYmxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MTk4NTcsImV4cCI6MjA5NjA5NTg1N30.SFTZ6Ae22Ln4lzYATubf-7h_LdvZxzBPJzxINJuzcZk",
+);
 
-      // Helper: return headers with current session token for server calls
-      async function authHeaders() {
-        try {
-          const { data } = await sb.auth.getSession();
-          const token = data?.session?.access_token;
-          if (!token) return { "Content-Type": "application/json" };
-          return {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          };
-        } catch (e) {
-          return { "Content-Type": "application/json" };
-        }
-      }
+// Helper: return headers with current session token for server calls
+async function authHeaders() {
+try {
+const { data } = await sb.auth.getSession();
+const token = data?.session?.access_token;
+if (!token) return { "Content-Type": "application/json" };
+return {
+"Content-Type": "application/json",
+Authorization: `Bearer ${token}`,
+};
+} catch (e) {
+return { "Content-Type": "application/json" };
+}
+}
 
-      // Gate — runs before page loads
-      (async () => {
-        const { data } = await sb.auth.getSession();
-        if (!data.session) {
-          window.location.href = "/login";
-        }
-      })();
-    </script>
-    <style>
-      *,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
+// Gate — runs before page loads
+(async () => {
+const { data } = await sb.auth.getSession();
+if (!data.session) {
+window.location.href = "/login";
+}
+})();
+</script>
+<style>
+*,
+*::before,
+*::after {
+box-sizing: border-box;
+margin: 0;
+padding: 0;
+}
 
-      :root {
-        --bg: #faf8f5;
-        --surface: #ffffff;
-        --border: #e8e2d9;
-        --border2: #f0ebe3;
-        --accent: #f97316;
-        --accent2: #ea6c00;
-        --accent-dim: rgba(249, 115, 22, 0.09);
-        --text: #1c1917;
-        --muted: #78716c;
-        --muted2: #a8a29e;
-        --success: #16a34a;
-        --error: #dc2626;
-        --r: 12px;
-      }
+:root {
+--bg: #faf8f5;
+--surface: #ffffff;
+--border: #e8e2d9;
+--border2: #f0ebe3;
+--accent: #f97316;
+--accent2: #ea6c00;
+--accent-dim: rgba(249, 115, 22, 0.09);
+--text: #1c1917;
+--muted: #78716c;
+--muted2: #a8a29e;
+--success: #16a34a;
+--error: #dc2626;
+--r: 12px;
+}
 
-      html.dark {
-        --bg: #1c1917;
-        --surface: #292524;
-        --border: #44403c;
-        --border2: #3a3633;
-        --accent: #f97316;
-        --accent2: #fb923c;
-        --accent-dim: rgba(249, 115, 22, 0.14);
-        --text: #f5f5f4;
-        --muted: #a8a29e;
-        --muted2: #78716c;
-        --success: #4ade80;
-        --error: #f87171;
-      }
+html.dark {
+--bg: #1c1917;
+--surface: #292524;
+--border: #44403c;
+--border2: #3a3633;
+--accent: #f97316;
+--accent2: #fb923c;
+--accent-dim: rgba(249, 115, 22, 0.14);
+--text: #f5f5f4;
+--muted: #a8a29e;
+--muted2: #78716c;
+--success: #4ade80;
+--error: #f87171;
+}
 
-      body {
-        background: var(--bg);
-        color: var(--text);
-        font-family: "Figtree", sans-serif;
-        min-height: 100vh;
-        position: relative;
-        transition:
-          background 0.25s ease,
-          color 0.25s ease;
-      }
+body {
+background: var(--bg);
+color: var(--text);
+font-family: "Figtree", sans-serif;
+min-height: 100vh;
+position: relative;
+transition:
+background 0.25s ease,
+color 0.25s ease;
+}
 
-      /* Hamburger button */
-      .hamburger {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 5px;
-        width: 38px;
-        height: 38px;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 9px;
-        cursor: pointer;
-        padding: 0;
-        align-items: center;
-        flex-shrink: 0;
-      }
-      .hamburger span {
-        display: block;
-        width: 16px;
-        height: 2px;
-        background: var(--text);
-        border-radius: 1px;
-        transition:
-          transform 0.25s ease,
-          opacity 0.25s ease;
-      }
-      .hamburger.open span:nth-child(1) {
-        transform: translateY(7px) rotate(45deg);
-      }
-      .hamburger.open span:nth-child(2) {
-        opacity: 0;
-      }
-      .hamburger.open span:nth-child(3) {
-        transform: translateY(-7px) rotate(-45deg);
-      }
+/* Hamburger button */
+.hamburger {
+display: flex;
+flex-direction: column;
+justify-content: center;
+gap: 5px;
+width: 38px;
+height: 38px;
+background: var(--surface);
+border: 1px solid var(--border);
+border-radius: 9px;
+cursor: pointer;
+padding: 0;
+align-items: center;
+flex-shrink: 0;
+}
+.hamburger span {
+display: block;
+width: 16px;
+height: 2px;
+background: var(--text);
+border-radius: 1px;
+transition:
+transform 0.25s ease,
+opacity 0.25s ease;
+}
+.hamburger.open span:nth-child(1) {
+transform: translateY(7px) rotate(45deg);
+}
+.hamburger.open span:nth-child(2) {
+opacity: 0;
+}
+.hamburger.open span:nth-child(3) {
+transform: translateY(-7px) rotate(-45deg);
+}
 
-      /* Drawer overlay */
-      .drawer-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.4);
-        opacity: 0;
-        visibility: hidden;
+/* Drawer overlay */
+.drawer-overlay {
+position: fixed;
+inset: 0;
+background: rgba(0, 0, 0, 0.4);
+opacity: 0;
+visibility: hidden;
+        transition: opacity 0.25s ease;
         pointer-events: none;
         backdrop-filter: blur(0px);
         transition:
           opacity 0.25s ease,
           visibility 0.25s ease,
           backdrop-filter 0.25s ease;
-        z-index: 200;
-      }
-      .drawer-overlay.show {
-        opacity: 1;
-        visibility: visible;
+z-index: 200;
+}
+.drawer-overlay.show {
+opacity: 1;
+visibility: visible;
         pointer-events: auto;
         backdrop-filter: blur(2px);
-      }
+}
 
-      /* Drawer panel */
-      .drawer {
-        position: fixed;
-        top: 0;
-        left: 0;
-        height: 100%;
-        width: 280px;
-        max-width: 85vw;
-        background: var(--surface);
-        border-right: 1px solid var(--border);
-        z-index: 201;
+/* Drawer panel */
+.drawer {
+position: fixed;
+top: 0;
+left: 0;
+height: 100%;
+width: 280px;
+max-width: 85vw;
+background: var(--surface);
+border-right: 1px solid var(--border);
+z-index: 201;
+        transform: translateX(-100%);
+        transition: transform 0.28s ease;
         transform: translateX(-104%);
         transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
-        display: flex;
-        flex-direction: column;
-        overflow-y: auto;
+display: flex;
+flex-direction: column;
+overflow-y: auto;
         box-shadow: none;
-      }
-      .drawer.show {
-        transform: translateX(0);
+}
+.drawer.show {
+transform: translateX(0);
         box-shadow: 14px 0 28px rgba(15, 23, 42, 0.18);
-      }
+}
 
-      .drawer-section {
-        padding: 18px 20px;
-        border-bottom: 1px solid var(--border2);
+.drawer-section {
+padding: 18px 20px;
+border-bottom: 1px solid var(--border2);
         opacity: 0;
         transform: translateX(-8px);
         transition:
@@ -214,131 +217,131 @@
       }
       .drawer.show .drawer-section:nth-child(9) {
         transition-delay: 0.36s;
-      }
-      .drawer-section:last-child {
-        border-bottom: none;
-      }
-      .drawer-label {
-        font-family: "DM Mono", monospace;
-        font-size: 0.62rem;
-        color: var(--muted2);
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-        margin-bottom: 10px;
-      }
-      .drawer-company {
-        font-family: "Syne", sans-serif;
-        font-weight: 800;
-        font-size: 1.05rem;
-        color: var(--text);
-        margin-bottom: 4px;
-      }
-      .drawer-email {
-        font-size: 0.82rem;
-        color: var(--muted);
-        word-break: break-all;
-      }
-      .drawer-tier-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        font-family: "DM Mono", monospace;
-        font-size: 0.68rem;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        padding: 4px 11px;
-        border-radius: 999px;
-        font-weight: 600;
-      }
-      .drawer-tier-badge.free {
-        background: var(--border2);
-        color: var(--muted);
-      }
-      .drawer-tier-badge.premium {
-        background: rgba(249, 115, 22, 0.1);
-        border: 1px solid rgba(249, 115, 22, 0.25);
-        color: var(--accent);
-      }
-      .drawer-link {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 9px 0;
-        font-size: 0.88rem;
-        color: var(--text);
-        text-decoration: none;
-        cursor: pointer;
-        background: none;
-        border: none;
-        width: 100%;
-        text-align: left;
-        font-family: "Figtree", sans-serif;
-      }
-      .drawer-link:hover {
-        color: var(--accent);
-      }
-      .drawer-link svg {
-        flex-shrink: 0;
-        opacity: 0.7;
-      }
-      .drawer-history-item {
-        padding: 8px 0;
-        border-bottom: 1px solid var(--border2);
-        font-size: 0.78rem;
-      }
-      .drawer-history-item:last-child {
-        border-bottom: none;
-      }
-      .drawer-history-route {
-        font-weight: 600;
-        color: var(--text);
-        margin-bottom: 2px;
-      }
-      .drawer-history-meta {
-        color: var(--muted2);
-        font-family: "DM Mono", monospace;
-        font-size: 0.68rem;
-      }
-      .drawer-toggle-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 9px 0;
-      }
-      .drawer-toggle-row span {
-        font-size: 0.88rem;
-        color: var(--text);
-      }
-      .theme-switch {
-        position: relative;
-        width: 42px;
-        height: 24px;
-        background: var(--border);
-        border-radius: 999px;
-        cursor: pointer;
-        transition: background 0.2s;
-        flex-shrink: 0;
-      }
-      .theme-switch.on {
-        background: var(--accent);
-      }
-      .theme-switch::after {
-        content: "";
-        position: absolute;
-        top: 3px;
-        left: 3px;
-        width: 18px;
-        height: 18px;
-        background: #fff;
-        border-radius: 50%;
-        transition: transform 0.2s;
-      }
-      .theme-switch.on::after {
-        transform: translateX(18px);
-      }
-      .drawer-logout {
-        color: var(--error);
-      }
+}
+.drawer-section:last-child {
+border-bottom: none;
+}
+.drawer-label {
+font-family: "DM Mono", monospace;
+font-size: 0.62rem;
+color: var(--muted2);
+letter-spacing: 0.14em;
+text-transform: uppercase;
+margin-bottom: 10px;
+}
+.drawer-company {
+font-family: "Syne", sans-serif;
+font-weight: 800;
+font-size: 1.05rem;
+color: var(--text);
+margin-bottom: 4px;
+}
+.drawer-email {
+font-size: 0.82rem;
+color: var(--muted);
+word-break: break-all;
+}
+.drawer-tier-badge {
+display: inline-flex;
+align-items: center;
+gap: 5px;
+font-family: "DM Mono", monospace;
+font-size: 0.68rem;
+letter-spacing: 0.08em;
+text-transform: uppercase;
+padding: 4px 11px;
+border-radius: 999px;
+font-weight: 600;
+}
+.drawer-tier-badge.free {
+background: var(--border2);
+color: var(--muted);
+}
+.drawer-tier-badge.premium {
+background: rgba(249, 115, 22, 0.1);
+border: 1px solid rgba(249, 115, 22, 0.25);
+color: var(--accent);
+}
+.drawer-link {
+display: flex;
+align-items: center;
+gap: 10px;
+padding: 9px 0;
+font-size: 0.88rem;
+color: var(--text);
+text-decoration: none;
+cursor: pointer;
+background: none;
+border: none;
+width: 100%;
+text-align: left;
+font-family: "Figtree", sans-serif;
+}
+.drawer-link:hover {
+color: var(--accent);
+}
+.drawer-link svg {
+flex-shrink: 0;
+opacity: 0.7;
+}
+.drawer-history-item {
+padding: 8px 0;
+border-bottom: 1px solid var(--border2);
+font-size: 0.78rem;
+}
+.drawer-history-item:last-child {
+border-bottom: none;
+}
+.drawer-history-route {
+font-weight: 600;
+color: var(--text);
+margin-bottom: 2px;
+}
+.drawer-history-meta {
+color: var(--muted2);
+font-family: "DM Mono", monospace;
+font-size: 0.68rem;
+}
+.drawer-toggle-row {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 9px 0;
+}
+.drawer-toggle-row span {
+font-size: 0.88rem;
+color: var(--text);
+}
+.theme-switch {
+position: relative;
+width: 42px;
+height: 24px;
+background: var(--border);
+border-radius: 999px;
+cursor: pointer;
+transition: background 0.2s;
+flex-shrink: 0;
+}
+.theme-switch.on {
+background: var(--accent);
+}
+.theme-switch::after {
+content: "";
+position: absolute;
+top: 3px;
+left: 3px;
+width: 18px;
+height: 18px;
+background: #fff;
+border-radius: 50%;
+transition: transform 0.2s;
+}
+.theme-switch.on::after {
+transform: translateX(18px);
+}
+.drawer-logout {
+color: var(--error);
+}
 
       #renew-banner {
         background: linear-gradient(
@@ -368,1196 +371,1199 @@
         transform: translateY(-1px);
       }
 
-      body {
-        background: var(--bg);
-        color: var(--text);
-        font-family: "Figtree", sans-serif;
-        min-height: 100vh;
-        position: relative;
-        transition:
-          background 0.25s ease,
-          color 0.25s ease;
-      }
+body {
+background: var(--bg);
+color: var(--text);
+font-family: "Figtree", sans-serif;
+min-height: 100vh;
+position: relative;
+transition:
+background 0.25s ease,
+color 0.25s ease;
+}
 
-      body::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        background-image: radial-gradient(
-          circle,
-          rgba(0, 0, 0, 0.05) 1px,
-          transparent 1px
-        );
-        background-size: 24px 24px;
-        pointer-events: none;
-        z-index: 0;
-      }
-      body::after {
-        content: "";
-        position: fixed;
-        top: -160px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 600px;
-        height: 320px;
-        background: radial-gradient(
-          ellipse,
-          rgba(249, 115, 22, 0.1) 0%,
-          transparent 70%
-        );
-        pointer-events: none;
-        z-index: 0;
-      }
+body::before {
+content: "";
+position: fixed;
+inset: 0;
+background-image: radial-gradient(
+circle,
+rgba(0, 0, 0, 0.05) 1px,
+transparent 1px
+);
+background-size: 24px 24px;
+pointer-events: none;
+z-index: 0;
+}
+body::after {
+content: "";
+position: fixed;
+top: -160px;
+left: 50%;
+transform: translateX(-50%);
+width: 600px;
+height: 320px;
+background: radial-gradient(
+ellipse,
+rgba(249, 115, 22, 0.1) 0%,
+transparent 70%
+);
+pointer-events: none;
+z-index: 0;
+}
 
-      .page {
-        position: relative;
-        z-index: 1;
-        max-width: 760px;
-        margin: 0 auto;
-        padding: 36px 20px 80px;
-      }
+.page {
+position: relative;
+z-index: 1;
+max-width: 760px;
+margin: 0 auto;
+padding: 36px 20px 80px;
+}
 
-      header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        margin-bottom: 36px;
-        animation: fadeUp 0.45s ease both;
-      }
-      .header-left,
-      .header-center,
-      .header-right {
-        display: flex;
-        align-items: center;
-      }
-      .header-left {
-        flex: 0 0 auto;
-      }
-      .logo {
-        font-family: "Syne", sans-serif;
-        font-size: 2rem;
-        font-weight: 800;
-        letter-spacing: -1px;
-        line-height: 1;
-        color: var(--text);
-      }
-      .logo em {
-        color: var(--accent);
-        font-style: normal;
-      }
+header {
+display: flex;
+align-items: flex-start;
+justify-content: space-between;
+margin-bottom: 36px;
+animation: fadeUp 0.45s ease both;
+}
+.header-left,
+.header-center,
+.header-right {
+display: flex;
+align-items: center;
+}
+.header-left {
+flex: 0 0 auto;
+}
+.logo {
+font-family: "Syne", sans-serif;
+font-size: 2rem;
+font-weight: 800;
+letter-spacing: -1px;
+line-height: 1;
+color: var(--text);
+}
+.logo em {
+color: var(--accent);
+font-style: normal;
+}
 
-      .status-dot {
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        background: var(--muted2);
-        flex-shrink: 0;
-        transition:
-          background 0.4s,
-          box-shadow 0.4s;
-      }
-      .status-dot.online {
-        background: var(--success);
-        box-shadow: 0 0 7px rgba(22, 163, 74, 0.5);
-      }
-      .status-dot.offline {
-        background: var(--error);
-        box-shadow: 0 0 7px rgba(220, 38, 38, 0.5);
-      }
+.status-dot {
+width: 7px;
+height: 7px;
+border-radius: 50%;
+background: var(--muted2);
+flex-shrink: 0;
+transition:
+background 0.4s,
+box-shadow 0.4s;
+}
+.status-dot.online {
+background: var(--success);
+box-shadow: 0 0 7px rgba(22, 163, 74, 0.5);
+}
+.status-dot.offline {
+background: var(--error);
+box-shadow: 0 0 7px rgba(220, 38, 38, 0.5);
+}
 
-      /* ── STATS ── */
-      .stats-strip {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 12px;
-        margin-bottom: 20px;
-      }
+/* ── STATS ── */
+.stats-strip {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 12px;
+margin-bottom: 20px;
+}
 
-      .stat-card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-top: 3px solid transparent;
-        border-radius: var(--r);
-        padding: 18px 16px;
-        position: relative;
-        overflow: hidden;
-        opacity: 0;
-        transform: translateY(14px);
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-        min-width: 0; /* allow shrink */
-      }
-      .stat-card.in {
-        transition:
-          opacity 0.4s ease,
-          transform 0.4s ease,
-          border-top-color 0.5s,
-          box-shadow 0.3s;
-        opacity: 1;
-        transform: translateY(0);
-        border-top-color: var(--accent);
-        box-shadow:
-          0 4px 20px rgba(249, 115, 22, 0.08),
-          0 1px 4px rgba(0, 0, 0, 0.05);
-      }
-      .stat-card::after {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 50px;
-        background: linear-gradient(
-          to bottom,
-          rgba(249, 115, 22, 0.04),
-          transparent
-        );
-        pointer-events: none;
-      }
-      .stat-number {
-        font-family: "Syne", sans-serif;
-        font-size: 2.1rem;
-        font-weight: 800;
-        color: var(--text);
-        line-height: 1;
-        margin-bottom: 6px;
-        letter-spacing: -1.5px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .stat-label {
-        font-family: "DM Mono", monospace;
-        font-size: 0.62rem;
-        color: var(--muted2);
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-      }
+.stat-card {
+background: var(--surface);
+border: 1px solid var(--border);
+border-top: 3px solid transparent;
+border-radius: var(--r);
+padding: 18px 16px;
+position: relative;
+overflow: hidden;
+opacity: 0;
+transform: translateY(14px);
+box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+min-width: 0; /* allow shrink */
+}
+.stat-card.in {
+transition:
+opacity 0.4s ease,
+transform 0.4s ease,
+border-top-color 0.5s,
+box-shadow 0.3s;
+opacity: 1;
+transform: translateY(0);
+border-top-color: var(--accent);
+box-shadow:
+0 4px 20px rgba(249, 115, 22, 0.08),
+0 1px 4px rgba(0, 0, 0, 0.05);
+}
+.stat-card::after {
+content: "";
+position: absolute;
+top: 0;
+left: 0;
+right: 0;
+height: 50px;
+background: linear-gradient(
+to bottom,
+rgba(249, 115, 22, 0.04),
+transparent
+);
+pointer-events: none;
+}
+.stat-number {
+font-family: "Syne", sans-serif;
+font-size: 2.1rem;
+font-weight: 800;
+color: var(--text);
+line-height: 1;
+margin-bottom: 6px;
+letter-spacing: -1.5px;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+.stat-label {
+font-family: "DM Mono", monospace;
+font-size: 0.62rem;
+color: var(--muted2);
+text-transform: uppercase;
+letter-spacing: 0.08em;
+}
 
-      /* Last entry smaller font so date fits */
-      #stat-last {
-        font-size: 0.88rem !important;
-        letter-spacing: 0 !important;
-        margin-top: 4px;
-        font-family: "DM Mono", monospace !important;
-        font-weight: 500;
-      }
+/* Last entry smaller font so date fits */
+#stat-last {
+font-size: 0.88rem !important;
+letter-spacing: 0 !important;
+margin-top: 4px;
+font-family: "DM Mono", monospace !important;
+font-weight: 500;
+}
 
-      /* ── CARDS ── */
-      .card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--r);
-        padding: 26px;
-        margin-bottom: 16px;
-        box-shadow:
-          0 1px 4px rgba(0, 0, 0, 0.05),
-          0 4px 20px rgba(0, 0, 0, 0.04);
-        opacity: 0;
-        transform: translateY(14px);
-      }
-      .card.in {
-        transition:
-          opacity 0.45s ease,
-          transform 0.45s ease;
-        opacity: 1;
-        transform: translateY(0);
-      }
+/* ── CARDS ── */
+.card {
+background: var(--surface);
+border: 1px solid var(--border);
+border-radius: var(--r);
+padding: 26px;
+margin-bottom: 16px;
+box-shadow:
+0 1px 4px rgba(0, 0, 0, 0.05),
+0 4px 20px rgba(0, 0, 0, 0.04);
+opacity: 0;
+transform: translateY(14px);
+}
+.card.in {
+transition:
+opacity 0.45s ease,
+transform 0.45s ease;
+opacity: 1;
+transform: translateY(0);
+}
 
-      .section-label {
-        font-family: "DM Mono", monospace;
-        font-size: 0.66rem;
-        letter-spacing: 0.15em;
-        text-transform: uppercase;
-        color: var(--accent);
-        margin-bottom: 5px;
-      }
-      .section-title {
-        font-family: "Syne", sans-serif;
-        font-size: 1.05rem;
-        font-weight: 700;
-        color: var(--text);
-        margin-bottom: 4px;
-      }
-      .section-desc {
-        font-size: 0.83rem;
-        color: var(--muted);
-        margin-bottom: 20px;
-        line-height: 1.55;
-      }
+.section-label {
+font-family: "DM Mono", monospace;
+font-size: 0.66rem;
+letter-spacing: 0.15em;
+text-transform: uppercase;
+color: var(--accent);
+margin-bottom: 5px;
+}
+.section-title {
+font-family: "Syne", sans-serif;
+font-size: 1.05rem;
+font-weight: 700;
+color: var(--text);
+margin-bottom: 4px;
+}
+.section-desc {
+font-size: 0.83rem;
+color: var(--muted);
+margin-bottom: 20px;
+line-height: 1.55;
+}
 
-      textarea {
-        width: 100%;
-        height: 148px;
-        background: var(--bg);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        color: var(--text);
-        font-family: "DM Mono", monospace;
-        font-size: 0.79rem;
-        padding: 14px 16px;
-        resize: vertical;
-        outline: none;
-        transition:
-          border-color 0.2s,
-          box-shadow 0.2s;
-        line-height: 1.65;
-      }
-      textarea::placeholder {
-        color: var(--muted2);
-      }
-      textarea:focus {
-        border-color: rgba(249, 115, 22, 0.5);
-        box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.07);
-      }
+textarea {
+width: 100%;
+height: 148px;
+background: var(--bg);
+border: 1px solid var(--border);
+border-radius: 8px;
+color: var(--text);
+font-family: "DM Mono", monospace;
+font-size: 0.79rem;
+padding: 14px 16px;
+resize: vertical;
+outline: none;
+transition:
+border-color 0.2s,
+box-shadow 0.2s;
+line-height: 1.65;
+}
+textarea::placeholder {
+color: var(--muted2);
+}
+textarea:focus {
+border-color: rgba(249, 115, 22, 0.5);
+box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.07);
+}
 
-      .btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        background: var(--accent);
-        color: #fff;
-        font-family: "Figtree", sans-serif;
-        font-weight: 700;
-        font-size: 0.88rem;
-        border: none;
-        padding: 11px 22px;
-        border-radius: 8px;
-        cursor: pointer;
-        margin-top: 14px;
-        transition:
-          background 0.2s,
-          transform 0.15s,
-          box-shadow 0.2s;
-        box-shadow: 0 2px 12px rgba(249, 115, 22, 0.3);
-      }
-      .btn:hover {
-        background: var(--accent2);
-        box-shadow: 0 4px 20px rgba(249, 115, 22, 0.4);
-        transform: translateY(-1px);
-      }
-      .btn:active {
-        transform: scale(0.98);
-      }
-      .btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        transform: none;
-      }
+.btn {
+display: inline-flex;
+align-items: center;
+gap: 8px;
+background: var(--accent);
+color: #fff;
+font-family: "Figtree", sans-serif;
+font-weight: 700;
+font-size: 0.88rem;
+border: none;
+padding: 11px 22px;
+border-radius: 8px;
+cursor: pointer;
+margin-top: 14px;
+transition:
+background 0.2s,
+transform 0.15s,
+box-shadow 0.2s;
+box-shadow: 0 2px 12px rgba(249, 115, 22, 0.3);
+}
+.btn:hover {
+background: var(--accent2);
+box-shadow: 0 4px 20px rgba(249, 115, 22, 0.4);
+transform: translateY(-1px);
+}
+.btn:active {
+transform: scale(0.98);
+}
+.btn:disabled {
+opacity: 0.5;
+cursor: not-allowed;
+transform: none;
+}
 
-      .btn-outline {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        background: transparent;
-        color: var(--text);
-        font-family: "Figtree", sans-serif;
-        font-weight: 600;
-        font-size: 0.85rem;
-        border: 1px solid var(--border);
-        padding: 10px 18px;
-        border-radius: 8px;
-        cursor: pointer;
-        transition:
-          border-color 0.2s,
-          color 0.2s,
-          transform 0.15s;
-      }
-      .btn-outline:hover {
-        border-color: var(--accent);
-        color: var(--accent);
-        transform: translateY(-1px);
-      }
+.btn-outline {
+display: inline-flex;
+align-items: center;
+gap: 7px;
+background: transparent;
+color: var(--text);
+font-family: "Figtree", sans-serif;
+font-weight: 600;
+font-size: 0.85rem;
+border: 1px solid var(--border);
+padding: 10px 18px;
+border-radius: 8px;
+cursor: pointer;
+transition:
+border-color 0.2s,
+color 0.2s,
+transform 0.15s;
+}
+.btn-outline:hover {
+border-color: var(--accent);
+color: var(--accent);
+transform: translateY(-1px);
+}
 
-      .btn-ghost {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        background: var(--accent-dim);
-        color: var(--accent);
-        font-family: "Figtree", sans-serif;
-        font-weight: 600;
-        font-size: 0.85rem;
-        border: 1px solid rgba(249, 115, 22, 0.2);
-        padding: 10px 18px;
-        border-radius: 8px;
-        cursor: pointer;
-        transition:
-          background 0.2s,
-          transform 0.15s;
-      }
-      .btn-ghost:hover {
-        background: rgba(249, 115, 22, 0.15);
-        transform: translateY(-1px);
-      }
-      .btn-ghost:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        transform: none;
-      }
-      .btn-row {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-top: 14px;
-      }
+.btn-ghost {
+display: inline-flex;
+align-items: center;
+gap: 7px;
+background: var(--accent-dim);
+color: var(--accent);
+font-family: "Figtree", sans-serif;
+font-weight: 600;
+font-size: 0.85rem;
+border: 1px solid rgba(249, 115, 22, 0.2);
+padding: 10px 18px;
+border-radius: 8px;
+cursor: pointer;
+transition:
+background 0.2s,
+transform 0.15s;
+}
+.btn-ghost:hover {
+background: rgba(249, 115, 22, 0.15);
+transform: translateY(-1px);
+}
+.btn-ghost:disabled {
+opacity: 0.5;
+cursor: not-allowed;
+transform: none;
+}
+.btn-row {
+display: flex;
+gap: 10px;
+flex-wrap: wrap;
+margin-top: 14px;
+}
 
-      .search-row {
-        display: flex;
-        gap: 10px;
-      }
-      .search-row input {
-        flex: 1;
-        background: var(--bg);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        color: var(--text);
-        font-family: "Figtree", sans-serif;
-        font-size: 0.88rem;
-        padding: 10px 14px;
-        outline: none;
-        transition:
-          border-color 0.2s,
-          box-shadow 0.2s;
-      }
-      .search-row input::placeholder {
-        color: var(--muted2);
-      }
-      .search-row input:focus {
-        border-color: rgba(249, 115, 22, 0.5);
-        box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.07);
-      }
+.search-row {
+display: flex;
+gap: 10px;
+}
+.search-row input {
+flex: 1;
+background: var(--bg);
+border: 1px solid var(--border);
+border-radius: 8px;
+color: var(--text);
+font-family: "Figtree", sans-serif;
+font-size: 0.88rem;
+padding: 10px 14px;
+outline: none;
+transition:
+border-color 0.2s,
+box-shadow 0.2s;
+}
+.search-row input::placeholder {
+color: var(--muted2);
+}
+.search-row input:focus {
+border-color: rgba(249, 115, 22, 0.5);
+box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.07);
+}
 
-      .spinner-wrap {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 22px 0;
-      }
-      .spinner {
-        width: 20px;
-        height: 20px;
-        border: 2px solid var(--border2);
-        border-top-color: var(--accent);
-        border-radius: 50%;
-        animation: spin 0.65s linear infinite;
-        flex-shrink: 0;
-      }
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-      .spinner-label {
-        font-family: "DM Mono", monospace;
-        font-size: 0.75rem;
-        color: var(--muted);
-      }
+.spinner-wrap {
+display: flex;
+align-items: center;
+gap: 12px;
+padding: 22px 0;
+}
+.spinner {
+width: 20px;
+height: 20px;
+border: 2px solid var(--border2);
+border-top-color: var(--accent);
+border-radius: 50%;
+animation: spin 0.65s linear infinite;
+flex-shrink: 0;
+}
+@keyframes spin {
+to {
+transform: rotate(360deg);
+}
+}
+.spinner-label {
+font-family: "DM Mono", monospace;
+font-size: 0.75rem;
+color: var(--muted);
+}
 
-      .result-success {
-        border: 1px solid rgba(22, 163, 74, 0.2);
-        border-radius: 10px;
-        padding: 20px;
-        background: rgba(22, 163, 74, 0.03);
-        margin-top: 16px;
-        animation: fadeUp 0.3s ease;
-      }
-      .result-error {
-        border: 1px solid rgba(220, 38, 38, 0.2);
-        border-radius: 10px;
-        padding: 16px 20px;
-        background: rgba(220, 38, 38, 0.03);
-        font-family: "DM Mono", monospace;
-        font-size: 0.77rem;
-        color: var(--error);
-        margin-top: 16px;
-      }
-      .result-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: rgba(22, 163, 74, 0.1);
-        color: var(--success);
-        font-size: 0.7rem;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        padding: 4px 10px;
-        border-radius: 999px;
-        margin-bottom: 16px;
-      }
+.result-success {
+border: 1px solid rgba(22, 163, 74, 0.2);
+border-radius: 10px;
+padding: 20px;
+background: rgba(22, 163, 74, 0.03);
+margin-top: 16px;
+animation: fadeUp 0.3s ease;
+}
+.result-error {
+border: 1px solid rgba(220, 38, 38, 0.2);
+border-radius: 10px;
+padding: 16px 20px;
+background: rgba(220, 38, 38, 0.03);
+font-family: "DM Mono", monospace;
+font-size: 0.77rem;
+color: var(--error);
+margin-top: 16px;
+}
+.result-badge {
+display: inline-flex;
+align-items: center;
+gap: 6px;
+background: rgba(22, 163, 74, 0.1);
+color: var(--success);
+font-size: 0.7rem;
+font-weight: 700;
+letter-spacing: 0.08em;
+text-transform: uppercase;
+padding: 4px 10px;
+border-radius: 999px;
+margin-bottom: 16px;
+}
 
-      .fields-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 14px;
-      }
-      .field-full {
-        grid-column: 1/-1;
-      }
-      .field-label {
-        font-family: "DM Mono", monospace;
-        font-size: 0.63rem;
-        color: var(--muted2);
-        letter-spacing: 0.13em;
-        text-transform: uppercase;
-        margin-bottom: 4px;
-      }
-      .field-value {
-        font-size: 0.9rem;
-        color: var(--text);
-        font-weight: 500;
-        line-height: 1.5;
-        word-break: break-word;
-      }
-      .tracking-chip {
-        display: inline-block;
-        background: rgba(249, 115, 22, 0.08);
-        color: var(--accent);
-        font-family: "DM Mono", monospace;
-        font-size: 0.8rem;
-        font-weight: 500;
-        padding: 4px 10px;
-        border-radius: 6px;
-        border: 1px solid rgba(249, 115, 22, 0.2);
-      }
+.fields-grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 14px;
+}
+.field-full {
+grid-column: 1/-1;
+}
+.field-label {
+font-family: "DM Mono", monospace;
+font-size: 0.63rem;
+color: var(--muted2);
+letter-spacing: 0.13em;
+text-transform: uppercase;
+margin-bottom: 4px;
+}
+.field-value {
+font-size: 0.9rem;
+color: var(--text);
+font-weight: 500;
+line-height: 1.5;
+word-break: break-word;
+}
+.tracking-chip {
+display: inline-block;
+background: rgba(249, 115, 22, 0.08);
+color: var(--accent);
+font-family: "DM Mono", monospace;
+font-size: 0.8rem;
+font-weight: 500;
+padding: 4px 10px;
+border-radius: 6px;
+border: 1px solid rgba(249, 115, 22, 0.2);
+}
 
-      .records-list {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-      .record-card {
-        background: var(--bg);
-        border: 1px solid var(--border);
-        border-radius: 9px;
-        padding: 14px 16px;
-        transition:
-          border-color 0.2s,
-          transform 0.2s,
-          box-shadow 0.2s;
-      }
-      .record-card:hover {
-        border-color: rgba(249, 115, 22, 0.35);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(249, 115, 22, 0.08);
-      }
-      .record-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 7px;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-      .record-route {
-        font-size: 0.88rem;
-        font-weight: 600;
-        color: var(--text);
-      }
-      .record-route .arrow {
-        color: var(--muted2);
-        margin: 0 5px;
-        font-weight: 400;
-      }
-      .record-date {
-        font-family: "DM Mono", monospace;
-        font-size: 0.64rem;
-        color: var(--muted2);
-        white-space: nowrap;
-      }
-      .record-items {
-        font-size: 0.79rem;
-        color: var(--muted);
-        margin-bottom: 7px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .record-tracking {
-        font-family: "DM Mono", monospace;
-        font-size: 0.67rem;
-        color: var(--accent);
-        opacity: 0.8;
-      }
-      .record-status-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-top: 8px;
-        flex-wrap: wrap;
-      }
-      .status-pill {
-        display: inline-block;
-        padding: 3px 9px;
-        border-radius: 999px;
-        font-size: 0.66rem;
-        font-weight: 700;
-        letter-spacing: 0.4px;
-        text-transform: uppercase;
-      }
-      .status-select {
-        font-family: "Figtree", sans-serif;
-        font-size: 0.74rem;
-        padding: 4px 8px;
-        border-radius: 7px;
-        border: 1px solid var(--border);
-        background: var(--bg);
-        color: var(--text);
-        cursor: pointer;
-        outline: none;
-      }
+.records-list {
+display: flex;
+flex-direction: column;
+gap: 10px;
+}
+.record-card {
+background: var(--bg);
+border: 1px solid var(--border);
+border-radius: 9px;
+padding: 14px 16px;
+transition:
+border-color 0.2s,
+transform 0.2s,
+box-shadow 0.2s;
+}
+.record-card:hover {
+border-color: rgba(249, 115, 22, 0.35);
+transform: translateY(-2px);
+box-shadow: 0 6px 20px rgba(249, 115, 22, 0.08);
+}
+.record-header {
+display: flex;
+justify-content: space-between;
+align-items: flex-start;
+margin-bottom: 7px;
+gap: 8px;
+flex-wrap: wrap;
+}
+.record-route {
+font-size: 0.88rem;
+font-weight: 600;
+color: var(--text);
+}
+.record-route .arrow {
+color: var(--muted2);
+margin: 0 5px;
+font-weight: 400;
+}
+.record-date {
+font-family: "DM Mono", monospace;
+font-size: 0.64rem;
+color: var(--muted2);
+white-space: nowrap;
+}
+.record-items {
+font-size: 0.79rem;
+color: var(--muted);
+margin-bottom: 7px;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+.record-tracking {
+font-family: "DM Mono", monospace;
+font-size: 0.67rem;
+color: var(--accent);
+opacity: 0.8;
+}
+.record-status-row {
+display: flex;
+align-items: center;
+gap: 8px;
+margin-top: 8px;
+flex-wrap: wrap;
+}
+.status-pill {
+display: inline-block;
+padding: 3px 9px;
+border-radius: 999px;
+font-size: 0.66rem;
+font-weight: 700;
+letter-spacing: 0.4px;
+text-transform: uppercase;
+}
+.status-select {
+font-family: "Figtree", sans-serif;
+font-size: 0.74rem;
+padding: 4px 8px;
+border-radius: 7px;
+border: 1px solid var(--border);
+background: var(--bg);
+color: var(--text);
+cursor: pointer;
+outline: none;
+}
 
-      .empty-state {
-        text-align: center;
-        padding: 30px 0;
-      }
-      .empty-icon {
-        font-size: 1.7rem;
-        margin-bottom: 8px;
-        opacity: 0.35;
-      }
-      .empty-text {
-        font-family: "DM Mono", monospace;
-        font-size: 0.74rem;
-        color: var(--muted2);
-      }
+.empty-state {
+text-align: center;
+padding: 30px 0;
+}
+.empty-icon {
+font-size: 1.7rem;
+margin-bottom: 8px;
+opacity: 0.35;
+}
+.empty-text {
+font-family: "DM Mono", monospace;
+font-size: 0.74rem;
+color: var(--muted2);
+}
 
-      .receipt-section {
-        margin-top: 20px;
-        border-top: 1px solid var(--border2);
-        padding-top: 20px;
-        animation: fadeUp 0.35s ease;
-      }
-      .receipt-preview-label {
-        font-family: "DM Mono", monospace;
-        font-size: 0.66rem;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-        color: var(--muted2);
-        margin-bottom: 14px;
-      }
+.receipt-section {
+margin-top: 20px;
+border-top: 1px solid var(--border2);
+padding-top: 20px;
+animation: fadeUp 0.35s ease;
+}
+.receipt-preview-label {
+font-family: "DM Mono", monospace;
+font-size: 0.66rem;
+letter-spacing: 0.14em;
+text-transform: uppercase;
+color: var(--muted2);
+margin-bottom: 14px;
+}
 
-      /* ── RECEIPT ── */
-      #receipt-card {
-        width: 400px;
-        background: #fff;
-        border-radius: 14px;
-        overflow: visible;
-        font-family: "Figtree", sans-serif;
-        position: relative;
-      }
+/* ── RECEIPT ── */
+#receipt-card {
+width: 400px;
+background: #fff;
+border-radius: 14px;
+overflow: visible;
+font-family: "Figtree", sans-serif;
+position: relative;
+}
 
-      .receipt-header-free {
-        background: #fff7ed;
-        border-bottom: 3px solid #f97316;
-        padding: 22px 24px 18px;
-        text-align: center;
-        border-radius: 14px 14px 0 0;
-      }
-      .receipt-company-name {
-        font-family: "Plus Jakarta Sans", sans-serif;
-        font-size: 1.25rem;
-        font-weight: 800;
-        color: #1c1917;
-        letter-spacing: -0.3px;
-        margin-bottom: 3px;
-        line-height: 1.2;
-      }
-      .receipt-company-sub {
-        font-size: 0.7rem;
-        color: #a8a29e;
-        text-transform: uppercase;
-        letter-spacing: 0.12em;
-        font-family: "DM Mono", monospace;
-      }
-      .receipt-powered-badge {
-        display: inline-block;
-        margin-top: 10px;
-        background: #f5f5f4;
-        color: #c4b5a5;
-        font-size: 0.62rem;
-        font-family: "DM Mono", monospace;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        padding: 3px 10px;
-        border-radius: 999px;
-        border: 1px solid #e8e2d9;
-      }
+.receipt-header-free {
+background: #fff7ed;
+border-bottom: 3px solid #f97316;
+padding: 22px 24px 18px;
+text-align: center;
+border-radius: 14px 14px 0 0;
+}
+.receipt-company-name {
+font-family: "Plus Jakarta Sans", sans-serif;
+font-size: 1.25rem;
+font-weight: 800;
+color: #1c1917;
+letter-spacing: -0.3px;
+margin-bottom: 3px;
+line-height: 1.2;
+}
+.receipt-company-sub {
+font-size: 0.7rem;
+color: #a8a29e;
+text-transform: uppercase;
+letter-spacing: 0.12em;
+font-family: "DM Mono", monospace;
+}
+.receipt-powered-badge {
+display: inline-block;
+margin-top: 10px;
+background: #f5f5f4;
+color: #c4b5a5;
+font-size: 0.62rem;
+font-family: "DM Mono", monospace;
+letter-spacing: 0.08em;
+text-transform: uppercase;
+padding: 3px 10px;
+border-radius: 999px;
+border: 1px solid #e8e2d9;
+}
 
-      .receipt-header-paid {
-        background: #f97316;
-        padding: 22px 24px 18px;
-        text-align: center;
-        display: none;
-        border-radius: 14px 14px 0 0;
-      }
-      .receipt-header-paid .receipt-company-name {
-        color: #fff;
-      }
-      .receipt-header-paid .receipt-company-sub {
-        color: rgba(255, 255, 255, 0.7);
-      }
+.receipt-header-paid {
+background: #f97316;
+padding: 22px 24px 18px;
+text-align: center;
+display: none;
+border-radius: 14px 14px 0 0;
+}
+.receipt-header-paid .receipt-company-name {
+color: #fff;
+}
+.receipt-header-paid .receipt-company-sub {
+color: rgba(255, 255, 255, 0.7);
+}
 
-      .receipt-tracking-strip {
-        background: #1c1917;
-        padding: 14px 20px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-      }
-      .receipt-tracking-label {
-        font-family: "DM Mono", monospace;
-        font-size: 0.6rem;
-        color: rgba(255, 255, 255, 0.4);
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        margin-bottom: 3px;
-      }
-      .receipt-tracking-num {
-        font-family: "DM Mono", monospace;
-        font-size: 1rem;
-        font-weight: 500;
-        color: #f97316;
-        letter-spacing: 0.04em;
-        word-break: break-all;
-      }
-      .receipt-date-val {
-        font-family: "DM Mono", monospace;
-        font-size: 0.68rem;
-        color: rgba(255, 255, 255, 0.45);
-        text-align: right;
-        line-height: 1.5;
-        white-space: nowrap;
-        flex-shrink: 0;
-      }
+.receipt-tracking-strip {
+background: #1c1917;
+padding: 14px 20px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 10px;
+}
+.receipt-tracking-label {
+font-family: "DM Mono", monospace;
+font-size: 0.6rem;
+color: rgba(255, 255, 255, 0.4);
+text-transform: uppercase;
+letter-spacing: 0.1em;
+margin-bottom: 3px;
+}
+.receipt-tracking-num {
+font-family: "DM Mono", monospace;
+font-size: 1rem;
+font-weight: 500;
+color: #f97316;
+letter-spacing: 0.04em;
+word-break: break-all;
+}
+.receipt-date-val {
+font-family: "DM Mono", monospace;
+font-size: 0.68rem;
+color: rgba(255, 255, 255, 0.45);
+text-align: right;
+line-height: 1.5;
+white-space: nowrap;
+flex-shrink: 0;
+}
 
-      .receipt-body {
-        padding: 18px 20px;
-        background: #fff;
-      }
-      .receipt-route {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        margin-bottom: 14px;
-        width: 100%;
-      }
+.receipt-body {
+padding: 18px 20px;
+background: #fff;
+}
+.receipt-route {
+display: flex;
+flex-direction: column;
+gap: 8px;
+margin-bottom: 14px;
+width: 100%;
+}
 
-      .receipt-party-label {
-        font-size: 0.6rem;
-        font-weight: 700;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: #a8a29e;
-        margin-bottom: 4px;
-        font-family: "DM Mono", monospace;
-      }
-      .receipt-party-name {
-        font-size: 0.88rem;
-        font-weight: 700;
-        color: #1c1917;
-        line-height: 1.3;
-        word-break: break-word;
-        overflow: hidden;
-        max-width: 100%;
-      }
-      .receipt-arrow-col {
-        display: none;
-      }
-      .receipt-party.right {
-        text-align: left;
-      }
+.receipt-party-label {
+font-size: 0.6rem;
+font-weight: 700;
+letter-spacing: 0.12em;
+text-transform: uppercase;
+color: #a8a29e;
+margin-bottom: 4px;
+font-family: "DM Mono", monospace;
+}
+.receipt-party-name {
+font-size: 0.88rem;
+font-weight: 700;
+color: #1c1917;
+line-height: 1.3;
+word-break: break-word;
+overflow: hidden;
+max-width: 100%;
+}
+.receipt-arrow-col {
+display: none;
+}
+.receipt-party.right {
+text-align: left;
+}
 
-      .receipt-items-card {
-        background: #faf8f5;
-        border-radius: 10px;
-        padding: 14px 16px;
-        border: 1px solid #e8e2d9;
-      }
-      .receipt-items-label {
-        font-size: 0.6rem;
-        font-weight: 700;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: #a8a29e;
-        margin-bottom: 6px;
-        font-family: "DM Mono", monospace;
-      }
-      .receipt-items-value {
-        font-size: 0.85rem;
-        color: #374151;
-        line-height: 1.5;
-      }
+.receipt-items-card {
+background: #faf8f5;
+border-radius: 10px;
+padding: 14px 16px;
+border: 1px solid #e8e2d9;
+}
+.receipt-items-label {
+font-size: 0.6rem;
+font-weight: 700;
+letter-spacing: 0.12em;
+text-transform: uppercase;
+color: #a8a29e;
+margin-bottom: 6px;
+font-family: "DM Mono", monospace;
+}
+.receipt-items-value {
+font-size: 0.85rem;
+color: #374151;
+line-height: 1.5;
+}
 
-      .receipt-footer {
-        padding: 12px 20px;
-        border-top: 1px solid #f5f5f4;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        border-radius: 0 0 14px 14px;
-      }
-      .receipt-footer-note {
-        font-size: 0.66rem;
-        color: #d6d3d1;
-      }
-      .receipt-watermark {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        pointer-events: none;
-        z-index: 0;
-      }
-      .receipt-watermark img {
-        max-width: 60%;
-        max-height: 60%;
-        opacity: 0.06;
-        filter: grayscale(1);
-        transform: translateY(-4px);
-      }
-      .receipt-evueo-brand {
-        font-family: "Syne", sans-serif;
-        font-size: 0.78rem;
-        font-weight: 800;
-        color: #d6d3d1;
-        letter-spacing: -0.3px;
-      }
-      .receipt-evueo-brand span {
-        color: #f97316;
-      }
+.receipt-footer {
+padding: 12px 20px;
+border-top: 1px solid #f5f5f4;
+display: flex;
+align-items: center;
+justify-content: space-between;
+border-radius: 0 0 14px 14px;
+}
+.receipt-footer-note {
+font-size: 0.66rem;
+color: #d6d3d1;
+}
+.receipt-watermark {
+position: absolute;
+inset: 0;
+display: flex;
+align-items: center;
+justify-content: center;
+pointer-events: none;
+z-index: 0;
+}
+.receipt-watermark img {
+max-width: 60%;
+max-height: 60%;
+opacity: 0.06;
+filter: grayscale(1);
+transform: translateY(-4px);
+}
+.receipt-evueo-brand {
+font-family: "Syne", sans-serif;
+font-size: 0.78rem;
+font-weight: 800;
+color: #d6d3d1;
+letter-spacing: -0.3px;
+}
+.receipt-evueo-brand span {
+color: #f97316;
+}
 
-      @keyframes fadeUp {
-        from {
-          opacity: 0;
-          transform: translateY(12px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
+@keyframes fadeUp {
+from {
+opacity: 0;
+transform: translateY(12px);
+}
+to {
+opacity: 1;
+transform: translateY(0);
+}
+}
 
-      @media (max-width: 500px) {
-        .page {
-          padding: 22px 12px 60px;
-        }
-        .logo {
-          font-size: 1.55rem;
-        }
-        header {
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 14px;
-        }
-        .header-left {
-          flex: initial;
-          width: 100%;
-          justify-content: flex-start;
-        }
-        .header-center {
-          display: none;
-        }
-        .header-right {
-          flex: initial;
-          width: 100%;
-          justify-content: flex-end;
-        }
-        .status-pill {
-          max-width: 100%;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        body,
-        .page,
-        header {
-          max-width: 100%;
-          overflow-x: hidden;
-        }
-        .stats-strip {
-          gap: 8px;
-        }
-        .stat-card {
-          padding: 14px 10px;
-        }
-        .stat-number {
-          font-size: 1.7rem;
-        }
-        #stat-last {
-          font-size: 0.78rem !important;
-        }
-        .card {
-          padding: 18px 14px;
-        }
-        .fields-grid {
-          grid-template-columns: 1fr;
-        }
-        .search-row {
-          flex-direction: column;
-        }
-        #receipt-card {
-          width: 100%;
-          max-width: 400px;
-        }
-      }
+@media (max-width: 500px) {
+.page {
+padding: 22px 12px 60px;
+}
+.logo {
+font-size: 1.55rem;
+}
+header {
+flex-direction: column;
+align-items: flex-start;
+gap: 14px;
+}
+.header-left {
+flex: initial;
+width: 100%;
+justify-content: flex-start;
+}
+.header-center {
+display: none;
+}
+.header-right {
+flex: initial;
+width: 100%;
+justify-content: flex-end;
+}
+.status-pill {
+max-width: 100%;
+overflow: hidden;
+text-overflow: ellipsis;
+white-space: nowrap;
+}
+body,
+.page,
+header {
+max-width: 100%;
+overflow-x: hidden;
+}
+.stats-strip {
+gap: 8px;
+}
+.stat-card {
+padding: 14px 10px;
+}
+.stat-number {
+font-size: 1.7rem;
+}
+#stat-last {
+font-size: 0.78rem !important;
+}
+.card {
+padding: 18px 14px;
+}
+.fields-grid {
+grid-template-columns: 1fr;
+}
+.search-row {
+flex-direction: column;
+}
+#receipt-card {
+width: 100%;
+max-width: 400px;
+}
+}
 
-      footer {
-        text-align: center;
-        padding: 20px 0; /* Optional: adds some breathing room at the bottom */
-      }
-      /* Brand colour picker */
-      .swatches {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 10px;
-      }
-      .swatch {
-        width: 34px;
-        height: 34px;
-        border-radius: 50%;
-        border: 2px solid transparent;
-        cursor: pointer;
-        padding: 0;
-      }
-      .swatch[aria-pressed="true"] {
-        box-shadow:
-          0 0 0 2px var(--surface, #fff),
-          0 0 0 4px var(--text, #1c1917);
-      }
-      .swatch:focus-visible {
-        outline: 2px solid var(--text, #1c1917);
-        outline-offset: 3px;
-      }
-      .brand-preview {
-        margin-top: 12px;
-        border-radius: 8px;
-        padding: 10px 12px;
-        color: #fff;
-        font-weight: 700;
-        font-size: 0.85rem;
-        text-align: center;
-        background: #f97316;
-      }
-      .brand-note {
-        font-size: 0.78rem;
-        color: var(--muted);
-        margin-top: 8px;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="page">
-      <header>
-        <div class="header-left">
-          <button
-            class="hamburger"
-            id="hamburger-btn"
-            onclick="toggleDrawer()"
-            aria-label="Menu"
-          >
-            <span></span><span></span><span></span>
-          </button>
-          <div>
-            <div class="logo">ev<em>u</em>eo</div>
-            <div class="tagline">AI · Logistics Intelligence</div>
-          </div>
-        </div>
-        <div class="header-center"></div>
-        <div class="header-right">
-          <button
-            id="theme-btn"
-            class="hamburger"
-            onclick="toggleTheme()"
-            aria-label="Toggle theme"
-            title="Toggle theme"
-          >
-            <svg
-              id="theme-icon"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <circle cx="12" cy="12" r="4"></circle>
-            </svg>
-          </button>
-          <div class="status-pill">
-            <div class="status-dot" id="status-dot"></div>
-            <span id="status-text">Connecting…</span>
-          </div>
-        </div>
-      </header>
-      <div
-        id="renew-banner"
-        style="
-          display: none;
-          align-items: center;
-          justify-content: space-between;
-          gap: 10px;
-          flex-wrap: wrap;
-          background: rgba(249, 115, 22, 0.09);
-          border: 1px solid rgba(249, 115, 22, 0.3);
-          border-radius: 10px;
-          padding: 10px 14px;
-          margin-bottom: 14px;
-          font-size: 0.85rem;
-        "
-      >
-        <span id="renew-banner-text"></span>
-        <a
-          href="/upgrade"
-          style="
-            background: var(--accent);
-            color: #fff;
-            padding: 6px 14px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            white-space: nowrap;
-          "
+footer {
+text-align: center;
+padding: 20px 0; /* Optional: adds some breathing room at the bottom */
+}
+/* Brand colour picker */
+.swatches {
+display: flex;
+flex-wrap: wrap;
+gap: 10px;
+margin-top: 10px;
+}
+.swatch {
+width: 34px;
+height: 34px;
+border-radius: 50%;
+border: 2px solid transparent;
+cursor: pointer;
+padding: 0;
+}
+.swatch[aria-pressed="true"] {
+box-shadow:
+0 0 0 2px var(--surface, #fff),
+0 0 0 4px var(--text, #1c1917);
+}
+.swatch:focus-visible {
+outline: 2px solid var(--text, #1c1917);
+outline-offset: 3px;
+}
+.brand-preview {
+margin-top: 12px;
+border-radius: 8px;
+padding: 10px 12px;
+color: #fff;
+font-weight: 700;
+font-size: 0.85rem;
+text-align: center;
+background: #f97316;
+}
+.brand-note {
+font-size: 0.78rem;
+color: var(--muted);
+margin-top: 8px;
+}
+</style>
+</head>
+<body>
+<div class="page">
+<header>
+<div class="header-left">
+<button
+class="hamburger"
+id="hamburger-btn"
+onclick="toggleDrawer()"
+aria-label="Menu"
+>
+<span></span><span></span><span></span>
+</button>
+<div>
+<div class="logo">ev<em>u</em>eo</div>
+<div class="tagline">AI · Logistics Intelligence</div>
+</div>
+</div>
+<div class="header-center"></div>
+<div class="header-right">
+<button
+id="theme-btn"
+class="hamburger"
+onclick="toggleTheme()"
+aria-label="Toggle theme"
+title="Toggle theme"
+>
+<svg
+id="theme-icon"
+width="16"
+height="16"
+viewBox="0 0 24 24"
+fill="none"
+stroke="currentColor"
+stroke-width="1.5"
+stroke-linecap="round"
+stroke-linejoin="round"
+>
+<circle cx="12" cy="12" r="4"></circle>
+</svg>
+</button>
+<div class="status-pill">
+<div class="status-dot" id="status-dot"></div>
+<span id="status-text">Connecting…</span>
+</div>
+</div>
+</header>
+<div
+id="renew-banner"
+style="
+         display: none;
+         align-items: center;
+         justify-content: space-between;
+         gap: 10px;
+         flex-wrap: wrap;
+         background: rgba(249, 115, 22, 0.09);
+         border: 1px solid rgba(249, 115, 22, 0.3);
+         border-radius: 10px;
+         padding: 10px 14px;
+         margin-bottom: 14px;
+         font-size: 0.85rem;
+       "
+>
+<span id="renew-banner-text"></span>
+<a
+href="/upgrade"
+style="
+           background: var(--accent);
+           color: #fff;
+           padding: 6px 14px;
+           border-radius: 8px;
+           text-decoration: none;
+           font-weight: 600;
+           white-space: nowrap;
+         "
+          >Renew Now — ₦5,000</a
           >Renew Now for ₦5,000</a
-        >
-      </div>
-      <div class="stats-strip">
-        <div class="stat-card" id="sc-0">
-          <div class="stat-number" id="stat-total">—</div>
-          <div class="stat-label">Total Records</div>
-        </div>
-        <div class="stat-card" id="sc-1">
-          <div class="stat-number" id="stat-today">—</div>
-          <div class="stat-label">Today's Entries</div>
-        </div>
-        <div class="stat-card" id="sc-2">
-          <div class="stat-number" id="stat-last">—</div>
-          <div class="stat-label">Last Entry</div>
-        </div>
-      </div>
+>
+</div>
+<div class="stats-strip">
+<div class="stat-card" id="sc-0">
+<div class="stat-number" id="stat-total">—</div>
+<div class="stat-label">Total Records</div>
+</div>
+<div class="stat-card" id="sc-1">
+<div class="stat-number" id="stat-today">—</div>
+<div class="stat-label">Today's Entries</div>
+</div>
+<div class="stat-card" id="sc-2">
+<div class="stat-number" id="stat-last">—</div>
+<div class="stat-label">Last Entry</div>
+</div>
+</div>
 
-      <div class="card" id="card-0">
-        <div class="section-label">Extract</div>
-        <div class="section-title">Analyze Waybill / Invoice</div>
-        <div class="section-desc">
+<div class="card" id="card-0">
+<div class="section-label">Extract</div>
+<div class="section-title">Analyze Waybill / Invoice</div>
+<div class="section-desc">
+          Paste raw text — Evueo extracts the fields, saves to your sheet, and
           Paste raw text, Evueo extracts the fields, saves to your sheet, and
-          generates a receipt instantly.
-        </div>
-        <textarea
-          id="messyInput"
-          placeholder="e.g. Recv: Mr. James at 45 Lekki Phase 1. Sender: Chidi Okafor. Tracking EV-2041. 3 cartons of tiles..."
-        ></textarea>
+generates a receipt instantly.
+</div>
+<textarea
+id="messyInput"
+placeholder="e.g. Recv: Mr. James at 45 Lekki Phase 1. Sender: Chidi Okafor. Tracking EV-2041. 3 cartons of tiles..."
+></textarea>
 
-        <!-- Premium-only manual fields. Money is never AI-extracted, so the
-             courier types/confirms it here before it prints on the receipt.
-             Hidden for free accounts (shown in onload when tier is premium). -->
-        <div id="premium-fields" style="display: none">
-          <div
-            style="
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 10px;
-              margin-bottom: 12px;
-            "
-          >
-            <div>
-              <label
-                style="
-                  display: block;
-                  font-size: 0.72rem;
-                  font-weight: 600;
-                  color: var(--muted);
-                  margin-bottom: 5px;
-                "
-                >Delivery fee (optional)</label
-              >
-              <input
-                type="text"
-                id="deliveryFeeInput"
-                inputmode="decimal"
-                placeholder="e.g. ₦2,000"
-                style="
-                  width: 100%;
-                  background: var(--bg);
-                  border: 1px solid var(--border);
-                  border-radius: 9px;
-                  color: var(--text);
-                  font-family: &quot;Figtree&quot;, sans-serif;
-                  font-size: 0.9rem;
-                  padding: 11px 13px;
-                  outline: none;
-                "
-              />
-            </div>
-            <div>
-              <label
-                style="
-                  display: block;
-                  font-size: 0.72rem;
-                  font-weight: 600;
-                  color: var(--muted);
-                  margin-bottom: 5px;
-                "
-                >Payment status</label
-              >
-              <select
-                id="paymentStatusInput"
-                style="
-                  width: 100%;
-                  background: var(--bg);
-                  border: 1px solid var(--border);
-                  border-radius: 9px;
-                  color: var(--text);
-                  font-family: &quot;Figtree&quot;, sans-serif;
-                  font-size: 0.9rem;
-                  padding: 11px 13px;
-                  outline: none;
-                "
-              >
-                <option value="">—</option>
-                <option value="Paid">Paid</option>
-                <option value="Pay on Delivery">Pay on Delivery</option>
-              </select>
-            </div>
-          </div>
-        </div>
-        <button class="btn" onclick="analyzeData()">
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-          </svg>
-          Analyze & Save
-        </button>
-        <div id="analyze-output"></div>
-      </div>
+<!-- Premium-only manual fields. Money is never AI-extracted, so the
+            courier types/confirms it here before it prints on the receipt.
+            Hidden for free accounts (shown in onload when tier is premium). -->
+<div id="premium-fields" style="display: none">
+<div
+style="
+             display: grid;
+             grid-template-columns: 1fr 1fr;
+             gap: 10px;
+             margin-bottom: 12px;
+           "
+>
+<div>
+<label
+style="
+                 display: block;
+                 font-size: 0.72rem;
+                 font-weight: 600;
+                 color: var(--muted);
+                 margin-bottom: 5px;
+               "
+>Delivery fee (optional)</label
+>
+<input
+type="text"
+id="deliveryFeeInput"
+inputmode="decimal"
+placeholder="e.g. ₦2,000"
+style="
+                 width: 100%;
+                 background: var(--bg);
+                 border: 1px solid var(--border);
+                 border-radius: 9px;
+                 color: var(--text);
+                 font-family: &quot;Figtree&quot;, sans-serif;
+                 font-size: 0.9rem;
+                 padding: 11px 13px;
+                 outline: none;
+               "
+/>
+</div>
+<div>
+<label
+style="
+                 display: block;
+                 font-size: 0.72rem;
+                 font-weight: 600;
+                 color: var(--muted);
+                 margin-bottom: 5px;
+               "
+>Payment status</label
+>
+<select
+id="paymentStatusInput"
+style="
+                 width: 100%;
+                 background: var(--bg);
+                 border: 1px solid var(--border);
+                 border-radius: 9px;
+                 color: var(--text);
+                 font-family: &quot;Figtree&quot;, sans-serif;
+                 font-size: 0.9rem;
+                 padding: 11px 13px;
+                 outline: none;
+               "
+>
+<option value="">—</option>
+<option value="Paid">Paid</option>
+<option value="Pay on Delivery">Pay on Delivery</option>
+</select>
+</div>
+</div>
+</div>
+<button class="btn" onclick="analyzeData()">
+<svg
+width="14"
+height="14"
+viewBox="0 0 24 24"
+fill="none"
+stroke="currentColor"
+stroke-width="2.5"
+stroke-linecap="round"
+stroke-linejoin="round"
+>
+<polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+</svg>
+Analyze & Save
+</button>
+<div id="analyze-output"></div>
+</div>
 
-      <div class="card" id="card-1">
-        <div class="section-label">Activity</div>
-        <div class="section-title">Recent Records</div>
-        <div class="section-desc">
-          Last 5 entries — loaded automatically on every visit. Tap the status
-          dropdown on any record to update where the package is — your customer
-          sees it instantly on the verify page.
-        </div>
-        <div id="recent-output">
-          <div class="spinner-wrap">
-            <div class="spinner"></div>
-            <span class="spinner-label">Loading records…</span>
-          </div>
-        </div>
-      </div>
+<div class="card" id="card-1">
+<div class="section-label">Activity</div>
+<div class="section-title">Recent Records</div>
+<div class="section-desc">
+Last 5 entries — loaded automatically on every visit. Tap the status
+dropdown on any record to update where the package is — your customer
+sees it instantly on the verify page.
+</div>
+<div id="recent-output">
+<div class="spinner-wrap">
+<div class="spinner"></div>
+<span class="spinner-label">Loading records…</span>
+</div>
+</div>
+</div>
 
-      <div class="card" id="card-2">
-        <div class="section-label">Lookup</div>
-        <div class="section-title">Search Records</div>
-        <div class="section-desc">
-          Find any entry by sender or receiver name.
-        </div>
-        <div class="search-row">
-          <input
-            type="text"
-            id="searchInput"
-            placeholder="e.g. Chidi or James…"
-          />
-          <button class="btn-outline" onclick="searchSpreadsheet()">
-            <svg
-              width="13"
-              height="13"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-            Search
-          </button>
-        </div>
-        <div id="search-output" style="margin-top: 16px"></div>
-      </div>
-    </div>
+<div class="card" id="card-2">
+<div class="section-label">Lookup</div>
+<div class="section-title">Search Records</div>
+<div class="section-desc">
+Find any entry by sender or receiver name.
+</div>
+<div class="search-row">
+<input
+type="text"
+id="searchInput"
+placeholder="e.g. Chidi or James…"
+/>
+<button class="btn-outline" onclick="searchSpreadsheet()">
+<svg
+width="13"
+height="13"
+viewBox="0 0 24 24"
+fill="none"
+stroke="currentColor"
+stroke-width="2.5"
+stroke-linecap="round"
+stroke-linejoin="round"
+>
+<circle cx="11" cy="11" r="8" />
+<line x1="21" y1="21" x2="16.65" y2="16.65" />
+</svg>
+Search
+</button>
+</div>
+<div id="search-output" style="margin-top: 16px"></div>
+</div>
+</div>
 
-    <!-- Drawer overlay + panel (toggled by hamburger) -->
-    <div
-      class="drawer-overlay"
-      id="drawer-overlay"
-      onclick="closeDrawer()"
-      aria-hidden="true"
-    ></div>
-    <aside
-      class="drawer"
-      id="drawer"
-      role="dialog"
-      aria-modal="true"
-      aria-hidden="true"
-    >
-      <div class="drawer-section">
-        <div class="drawer-label">Account</div>
-        <div class="drawer-company" id="drawer-company">Your Company</div>
-        <div class="drawer-email" id="drawer-email">you@example.com</div>
-        <div
-          style="
-            margin-top: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-          "
-        >
-          <input
-            id="logo-input"
-            type="file"
-            accept="image/*"
-            style="display: none"
-            onchange="handleLogoSelect(event)"
-          />
-          <div style="display: flex; gap: 8px; align-items: center">
-            <button
-              class="btn-outline"
-              onclick="document.getElementById('logo-input').click()"
-            >
-              Upload Logo
-            </button>
-            <button
-              class="btn-outline"
-              id="remove-logo-btn"
-              onclick="removeLogo()"
-              style="display: none; color: var(--muted)"
-            >
-              Remove
-            </button>
-          </div>
-          <div
-            id="logo-preview"
-            style="
-              max-width: 120px;
-              max-height: 80px;
-              overflow: hidden;
-              border-radius: 6px;
-              border: 1px solid var(--border);
-              display: none;
-            "
-          ></div>
-          <div style="font-size: 0.78rem; color: var(--muted)">
+<!-- Drawer overlay + panel (toggled by hamburger) -->
+<div
+class="drawer-overlay"
+id="drawer-overlay"
+onclick="closeDrawer()"
+aria-hidden="true"
+></div>
+<aside
+class="drawer"
+id="drawer"
+role="dialog"
+aria-modal="true"
+aria-hidden="true"
+>
+<div class="drawer-section">
+<div class="drawer-label">Account</div>
+<div class="drawer-company" id="drawer-company">Your Company</div>
+<div class="drawer-email" id="drawer-email">you@example.com</div>
+<div
+style="
+           margin-top: 10px;
+           display: flex;
+           flex-direction: column;
+           gap: 8px;
+         "
+>
+<input
+id="logo-input"
+type="file"
+accept="image/*"
+style="display: none"
+onchange="handleLogoSelect(event)"
+/>
+<div style="display: flex; gap: 8px; align-items: center">
+<button
+class="btn-outline"
+onclick="document.getElementById('logo-input').click()"
+>
+Upload Logo
+</button>
+<button
+class="btn-outline"
+id="remove-logo-btn"
+onclick="removeLogo()"
+style="display: none; color: var(--muted)"
+>
+Remove
+</button>
+</div>
+<div
+id="logo-preview"
+style="
+             max-width: 120px;
+             max-height: 80px;
+             overflow: hidden;
+             border-radius: 6px;
+             border: 1px solid var(--border);
+             display: none;
+           "
+></div>
+<div style="font-size: 0.78rem; color: var(--muted)">
+            Premium logos will appear on receipts as a faint watermark.
             Premium logos appear on receipts as a watermark on premium plans.
-          </div>
-        </div>
-      </div>
+</div>
+</div>
+</div>
 
       <div class="drawer-section">
         <div class="drawer-label">Operations</div>
@@ -1583,16 +1589,18 @@
         </div>
       </div>
 
-      <div class="drawer-section">
+<div class="drawer-section">
+        <div class="drawer-label">Brand colour</div>
         <div class="drawer-label">Branding</div>
-        <div
-          class="swatches"
-          id="brand-swatches"
-          role="group"
-          aria-label="Brand colour"
-        ></div>
-        <div class="brand-preview" id="brand-preview">Your company</div>
-        <div class="brand-note" id="brand-note">
+<div
+class="swatches"
+id="brand-swatches"
+role="group"
+aria-label="Brand colour"
+></div>
+<div class="brand-preview" id="brand-preview">Your company</div>
+<div class="brand-note" id="brand-note">
+          Premium receipts use this colour. Free receipts stay Evueo orange.
           Choose the colour used on premium receipts and branded PDFs.
         </div>
       </div>
@@ -1613,1366 +1621,1409 @@
           </a>
           <a class="drawer-link" href="/terms.html">Terms</a>
           <a class="drawer-link" href="/privacy.html">Privacy</a>
-        </div>
-      </div>
+</div>
+</div>
 
-      <div class="drawer-section">
+<div class="drawer-section">
         <div class="drawer-label">Plan</div>
-        <div
-          style="
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-          "
-        >
-          <div style="display: flex; flex-direction: column; gap: 6px">
+<div
+style="
+           display: flex;
+           align-items: center;
+           justify-content: space-between;
+           gap: 8px;
+         "
+>
+<div style="display: flex; flex-direction: column; gap: 6px">
+            <button
+              class="drawer-link"
+              onclick="window.location.href = '/dashboard'"
+            >
+              Dashboard
+            </button>
+            <button
+              class="drawer-link"
+              onclick="window.location.href = '/history'"
+            >
+              History
+            </button>
+            <button
+              class="drawer-link"
+              onclick="window.location.href = '/upgrade'"
             <div
               style="font-size: 0.82rem; color: var(--text); font-weight: 600"
-            >
+>
+              Upgrade
+            </button>
               Premium pass
             </div>
             <div style="font-size: 0.76rem; color: var(--muted)">
               Active for 30 days
             </div>
-          </div>
-          <div id="drawer-tier-wrap" style="display: flex; align-items: center">
-            <div class="drawer-tier-badge" id="drawer-tier">Free</div>
-          </div>
-        </div>
-      </div>
+</div>
+<div id="drawer-tier-wrap" style="display: flex; align-items: center">
+<div class="drawer-tier-badge" id="drawer-tier">Free</div>
+</div>
+</div>
+</div>
 
-      <div class="drawer-section">
-        <div class="drawer-label">Settings</div>
-        <div style="display: flex; flex-direction: column; gap: 8px">
-          <button class="drawer-link" onclick="changeSheetId()">
-            Change Sheet ID
-          </button>
-          <div
-            style="font-size: 0.78rem; color: var(--muted)"
-            id="drawer-sheet-id"
-          >
-            Sheet: —
-          </div>
-        </div>
-      </div>
+<div class="drawer-section">
+<div class="drawer-label">Settings</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<button class="drawer-link" onclick="changeSheetId()">
+Change Sheet ID
+</button>
+<div
+style="font-size: 0.78rem; color: var(--muted)"
+id="drawer-sheet-id"
+>
+Sheet: —
+</div>
+</div>
+</div>
 
-      <div class="drawer-section">
+<div class="drawer-section">
+        <div class="drawer-label">History</div>
         <div class="drawer-label">Recent history</div>
-        <div
-          id="drawer-history"
-          style="max-height: 200px; overflow: auto; padding-top: 6px"
-        >
-          <div class="drawer-history-item">Loading…</div>
-        </div>
-      </div>
+<div
+id="drawer-history"
+style="max-height: 200px; overflow: auto; padding-top: 6px"
+>
+<div class="drawer-history-item">Loading…</div>
+</div>
+</div>
 
-      <div
-        class="drawer-section"
-        style="margin-top: auto; padding-bottom: 20px"
-      >
-        <div class="drawer-toggle-row">
-          <span>Dark / Light</span>
-          <div
-            id="drawer-theme-switch"
-            class="theme-switch"
-            onclick="toggleTheme()"
-            role="switch"
-            aria-checked="false"
-          ></div>
-        </div>
-        <div
-          style="
-            margin-top: 12px;
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            justify-content: space-between;
-          "
-        >
-          <button
-            class="drawer-link drawer-logout"
-            onclick="logoutFromDrawer()"
+      <div class="drawer-section">
+        <div class="drawer-label">Support</div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <a
+            class="drawer-link"
+            href="https://wa.me/2349042698417"
+            target="_blank"
+            rel="noopener"
+            >WhatsApp Business</a
           >
-            Log out
-          </button>
-          <div style="font-size: 0.78rem; color: var(--muted)">
-            evueo © 2026
-          </div>
+          <a class="drawer-link" href="mailto:support@evueo.com.ng"
+            >Email (support@evueo.com.ng)</a
+          >
         </div>
       </div>
-    </aside>
 
-    <!-- Off-screen receipt for PDF capture -->
-    <div
-      style="
-        position: absolute;
-        top: 0;
-        left: 0;
-        z-index: -9999;
-        width: 400px;
-        overflow: hidden;
-        opacity: 0;
-        pointer-events: none;
-      "
-    >
-      <div id="receipt-card">
-        <div class="receipt-header-free" id="receipt-header-free">
-          <div class="receipt-company-name" id="rc-company">
-            Your Logistics Company
-          </div>
-          <div class="receipt-company-sub">Waybill Receipt</div>
-          <div class="receipt-powered-badge">Powered by Evueo</div>
-        </div>
-        <div
-          id="receipt-watermark"
-          class="receipt-watermark"
-          style="display: none"
-        >
-          <img id="receipt-watermark-img" src="" alt="logo" />
-        </div>
-        <div class="receipt-header-paid" id="receipt-header-paid">
-          <div class="receipt-company-name" id="rc-company-paid">
-            Your Logistics Company
-          </div>
-          <div class="receipt-company-sub">Waybill Receipt</div>
-        </div>
-        <div class="receipt-tracking-strip">
-          <div style="min-width: 0; flex: 1">
-            <div class="receipt-tracking-label">Tracking ID</div>
-            <div class="receipt-tracking-num" id="rc-tracking">EV-0000</div>
-          </div>
-          <div class="receipt-date-val" id="rc-date">—</div>
-        </div>
-        <div class="receipt-body">
-          <div class="receipt-route">
-            <div class="receipt-party">
-              <div class="receipt-party-label">From</div>
-              <div class="receipt-party-name" id="rc-sender">—</div>
-            </div>
-            <div class="receipt-arrow-col">→</div>
-            <div class="receipt-party right">
-              <div class="receipt-party-label">To</div>
-              <div class="receipt-party-name" id="rc-receiver">—</div>
-            </div>
-          </div>
-          <div class="receipt-items-card">
-            <div class="receipt-items-label">Items / Description</div>
-            <div id="rc-items">—</div>
-          </div>
-        </div>
-        <div class="receipt-footer">
-          <div class="receipt-footer-note">
-            This receipt confirms registration only.
-          </div>
-          <div class="receipt-evueo-brand">ev<span>u</span>eo</div>
+      <div class="drawer-section">
+        <div class="drawer-label">Legal</div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <a class="drawer-link" href="/terms.html">Terms of Use</a>
+          <a class="drawer-link" href="/privacy.html">Privacy Policy</a>
         </div>
       </div>
-    </div>
 
-    <script>
-      // These are now set dynamically from Supabase in window.onload
-      // IS_PAID_TIER → window.userTier === "premium"
-      // COMPANY_NAME → window.companyName
+<div
+class="drawer-section"
+style="margin-top: auto; padding-bottom: 20px"
+>
+<div class="drawer-toggle-row">
+<span>Dark / Light</span>
+<div
+id="drawer-theme-switch"
+class="theme-switch"
+onclick="toggleTheme()"
+role="switch"
+aria-checked="false"
+></div>
+</div>
+<div
+style="
+           margin-top: 12px;
+           display: flex;
+           gap: 8px;
+           align-items: center;
+           justify-content: space-between;
+         "
+>
+<button
+class="drawer-link drawer-logout"
+onclick="logoutFromDrawer()"
+>
+Log out
+</button>
+<div style="font-size: 0.78rem; color: var(--muted)">
+evueo © 2026
+</div>
+</div>
+</div>
+</aside>
 
-      async function uploadLogo() {
-        if (!selectedLogoFile) return;
-        try {
-          const {
-            data: { session },
-          } = await sb.auth.getSession();
-          if (!session) return alert("Not authenticated");
+<!-- Off-screen receipt for PDF capture -->
+<div
+style="
+       position: absolute;
+       top: 0;
+       left: 0;
+       z-index: -9999;
+       width: 400px;
+       overflow: hidden;
+       opacity: 0;
+       pointer-events: none;
+     "
+>
+<div id="receipt-card">
+<div class="receipt-header-free" id="receipt-header-free">
+<div class="receipt-company-name" id="rc-company">
+Your Logistics Company
+</div>
+<div class="receipt-company-sub">Waybill Receipt</div>
+<div class="receipt-powered-badge">Powered by Evueo</div>
+</div>
+<div
+id="receipt-watermark"
+class="receipt-watermark"
+style="display: none"
+>
+<img id="receipt-watermark-img" src="" alt="logo" />
+</div>
+<div class="receipt-header-paid" id="receipt-header-paid">
+<div class="receipt-company-name" id="rc-company-paid">
+Your Logistics Company
+</div>
+<div class="receipt-company-sub">Waybill Receipt</div>
+</div>
+<div class="receipt-tracking-strip">
+<div style="min-width: 0; flex: 1">
+<div class="receipt-tracking-label">Tracking ID</div>
+<div class="receipt-tracking-num" id="rc-tracking">EV-0000</div>
+</div>
+<div class="receipt-date-val" id="rc-date">—</div>
+</div>
+<div class="receipt-body">
+<div class="receipt-route">
+<div class="receipt-party">
+<div class="receipt-party-label">From</div>
+<div class="receipt-party-name" id="rc-sender">—</div>
+</div>
+<div class="receipt-arrow-col">→</div>
+<div class="receipt-party right">
+<div class="receipt-party-label">To</div>
+<div class="receipt-party-name" id="rc-receiver">—</div>
+</div>
+</div>
+<div class="receipt-items-card">
+<div class="receipt-items-label">Items / Description</div>
+<div id="rc-items">—</div>
+</div>
+</div>
+<div class="receipt-footer">
+<div class="receipt-footer-note">
+This receipt confirms registration only.
+</div>
+<div class="receipt-evueo-brand">ev<span>u</span>eo</div>
+</div>
+</div>
+</div>
 
-          // resize image via canvas before upload (max 400px, jpeg compression)
-          const resizedDataUrl = await new Promise((resolve, reject) => {
-            const img = new Image();
-            img.onload = () => {
-              const maxDim = 400;
-              let { width, height } = img;
-              if (width > height && width > maxDim) {
-                height = Math.round((height * maxDim) / width);
-                width = maxDim;
-              } else if (height > maxDim) {
-                width = Math.round((width * maxDim) / height);
-                height = maxDim;
-              }
-              const canvas = document.createElement("canvas");
-              canvas.width = width;
-              canvas.height = height;
-              canvas.getContext("2d").drawImage(img, 0, 0, width, height);
-              resolve(canvas.toDataURL("image/jpeg", 0.8));
-            };
-            img.onerror = reject;
-            img.src = URL.createObjectURL(selectedLogoFile);
-          });
+<script>
+// These are now set dynamically from Supabase in window.onload
+// IS_PAID_TIER → window.userTier === "premium"
+// COMPANY_NAME → window.companyName
 
-          const b64 = resizedDataUrl.split(",")[1];
-          const payload = {
-            filename: "logo.jpg",
-            content_type: "image/jpeg",
-            data: b64,
-          };
+async function uploadLogo() {
+if (!selectedLogoFile) return;
+try {
+const {
+data: { session },
+} = await sb.auth.getSession();
+if (!session) return alert("Not authenticated");
 
-          const res = await fetch("/api/upload-logo", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${session.access_token}`,
-            },
-            body: JSON.stringify(payload),
-          });
-          let j;
-          try {
-            j = await res.json();
-          } catch (parseErr) {
-            const txt = await res.text().catch(() => "<no body>");
-            console.error("upload-logo non-json response:", txt);
-            throw new Error(`Upload failed: ${txt}`);
-          }
-          if (!res.ok)
-            throw new Error(j?.error || `Upload failed (status ${res.status})`);
-          window.companyLogo = j.url;
-          const p = document.getElementById("logo-preview");
-          if (p) {
-            p.style.display = "block";
-            p.innerHTML = `<img src="${esc(j.url)}" style="width:100%;height:auto;display:block;" crossorigin="anonymous"/>`;
-          }
-          document.getElementById("remove-logo-btn").style.display =
-            "inline-block";
-          setReceiptWatermark(j.url);
-        } catch (e) {
-          console.error("uploadLogo handler error", e);
-          alert(e.message || "Upload failed");
-        }
-      }
+// resize image via canvas before upload (max 400px, jpeg compression)
+const resizedDataUrl = await new Promise((resolve, reject) => {
+const img = new Image();
+img.onload = () => {
+const maxDim = 400;
+let { width, height } = img;
+if (width > height && width > maxDim) {
+height = Math.round((height * maxDim) / width);
+width = maxDim;
+} else if (height > maxDim) {
+width = Math.round((width * maxDim) / height);
+height = maxDim;
+}
+const canvas = document.createElement("canvas");
+canvas.width = width;
+canvas.height = height;
+canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+resolve(canvas.toDataURL("image/jpeg", 0.8));
+};
+img.onerror = reject;
+img.src = URL.createObjectURL(selectedLogoFile);
+});
 
-      function toArray(data) {
-        if (Array.isArray(data)) return data;
-        if (data && Array.isArray(data.rows)) return data.rows;
-        if (data && Array.isArray(data.records)) return data.records;
-        if (data && Array.isArray(data.data)) return data.data;
-        return [];
-      }
+const b64 = resizedDataUrl.split(",")[1];
+const payload = {
+filename: "logo.jpg",
+content_type: "image/jpeg",
+data: b64,
+};
 
-      /* ── Escape anything that came from pasted waybill text ── */
-      function esc(v) {
-        return String(v ?? "").replace(
-          /[&<>"']/g,
-          (c) =>
-            ({
-              "&": "&amp;",
-              "<": "&lt;",
-              ">": "&gt;",
-              '"': "&quot;",
-              "'": "&#39;",
-            })[c],
-        );
-      }
+const res = await fetch("/api/upload-logo", {
+method: "POST",
+headers: {
+"Content-Type": "application/json",
+Authorization: `Bearer ${session.access_token}`,
+},
+body: JSON.stringify(payload),
+});
+let j;
+try {
+j = await res.json();
+} catch (parseErr) {
+const txt = await res.text().catch(() => "<no body>");
+console.error("upload-logo non-json response:", txt);
+throw new Error(`Upload failed: ${txt}`);
+}
+if (!res.ok)
+throw new Error(j?.error || `Upload failed (status ${res.status})`);
+window.companyLogo = j.url;
+const p = document.getElementById("logo-preview");
+if (p) {
+p.style.display = "block";
+p.innerHTML = `<img src="${esc(j.url)}" style="width:100%;height:auto;display:block;" crossorigin="anonymous"/>`;
+}
+document.getElementById("remove-logo-btn").style.display =
+"inline-block";
+setReceiptWatermark(j.url);
+} catch (e) {
+console.error("uploadLogo handler error", e);
+alert(e.message || "Upload failed");
+}
+}
 
-      /* ── Brand colour (settings drawer) ── */
-      const BRAND_PALETTE = [
-        "#f97316",
-        "#2563eb",
-        "#15803d",
-        "#dc2626",
-        "#7c3aed",
-        "#0f766e",
-        "#b45309",
-        "#1c1917",
-        "#1e3a8a",
-        "#9f1239",
-      ];
-      const BRAND_NAMES = {
-        "#f97316": "Orange",
-        "#2563eb": "Blue",
-        "#15803d": "Green",
-        "#dc2626": "Red",
-        "#7c3aed": "Purple",
-        "#0f766e": "Teal",
-        "#b45309": "Brown",
-        "#1c1917": "Charcoal",
-        "#1e3a8a": "Navy",
-        "#9f1239": "Maroon",
-      };
+function toArray(data) {
+if (Array.isArray(data)) return data;
+if (data && Array.isArray(data.rows)) return data.rows;
+if (data && Array.isArray(data.records)) return data.records;
+if (data && Array.isArray(data.data)) return data.data;
+return [];
+}
 
-      function renderBrandPalette() {
-        const wrap = document.getElementById("brand-swatches");
-        if (!wrap) return;
-        const current = (window.brandColor || "#f97316").toLowerCase();
-        wrap.innerHTML = BRAND_PALETTE.map(
-          (hex) =>
-            `<button type="button" class="swatch" data-color="${hex}" style="background:${hex}" aria-label="${BRAND_NAMES[hex]}" aria-pressed="${hex === current}"></button>`,
-        ).join("");
-        wrap
-          .querySelectorAll(".swatch")
-          .forEach((b) =>
-            b.addEventListener("click", () => saveBrandColor(b.dataset.color)),
-          );
-        const prev = document.getElementById("brand-preview");
-        if (prev) {
-          prev.style.background = current;
-          prev.textContent = window.companyName || "Your company";
-        }
-      }
+/* ── Escape anything that came from pasted waybill text ── */
+function esc(v) {
+return String(v ?? "").replace(
+/[&<>"']/g,
+(c) =>
+({
+"&": "&amp;",
+"<": "&lt;",
+">": "&gt;",
+'"': "&quot;",
+"'": "&#39;",
+})[c],
+);
+}
 
-      async function saveBrandColor(hex) {
-        if (!BRAND_PALETTE.includes(hex)) return;
-        const before = window.brandColor || "#f97316";
-        window.brandColor = hex; // show it straight away
-        renderBrandPalette();
-        const note = document.getElementById("brand-note");
-        try {
-          const { data } = await sb.auth.getSession();
-          const token = data?.session?.access_token;
-          if (!token) throw new Error("Please log in again.");
-          const res = await fetch("/api/update-brand", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ brand_color: hex }),
-          });
-          const j = await res.json().catch(() => ({}));
-          if (!res.ok) throw new Error(j.error || "Could not save the colour.");
-          if (note)
-            note.textContent = `Saved: ${BRAND_NAMES[hex]}. Premium receipts use this colour.`;
-        } catch (e) {
-          window.brandColor = before; // put it back if saving failed
-          renderBrandPalette();
-          if (note)
-            note.textContent = e.message || "Could not save the colour.";
-        }
-      }
+/* ── Brand colour (settings drawer) ── */
+const BRAND_PALETTE = [
+"#f97316",
+"#2563eb",
+"#15803d",
+"#dc2626",
+"#7c3aed",
+"#0f766e",
+"#b45309",
+"#1c1917",
+"#1e3a8a",
+"#9f1239",
+];
+const BRAND_NAMES = {
+"#f97316": "Orange",
+"#2563eb": "Blue",
+"#15803d": "Green",
+"#dc2626": "Red",
+"#7c3aed": "Purple",
+"#0f766e": "Teal",
+"#b45309": "Brown",
+"#1c1917": "Charcoal",
+"#1e3a8a": "Navy",
+"#9f1239": "Maroon",
+};
 
-      /* ── Format description ── */
-      function formatDesc(raw) {
-        if (!raw || raw === "N/A") return "N/A";
-        try {
-          if (
-            typeof raw === "string" &&
-            (raw.startsWith("[") || raw.startsWith("{"))
-          ) {
-            const p = JSON.parse(raw);
-            if (Array.isArray(p))
-              return p
-                .map((o) =>
-                  typeof o === "object"
-                    ? `${o.quantity || o.qty || ""} ${o.unit || ""} ${o.description || o.name || ""}`.trim()
-                    : o,
-                )
-                .join(", ");
-          }
-        } catch (_) {}
-        return raw;
-      }
+function renderBrandPalette() {
+const wrap = document.getElementById("brand-swatches");
+if (!wrap) return;
+const current = (window.brandColor || "#f97316").toLowerCase();
+wrap.innerHTML = BRAND_PALETTE.map(
+(hex) =>
+`<button type="button" class="swatch" data-color="${hex}" style="background:${hex}" aria-label="${BRAND_NAMES[hex]}" aria-pressed="${hex === current}"></button>`,
+).join("");
+wrap
+.querySelectorAll(".swatch")
+.forEach((b) =>
+b.addEventListener("click", () => saveBrandColor(b.dataset.color)),
+);
+const prev = document.getElementById("brand-preview");
+if (prev) {
+prev.style.background = current;
+prev.textContent = window.companyName || "Your company";
+}
+}
 
-      function countUp(el, target, duration) {
-        if (!el) return;
-        const start = 0;
-        const startTime = performance.now();
-        function tick(now) {
-          const progress = Math.min((now - startTime) / duration, 1);
-          el.textContent = Math.floor(start + (target - start) * progress);
-          if (progress < 1) requestAnimationFrame(tick);
-          else el.textContent = target;
-        }
-        requestAnimationFrame(tick);
-      }
+async function saveBrandColor(hex) {
+if (!BRAND_PALETTE.includes(hex)) return;
+const before = window.brandColor || "#f97316";
+window.brandColor = hex; // show it straight away
+renderBrandPalette();
+const note = document.getElementById("brand-note");
+try {
+const { data } = await sb.auth.getSession();
+const token = data?.session?.access_token;
+if (!token) throw new Error("Please log in again.");
+const res = await fetch("/api/update-brand", {
+method: "POST",
+headers: {
+"Content-Type": "application/json",
+Authorization: `Bearer ${token}`,
+},
+body: JSON.stringify({ brand_color: hex }),
+});
+const j = await res.json().catch(() => ({}));
+if (!res.ok) throw new Error(j.error || "Could not save the colour.");
+if (note)
+note.textContent = `Saved: ${BRAND_NAMES[hex]}. Premium receipts use this colour.`;
+} catch (e) {
+window.brandColor = before; // put it back if saving failed
+renderBrandPalette();
+if (note)
+note.textContent = e.message || "Could not save the colour.";
+}
+}
 
-      /* ── Today count — robust date match ── */
-      function countToday(records) {
-        const now = new Date();
-        const dd = String(now.getDate()).padStart(2, "0");
-        const mm = String(now.getMonth() + 1).padStart(2, "0");
-        const yyyy = now.getFullYear();
-        // matches "02/06/2026" or "2/6/2026" at start of date string
-        return records.filter((r) => {
-          const d = (r.date || "").trim();
-          return (
-            d.startsWith(`${dd}/${mm}/${yyyy}`) ||
-            d.startsWith(`${parseInt(dd)}/${parseInt(mm)}/${yyyy}`)
-          );
-        }).length;
-      }
+/* ── Format description ── */
+function formatDesc(raw) {
+if (!raw || raw === "N/A") return "N/A";
+try {
+if (
+typeof raw === "string" &&
+(raw.startsWith("[") || raw.startsWith("{"))
+) {
+const p = JSON.parse(raw);
+if (Array.isArray(p))
+return p
+.map((o) =>
+typeof o === "object"
+? `${o.quantity || o.qty || ""} ${o.unit || ""} ${o.description || o.name || ""}`.trim()
+: o,
+)
+.join(", ");
+}
+} catch (_) {}
+return raw;
+}
 
-      /* ── Short date for stat card ("02 Jun") ── */
-      function shortDate(dateStr) {
-        if (!dateStr) return "—";
-        // dateStr is like "02/06/2026, 21:23:45"
-        const parts = dateStr.split(",")[0].trim().split("/");
-        if (parts.length < 2) return dateStr.split(",")[0].trim();
-        const months = [
-          "Jan",
-          "Feb",
-          "Mar",
-          "Apr",
-          "May",
-          "Jun",
-          "Jul",
-          "Aug",
-          "Sep",
-          "Oct",
-          "Nov",
-          "Dec",
-        ];
-        const day = parts[0];
-        const mon = months[parseInt(parts[1]) - 1] || parts[1];
-        return `${day} ${mon}`;
-      }
+function countUp(el, target, duration) {
+if (!el) return;
+const start = 0;
+const startTime = performance.now();
+function tick(now) {
+const progress = Math.min((now - startTime) / duration, 1);
+el.textContent = Math.floor(start + (target - start) * progress);
+if (progress < 1) requestAnimationFrame(tick);
+else el.textContent = target;
+}
+requestAnimationFrame(tick);
+}
 
-      /* ── Record card HTML ── */
-      // Delivery status — labels + colours mirror verify.html and the values
-      // accepted by /api/update-status. window.statusMap is keyed by tracking
-      // number and populated by loadStatuses() from /api/get-statuses.
-      const STATUS_LABELS = {
-        registered: { label: "Registered", bg: "#f5f5f4", fg: "#57534e" },
-        picked_up: { label: "Picked up", bg: "#dbeafe", fg: "#1d4ed8" },
-        out_for_delivery: {
-          label: "Out for delivery",
-          bg: "#ffedd5",
-          fg: "#c2410c",
-        },
-        delivered: { label: "Delivered", bg: "#dcfce7", fg: "#15803d" },
-      };
-      window.statusMap = window.statusMap || {};
+/* ── Today count — robust date match ── */
+function countToday(records) {
+const now = new Date();
+const dd = String(now.getDate()).padStart(2, "0");
+const mm = String(now.getMonth() + 1).padStart(2, "0");
+const yyyy = now.getFullYear();
+// matches "02/06/2026" or "2/6/2026" at start of date string
+return records.filter((r) => {
+const d = (r.date || "").trim();
+return (
+d.startsWith(`${dd}/${mm}/${yyyy}`) ||
+d.startsWith(`${parseInt(dd)}/${parseInt(mm)}/${yyyy}`)
+);
+}).length;
+}
 
-      async function loadStatuses() {
-        try {
-          const res = await fetch("/api/get-statuses", {
-            headers: await authHeaders(),
-            cache: "no-store",
-          });
-          if (!res.ok) return;
-          const rows = await res.json();
-          const map = {};
-          for (const r of rows || []) {
-            if (r && r.tracking_number) {
-              map[r.tracking_number] = {
-                status: r.status || "registered",
-                status_updated_at: r.status_updated_at || null,
-              };
-            }
-          }
-          window.statusMap = map;
-        } catch (e) {
-          console.error("loadStatuses error:", e);
-        }
-      }
+/* ── Short date for stat card ("02 Jun") ── */
+function shortDate(dateStr) {
+if (!dateStr) return "—";
+// dateStr is like "02/06/2026, 21:23:45"
+const parts = dateStr.split(",")[0].trim().split("/");
+if (parts.length < 2) return dateStr.split(",")[0].trim();
+const months = [
+"Jan",
+"Feb",
+"Mar",
+"Apr",
+"May",
+"Jun",
+"Jul",
+"Aug",
+"Sep",
+"Oct",
+"Nov",
+"Dec",
+];
+const day = parts[0];
+const mon = months[parseInt(parts[1]) - 1] || parts[1];
+return `${day} ${mon}`;
+}
 
-      async function updateRecordStatus(selectEl, tracking) {
-        const newStatus = selectEl.value;
-        if (!STATUS_LABELS[newStatus]) return;
-        const prev = (window.statusMap[tracking] || {}).status || "registered";
-        selectEl.disabled = true;
-        try {
-          const res = await fetch("/api/update-status", {
-            method: "POST",
-            headers: await authHeaders(),
-            body: JSON.stringify({
-              tracking_number: tracking,
-              status: newStatus,
-            }),
-          });
-          const data = await res.json().catch(() => ({}));
-          if (!res.ok)
-            throw new Error(data.error || "Could not update status.");
-          window.statusMap[tracking] = {
-            status: data.record?.status || newStatus,
-            status_updated_at:
-              data.record?.status_updated_at || new Date().toISOString(),
-          };
-          // Re-paint the pill in place — find the sibling element in the row.
-          const row = selectEl.closest(".record-status-row");
-          if (row) {
-            const pill = row.querySelector(".status-pill");
-            const s = STATUS_LABELS[window.statusMap[tracking].status];
-            if (pill && s) {
-              pill.textContent = s.label;
-              pill.style.background = s.bg;
-              pill.style.color = s.fg;
-            }
-          }
-        } catch (e) {
-          selectEl.value = prev;
-          alert(e.message || "Could not update status.");
-        } finally {
-          selectEl.disabled = false;
-        }
-      }
+/* ── Record card HTML ── */
+// Delivery status — labels + colours mirror verify.html and the values
+// accepted by /api/update-status. window.statusMap is keyed by tracking
+// number and populated by loadStatuses() from /api/get-statuses.
+const STATUS_LABELS = {
+registered: { label: "Registered", bg: "#f5f5f4", fg: "#57534e" },
+picked_up: { label: "Picked up", bg: "#dbeafe", fg: "#1d4ed8" },
+out_for_delivery: {
+label: "Out for delivery",
+bg: "#ffedd5",
+fg: "#c2410c",
+},
+delivered: { label: "Delivered", bg: "#dcfce7", fg: "#15803d" },
+};
+window.statusMap = window.statusMap || {};
 
-      function recordCardHTML(r) {
-        const tracking = r.tracking_number || "";
-        const known = window.statusMap[tracking];
-        const current = known?.status || "registered";
-        const s = STATUS_LABELS[current] || STATUS_LABELS.registered;
-        // The status control only renders when we actually have a tracking
-        // number (verify-able shipments). The select is unobtrusive but lets
-        // the courier advance the stage in one tap.
-        const statusRow = tracking
-          ? `<div class="record-status-row">
-              <span class="status-pill" style="background:${s.bg};color:${s.fg};">${s.label}</span>
-              <select class="status-select" data-tracking="${esc(tracking)}" onchange="updateRecordStatus(this, this.dataset.tracking)">
-                ${Object.entries(STATUS_LABELS)
-                  .map(
-                    ([v, info]) =>
-                      `<option value="${v}"${v === current ? " selected" : ""}>${info.label}</option>`,
-                  )
-                  .join("")}
-              </select>
-            </div>`
-          : "";
-        return `<div class="record-card">
-        <div class="record-header">
-          <div class="record-route">${esc(r.sender || "?")}<span class="arrow">→</span>${esc(r.receiver || "?")}</div>
-          <div class="record-date">${esc((r.date || "").split(",")[0])}</div>
-        </div>
-        <div class="record-items">${esc(formatDesc(r.description))}</div>
-        <div class="record-tracking">⬡ ${esc(r.tracking_number || "N/A")}</div>
-        ${statusRow}
-      </div>`;
-      }
+async function loadStatuses() {
+try {
+const res = await fetch("/api/get-statuses", {
+headers: await authHeaders(),
+cache: "no-store",
+});
+if (!res.ok) return;
+const rows = await res.json();
+const map = {};
+for (const r of rows || []) {
+if (r && r.tracking_number) {
+map[r.tracking_number] = {
+status: r.status || "registered",
+status_updated_at: r.status_updated_at || null,
+};
+}
+}
+window.statusMap = map;
+} catch (e) {
+console.error("loadStatuses error:", e);
+}
+}
 
-      /* ── Render recent ── */
-      function renderRecent(rawData) {
-        const records = toArray(rawData);
-        const out = document.getElementById("recent-output");
-        const last5 = [...records].reverse().slice(0, 5);
-        if (!last5.length) {
-          out.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No records yet. Analyze your first waybill above.</div></div>`;
-          return;
-        }
-        out.innerHTML = `<div class="records-list">${last5.map(recordCardHTML).join("")}</div>`;
-      }
+async function updateRecordStatus(selectEl, tracking) {
+const newStatus = selectEl.value;
+if (!STATUS_LABELS[newStatus]) return;
+const prev = (window.statusMap[tracking] || {}).status || "registered";
+selectEl.disabled = true;
+try {
+const res = await fetch("/api/update-status", {
+method: "POST",
+headers: await authHeaders(),
+body: JSON.stringify({
+tracking_number: tracking,
+status: newStatus,
+}),
+});
+const data = await res.json().catch(() => ({}));
+if (!res.ok)
+throw new Error(data.error || "Could not update status.");
+window.statusMap[tracking] = {
+status: data.record?.status || newStatus,
+status_updated_at:
+data.record?.status_updated_at || new Date().toISOString(),
+};
+// Re-paint the pill in place — find the sibling element in the row.
+const row = selectEl.closest(".record-status-row");
+if (row) {
+const pill = row.querySelector(".status-pill");
+const s = STATUS_LABELS[window.statusMap[tracking].status];
+if (pill && s) {
+pill.textContent = s.label;
+pill.style.background = s.bg;
+pill.style.color = s.fg;
+}
+}
+} catch (e) {
+selectEl.value = prev;
+alert(e.message || "Could not update status.");
+} finally {
+selectEl.disabled = false;
+}
+}
 
-      function formatReceiptDesc(raw) {
-        if (!raw || raw === "N/A") return "N/A";
+function recordCardHTML(r) {
+const tracking = r.tracking_number || "";
+const known = window.statusMap[tracking];
+const current = known?.status || "registered";
+const s = STATUS_LABELS[current] || STATUS_LABELS.registered;
+// The status control only renders when we actually have a tracking
+// number (verify-able shipments). The select is unobtrusive but lets
+// the courier advance the stage in one tap.
+const statusRow = tracking
+? `<div class="record-status-row">
+             <span class="status-pill" style="background:${s.bg};color:${s.fg};">${s.label}</span>
+             <select class="status-select" data-tracking="${esc(tracking)}" onchange="updateRecordStatus(this, this.dataset.tracking)">
+               ${Object.entries(STATUS_LABELS)
+                 .map(
+                   ([v, info]) =>
+                     `<option value="${v}"${v === current ? " selected" : ""}>${info.label}</option>`,
+                 )
+                 .join("")}
+             </select>
+           </div>`
+: "";
+return `<div class="record-card">
+       <div class="record-header">
+         <div class="record-route">${esc(r.sender || "?")}<span class="arrow">→</span>${esc(r.receiver || "?")}</div>
+         <div class="record-date">${esc((r.date || "").split(",")[0])}</div>
+       </div>
+       <div class="record-items">${esc(formatDesc(r.description))}</div>
+       <div class="record-tracking">⬡ ${esc(r.tracking_number || "N/A")}</div>
+       ${statusRow}
+     </div>`;
+}
 
-        // Detect numbered list e.g. "1. item 2. item"
-        const numbered = raw.match(/\d+\.\s[^0-9\.][^]*?(?=\s*\d+\.|$)/g);
-        if (numbered && numbered.length > 1) {
-          return numbered
-            .map(
-              (item) =>
-                `<div style="padding:4px 0;border-bottom:1px solid #f0ebe3;font-size:0.81rem;line-height:1.5;color:#374151;">${esc(item.trim())}</div>`,
-            )
-            .join("");
-        }
+/* ── Render recent ── */
+function renderRecent(rawData) {
+const records = toArray(rawData);
+const out = document.getElementById("recent-output");
+const last5 = [...records].reverse().slice(0, 5);
+if (!last5.length) {
+out.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No records yet. Analyze your first waybill above.</div></div>`;
+return;
+}
+out.innerHTML = `<div class="records-list">${last5.map(recordCardHTML).join("")}</div>`;
+}
 
-        return `<span style="font-size:0.85rem;color:#374151;line-height:1.6;">${raw}</span>`;
-      }
+function formatReceiptDesc(raw) {
+if (!raw || raw === "N/A") return "N/A";
 
-      /* ── Build receipt ── */
-      function buildReceiptCard(data) {
-        const isPaid = window.userTier === "premium";
-        const company = window.companyName || "Your Logistics Company";
+// Detect numbered list e.g. "1. item 2. item"
+const numbered = raw.match(/\d+\.\s[^0-9\.][^]*?(?=\s*\d+\.|$)/g);
+if (numbered && numbered.length > 1) {
+return numbered
+.map(
+(item) =>
+`<div style="padding:4px 0;border-bottom:1px solid #f0ebe3;font-size:0.81rem;line-height:1.5;color:#374151;">${esc(item.trim())}</div>`,
+)
+.join("");
+}
 
-        const now = new Date().toLocaleString("en-GB", {
-          timeZone: "Africa/Lagos",
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
+return `<span style="font-size:0.85rem;color:#374151;line-height:1.6;">${raw}</span>`;
+}
 
-        // Store everything downloadReceipt() needs for server-side PDF generation
-        window.lastReceiptData = {
-          companyName: company,
-          tracking: data.tracking_number || "N/A",
-          sender: data.sender || "N/A",
-          receiver: data.receiver || "N/A",
-          receiverPhone: data.receiver_phone || "",
-          landmark: data.landmark || "",
-          items: Array.isArray(data.description)
-            ? JSON.stringify(data.description)
-            : data.description || "N/A",
-          dateStr: now.replace(", ", "\n"),
-          isPaid,
-          logoUrl: window.companyLogo || null,
-          brandColor: window.brandColor || "#f97316",
-          // Premium-only fields. AI-extracted (weight/address/route) come back
-          // in the analyze response; fee/payment are the manual inputs echoed
-          // back by the server. Sent regardless — the receipt API gates them on
-          // isPaid, so they're inert for free accounts.
-          weight: data.weight || "",
-          deliveryAddress: data.delivery_address || "",
-          origin: data.origin || "",
-          destination: data.destination || "",
-          deliveryFee: data.delivery_fee || "",
-          paymentStatus: data.payment_status || "",
-        };
-      }
+/* ── Build receipt ── */
+function buildReceiptCard(data) {
+const isPaid = window.userTier === "premium";
+const company = window.companyName || "Your Logistics Company";
 
-      async function downloadReceipt() {
-        const btn = document.getElementById("dl-btn");
-        btn.disabled = true;
-        btn.innerHTML = `<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div> Generating…`;
+const now = new Date().toLocaleString("en-GB", {
+timeZone: "Africa/Lagos",
+day: "2-digit",
+month: "short",
+year: "numeric",
+hour: "2-digit",
+minute: "2-digit",
+});
 
-        try {
-          const payload = window.lastReceiptData;
-          if (!payload) throw new Error("No receipt data available.");
+// Store everything downloadReceipt() needs for server-side PDF generation
+window.lastReceiptData = {
+companyName: company,
+tracking: data.tracking_number || "N/A",
+sender: data.sender || "N/A",
+receiver: data.receiver || "N/A",
+receiverPhone: data.receiver_phone || "",
+landmark: data.landmark || "",
+items: Array.isArray(data.description)
+? JSON.stringify(data.description)
+: data.description || "N/A",
+dateStr: now.replace(", ", "\n"),
+isPaid,
+logoUrl: window.companyLogo || null,
+brandColor: window.brandColor || "#f97316",
+// Premium-only fields. AI-extracted (weight/address/route) come back
+// in the analyze response; fee/payment are the manual inputs echoed
+// back by the server. Sent regardless — the receipt API gates them on
+// isPaid, so they're inert for free accounts.
+weight: data.weight || "",
+deliveryAddress: data.delivery_address || "",
+origin: data.origin || "",
+destination: data.destination || "",
+deliveryFee: data.delivery_fee || "",
+paymentStatus: data.payment_status || "",
+};
+}
 
-          const res = await fetch("/api/generate-receipt", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
+async function downloadReceipt() {
+const btn = document.getElementById("dl-btn");
+btn.disabled = true;
+btn.innerHTML = `<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div> Generating…`;
 
-          if (!res.ok) {
-            let msg = `Server error (${res.status})`;
-            try {
-              const j = await res.json();
-              if (j?.error) msg = j.error;
-            } catch (_) {}
-            throw new Error(msg);
-          }
+try {
+const payload = window.lastReceiptData;
+if (!payload) throw new Error("No receipt data available.");
 
-          const blob = await res.blob();
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `Evueo-${payload.tracking}.pdf`;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          URL.revokeObjectURL(url);
-        } catch (e) {
-          console.error("PDF generation failed:", e);
-          alert(
-            e.message || "Could not generate receipt file. Please try again.",
-          );
-        }
+const res = await fetch("/api/generate-receipt", {
+method: "POST",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify(payload),
+});
 
-        btn.disabled = false;
-        btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Receipt`;
-      }
+if (!res.ok) {
+let msg = `Server error (${res.status})`;
+try {
+const j = await res.json();
+if (j?.error) msg = j.error;
+} catch (_) {}
+throw new Error(msg);
+}
 
-      /* ── On load ── */
-      // Drawer toggle / close / logout handlers
-      function toggleDrawer() {
-        const overlay = document.getElementById("drawer-overlay");
-        const drawer = document.getElementById("drawer");
-        const btn = document.getElementById("hamburger-btn");
-        const isOpen = overlay.classList.contains("show");
-        if (isOpen) {
-          overlay.classList.remove("show");
-          drawer.classList.remove("show");
-          btn.classList.remove("open");
-          drawer.setAttribute("aria-hidden", "true");
-        } else {
-          overlay.classList.add("show");
-          drawer.classList.add("show");
-          btn.classList.add("open");
-          drawer.setAttribute("aria-hidden", "false");
-        }
-      }
+const blob = await res.blob();
+const url = URL.createObjectURL(blob);
+const a = document.createElement("a");
+a.href = url;
+a.download = `Evueo-${payload.tracking}.pdf`;
+document.body.appendChild(a);
+a.click();
+a.remove();
+URL.revokeObjectURL(url);
+} catch (e) {
+console.error("PDF generation failed:", e);
+alert(
+e.message || "Could not generate receipt file. Please try again.",
+);
+}
 
-      function closeDrawer() {
-        const overlay = document.getElementById("drawer-overlay");
-        const drawer = document.getElementById("drawer");
-        const btn = document.getElementById("hamburger-btn");
-        overlay.classList.remove("show");
-        drawer.classList.remove("show");
-        btn.classList.remove("open");
-        drawer.setAttribute("aria-hidden", "true");
-      }
+btn.disabled = false;
+btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Receipt`;
+}
 
-      function logoutFromDrawer() {
-        (async () => {
-          try {
-            await sb.auth.signOut();
-          } catch (e) {}
-          window.location.href = "/login";
-        })();
-      }
+/* ── On load ── */
+// Drawer toggle / close / logout handlers
+function toggleDrawer() {
+const overlay = document.getElementById("drawer-overlay");
+const drawer = document.getElementById("drawer");
+const btn = document.getElementById("hamburger-btn");
+const isOpen = overlay.classList.contains("show");
+if (isOpen) {
+overlay.classList.remove("show");
+drawer.classList.remove("show");
+btn.classList.remove("open");
+drawer.setAttribute("aria-hidden", "true");
+} else {
+overlay.classList.add("show");
+drawer.classList.add("show");
+btn.classList.add("open");
+drawer.setAttribute("aria-hidden", "false");
+}
+}
 
-      // Logo upload / preview / storage
-      let selectedLogoFile = null;
-      function handleLogoSelect(e) {
-        const f = e.target.files && e.target.files[0];
-        if (!f) return;
-        selectedLogoFile = f;
-        const reader = new FileReader();
-        reader.onload = function (ev) {
-          const url = ev.target.result;
-          const p = document.getElementById("logo-preview");
-          p.style.display = "block";
+function closeDrawer() {
+const overlay = document.getElementById("drawer-overlay");
+const drawer = document.getElementById("drawer");
+const btn = document.getElementById("hamburger-btn");
+overlay.classList.remove("show");
+drawer.classList.remove("show");
+btn.classList.remove("open");
+drawer.setAttribute("aria-hidden", "true");
+}
+
+function logoutFromDrawer() {
+(async () => {
+try {
+await sb.auth.signOut();
+} catch (e) {}
+window.location.href = "/login";
+})();
+}
+
+// Logo upload / preview / storage
+let selectedLogoFile = null;
+function handleLogoSelect(e) {
+const f = e.target.files && e.target.files[0];
+if (!f) return;
+selectedLogoFile = f;
+const reader = new FileReader();
+reader.onload = function (ev) {
+const url = ev.target.result;
+const p = document.getElementById("logo-preview");
+p.style.display = "block";
+          p.innerHTML = `<img src="${url}" style="width:100%;height:auto;display:block;"/>`;
           p.innerHTML = `<img src="${url}" style="width:100%;height:auto;display:block;" crossorigin="anonymous"/>`;
-          document.getElementById("remove-logo-btn").style.display =
-            "inline-block";
-          document.getElementById("remove-logo-btn").dataset.preview = url;
-        };
-        reader.readAsDataURL(f);
-        // auto-upload
-        uploadLogo();
-      }
+document.getElementById("remove-logo-btn").style.display =
+"inline-block";
+document.getElementById("remove-logo-btn").dataset.preview = url;
+};
+reader.readAsDataURL(f);
+// auto-upload
+uploadLogo();
+}
 
-      // Note: Client-side direct storage upload removed to force server-mediated uploads.
-      // The server-backed `uploadLogo()` (earlier in this file) posts base64 to `/api/upload-logo`.
+// Note: Client-side direct storage upload removed to force server-mediated uploads.
+// The server-backed `uploadLogo()` (earlier in this file) posts base64 to `/api/upload-logo`.
 
-      async function removeLogo() {
-        // remove locally and clear DB link (does not delete storage object)
-        selectedLogoFile = null;
-        const p = document.getElementById("logo-preview");
-        if (p) {
-          p.style.display = "none";
-          p.innerHTML = "";
-        }
-        document.getElementById("remove-logo-btn").style.display = "none";
-        try {
-          await sb
-            .from("companies")
-            .update({ logo_url: null })
-            .match({ company_name: window.companyName });
-          window.companyLogo = null;
-        } catch (e) {}
-      }
+async function removeLogo() {
+// remove locally and clear DB link (does not delete storage object)
+selectedLogoFile = null;
+const p = document.getElementById("logo-preview");
+if (p) {
+p.style.display = "none";
+p.innerHTML = "";
+}
+document.getElementById("remove-logo-btn").style.display = "none";
+try {
+await sb
+.from("companies")
+.update({ logo_url: null })
+.match({ company_name: window.companyName });
+window.companyLogo = null;
+} catch (e) {}
+}
 
-      function setReceiptWatermark(url) {
-        const wrap = document.getElementById("receipt-watermark");
-        const img = document.getElementById("receipt-watermark-img");
-        if (!wrap || !img) return;
-        if (url && window.userTier === "premium") {
-          img.src = url;
-          wrap.style.display = "flex";
-        } else {
-          img.src = "";
-          wrap.style.display = "none";
-        }
-      }
+function setReceiptWatermark(url) {
+const wrap = document.getElementById("receipt-watermark");
+const img = document.getElementById("receipt-watermark-img");
+if (!wrap || !img) return;
+if (url && window.userTier === "premium") {
+img.src = url;
+wrap.style.display = "flex";
+} else {
+img.src = "";
+wrap.style.display = "none";
+}
+}
 
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") closeDrawer();
-      });
+document.addEventListener("keydown", (e) => {
+if (e.key === "Escape") closeDrawer();
+});
 
-      // Theme handling
-      function applyThemeFromStorage() {
-        try {
-          const t = localStorage.getItem("evueoTheme");
-          const htmlEl = document.documentElement;
-          const icon = document.getElementById("theme-icon");
-          const drawerSwitch = document.getElementById("drawer-theme-switch");
-          if (t === "dark") {
-            htmlEl.classList.add("dark");
-            if (icon)
-              icon.innerHTML =
-                '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
-            if (drawerSwitch) drawerSwitch.classList.add("on");
-            if (drawerSwitch) drawerSwitch.setAttribute("aria-checked", "true");
-          } else {
-            htmlEl.classList.remove("dark");
-            if (icon)
-              icon.innerHTML = '<circle cx="12" cy="12" r="4"></circle>';
-            if (drawerSwitch) drawerSwitch.classList.remove("on");
-            if (drawerSwitch)
-              drawerSwitch.setAttribute("aria-checked", "false");
-          }
-        } catch (e) {}
-      }
+// Theme handling
+function applyThemeFromStorage() {
+try {
+const t = localStorage.getItem("evueoTheme");
+const htmlEl = document.documentElement;
+const icon = document.getElementById("theme-icon");
+const drawerSwitch = document.getElementById("drawer-theme-switch");
+if (t === "dark") {
+htmlEl.classList.add("dark");
+if (icon)
+icon.innerHTML =
+'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+if (drawerSwitch) drawerSwitch.classList.add("on");
+if (drawerSwitch) drawerSwitch.setAttribute("aria-checked", "true");
+} else {
+htmlEl.classList.remove("dark");
+if (icon)
+icon.innerHTML = '<circle cx="12" cy="12" r="4"></circle>';
+if (drawerSwitch) drawerSwitch.classList.remove("on");
+if (drawerSwitch)
+drawerSwitch.setAttribute("aria-checked", "false");
+}
+} catch (e) {}
+}
 
-      function toggleTheme() {
-        try {
-          const htmlEl = document.documentElement;
-          const icon = document.getElementById("theme-icon");
-          const drawerSwitch = document.getElementById("drawer-theme-switch");
-          const isDark = htmlEl.classList.toggle("dark");
-          if (isDark) {
-            localStorage.setItem("evueoTheme", "dark");
-            if (icon)
-              icon.innerHTML =
-                '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
-            if (drawerSwitch) drawerSwitch.classList.add("on");
-            if (drawerSwitch) drawerSwitch.setAttribute("aria-checked", "true");
-          } else {
-            localStorage.setItem("evueoTheme", "light");
-            if (icon)
-              icon.innerHTML = '<circle cx="12" cy="12" r="4"></circle>';
-            if (drawerSwitch) drawerSwitch.classList.remove("on");
-            if (drawerSwitch)
-              drawerSwitch.setAttribute("aria-checked", "false");
-          }
-        } catch (e) {}
-      }
+function toggleTheme() {
+try {
+const htmlEl = document.documentElement;
+const icon = document.getElementById("theme-icon");
+const drawerSwitch = document.getElementById("drawer-theme-switch");
+const isDark = htmlEl.classList.toggle("dark");
+if (isDark) {
+localStorage.setItem("evueoTheme", "dark");
+if (icon)
+icon.innerHTML =
+'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+if (drawerSwitch) drawerSwitch.classList.add("on");
+if (drawerSwitch) drawerSwitch.setAttribute("aria-checked", "true");
+} else {
+localStorage.setItem("evueoTheme", "light");
+if (icon)
+icon.innerHTML = '<circle cx="12" cy="12" r="4"></circle>';
+if (drawerSwitch) drawerSwitch.classList.remove("on");
+if (drawerSwitch)
+drawerSwitch.setAttribute("aria-checked", "false");
+}
+} catch (e) {}
+}
 
-      async function changeSheetId() {
-        const current = window.companySheetId || "";
-        const newId = prompt("Enter new Google Sheet ID:", current);
-        if (!newId || newId.trim() === current) return;
+async function changeSheetId() {
+const current = window.companySheetId || "";
+const newId = prompt("Enter new Google Sheet ID:", current);
+if (!newId || newId.trim() === current) return;
 
-        const el = document.getElementById("drawer-sheet-id");
-        if (el) el.textContent = "Sheet: saving…";
+const el = document.getElementById("drawer-sheet-id");
+if (el) el.textContent = "Sheet: saving…";
 
-        try {
-          const res = await fetch("/api/update-sheet", {
-            method: "POST",
-            headers: await authHeaders(),
-            body: JSON.stringify({ sheet_id: newId.trim() }),
-          });
-          const data = await res.json();
-          if (!res.ok)
-            throw new Error(data.error || "Could not save sheet ID.");
+try {
+const res = await fetch("/api/update-sheet", {
+method: "POST",
+headers: await authHeaders(),
+body: JSON.stringify({ sheet_id: newId.trim() }),
+});
+const data = await res.json();
+if (!res.ok)
+throw new Error(data.error || "Could not save sheet ID.");
 
-          // Persisted — sync local state from the server's normalised value
-          window.companySheetId = data.sheet_id;
-          if (el) el.textContent = `Sheet: ${data.sheet_id}`;
-          alert(
-            "✅ Sheet ID updated. Make sure this new sheet is shared with the Evueo service account as Editor.",
-          );
-        } catch (e) {
-          if (el) el.textContent = `Sheet: ${current || "—"}`;
-          alert(e.message || "Could not save sheet ID.");
-        }
-      }
+// Persisted — sync local state from the server's normalised value
+window.companySheetId = data.sheet_id;
+if (el) el.textContent = `Sheet: ${data.sheet_id}`;
+alert(
+"✅ Sheet ID updated. Make sure this new sheet is shared with the Evueo service account as Editor.",
+);
+} catch (e) {
+if (el) el.textContent = `Sheet: ${current || "—"}`;
+alert(e.message || "Could not save sheet ID.");
+}
+}
 
-      function renderDrawerHistory(rawData) {
-        const records = toArray(rawData);
-        const out = document.getElementById("drawer-history");
-        if (!out) return;
-        const last = [...records].reverse().slice(0, 6);
-        if (!last.length) {
-          out.innerHTML = `<div class="drawer-history-item">No recent records</div>`;
-          return;
-        }
-        out.innerHTML = last
-          .map(
-            (r) =>
-              `<div class="drawer-history-item"><div class="drawer-history-route">${esc(r.sender || "–")} → ${esc(r.receiver || "–")}</div><div class="drawer-history-meta">${esc((r.date || "").split(",")[0])}</div></div>`,
-          )
-          .join("");
-      }
+function renderDrawerHistory(rawData) {
+const records = toArray(rawData);
+const out = document.getElementById("drawer-history");
+if (!out) return;
+const last = [...records].reverse().slice(0, 6);
+if (!last.length) {
+out.innerHTML = `<div class="drawer-history-item">No recent records</div>`;
+return;
+}
+out.innerHTML = last
+.map(
+(r) =>
+`<div class="drawer-history-item"><div class="drawer-history-route">${esc(r.sender || "–")} → ${esc(r.receiver || "–")}</div><div class="drawer-history-meta">${esc((r.date || "").split(",")[0])}</div></div>`,
+)
+.join("");
+}
 
-      window.onload = async function () {
-        applyThemeFromStorage();
-        ["card-0", "card-1", "card-2"].forEach((id, i) =>
-          setTimeout(
-            () => document.getElementById(id).classList.add("in"),
-            150 + i * 100,
-          ),
-        );
+window.onload = async function () {
+applyThemeFromStorage();
+["card-0", "card-1", "card-2"].forEach((id, i) =>
+setTimeout(
+() => document.getElementById(id).classList.add("in"),
+150 + i * 100,
+),
+);
 
-        const dot = document.getElementById("status-dot");
-        const sText = document.getElementById("status-text");
+const dot = document.getElementById("status-dot");
+const sText = document.getElementById("status-text");
 
-        try {
-          // Get company data from Supabase
-          const {
-            data: { session },
-          } = await sb.auth.getSession();
-          if (!session) {
-            window.location.href = "/login";
-            return;
-          }
+try {
+// Get company data from Supabase
+const {
+data: { session },
+} = await sb.auth.getSession();
+if (!session) {
+window.location.href = "/login";
+return;
+}
 
-          let { data: company, error: companyError } = await sb
-            .from("companies")
-            .select(
-              "company_name, sheet_id, tier, extractions_used, logo_url, premium_until, brand_color",
-            )
-            .single();
+let { data: company, error: companyError } = await sb
+.from("companies")
+.select(
+"company_name, sheet_id, tier, extractions_used, logo_url, premium_until, brand_color",
+)
+.single();
 
-          // First login after email verification — companies row doesn't exist yet.
-          // Create it from signup metadata stored during signUp().
-          if (companyError || !company) {
-            const meta = session.user.user_metadata || {};
-            // Always insert as "free" — even when the user picked premium at
-            // signup. /api/verify-payment is the only thing that should ever
-            // promote to "premium" (and set premium_until). The intent to be
-            // premium is preserved in meta.tier and used below to redirect to
-            // /upgrade. This keeps the DB honest: tier="premium" always means
-            // a paid, active subscription.
-            const { data: created, error: createError } = await sb
-              .from("companies")
-              .insert({
-                id: session.user.id,
-                email: session.user.email,
-                company_name: meta.company_name || "Your Company",
-                tier: "free",
-                sheet_id: meta.sheet_id || "",
-                agreed_to_terms: meta.agreed_to_terms || false,
-                agreed_at: meta.agreed_at || new Date().toISOString(),
-                agreed_ip: meta.agreed_ip || null,
-                brand_color: BRAND_PALETTE.includes(
-                  String(meta.brand_color || "").toLowerCase(),
-                )
-                  ? String(meta.brand_color).toLowerCase()
-                  : "#f97316",
-              })
-              .select(
-                "company_name, sheet_id, tier, extractions_used, logo_url, brand_color",
-              )
-              .single();
+// First login after email verification — companies row doesn't exist yet.
+// Create it from signup metadata stored during signUp().
+if (companyError || !company) {
+const meta = session.user.user_metadata || {};
+// Always insert as "free" — even when the user picked premium at
+// signup. /api/verify-payment is the only thing that should ever
+// promote to "premium" (and set premium_until). The intent to be
+// premium is preserved in meta.tier and used below to redirect to
+// /upgrade. This keeps the DB honest: tier="premium" always means
+// a paid, active subscription.
+const { data: created, error: createError } = await sb
+.from("companies")
+.insert({
+id: session.user.id,
+email: session.user.email,
+company_name: meta.company_name || "Your Company",
+tier: "free",
+sheet_id: meta.sheet_id || "",
+agreed_to_terms: meta.agreed_to_terms || false,
+agreed_at: meta.agreed_at || new Date().toISOString(),
+agreed_ip: meta.agreed_ip || null,
+brand_color: BRAND_PALETTE.includes(
+String(meta.brand_color || "").toLowerCase(),
+)
+? String(meta.brand_color).toLowerCase()
+: "#f97316",
+})
+.select(
+"company_name, sheet_id, tier, extractions_used, logo_url, brand_color",
+)
+.single();
 
-            if (createError || !created) {
-              console.error("Failed to create company row:", createError);
-              throw new Error(
-                "Could not set up your account. Please contact support.",
-              );
-            }
-            company = created;
+if (createError || !created) {
+console.error("Failed to create company row:", createError);
+throw new Error(
+"Could not set up your account. Please contact support.",
+);
+}
+company = created;
 
-            // If they chose premium at signup, send them to upgrade to pay now
-            if (meta.tier === "premium") {
-              window.location.href = "/upgrade";
-              return;
-            }
-          }
+// If they chose premium at signup, send them to upgrade to pay now
+if (meta.tier === "premium") {
+window.location.href = "/upgrade";
+return;
+}
+}
 
-          // Premium lapses when premium_until passes. Downgrade the row so the
-          // badge, premium tagline, and receipt watermark all reflect reality.
-          // (analyze.js does the same server-side; this keeps the UI honest.)
-          if (
-            company.tier === "premium" &&
-            (!company.premium_until ||
-              new Date(company.premium_until) <= new Date())
-          ) {
-            company.tier = "free";
-            sb.from("companies")
-              .update({ tier: "free" })
-              .eq("id", session.user.id)
-              .then(() => {});
-          }
+// Premium lapses when premium_until passes. Downgrade the row so the
+// badge, premium tagline, and receipt watermark all reflect reality.
+// (analyze.js does the same server-side; this keeps the UI honest.)
+if (
+company.tier === "premium" &&
+(!company.premium_until ||
+new Date(company.premium_until) <= new Date())
+) {
+company.tier = "free";
+sb.from("companies")
+.update({ tier: "free" })
+.eq("id", session.user.id)
+.then(() => {});
+}
 
-          window.userTier = company.tier;
+window.userTier = company.tier;
 
-          // Renewal reminder: show a banner when premium expires in ≤7, ≤3,
-          // or ≤1 day(s). Renewing early extends from the current expiry
-          // (verify-payment adds 30 days on top), so no days are lost.
-          if (company.tier === "premium" && company.premium_until) {
-            const msLeft = new Date(company.premium_until) - new Date();
-            const daysLeft = Math.ceil(msLeft / 86400000);
-            if (daysLeft <= 7 && daysLeft > 0) {
-              const banner = document.getElementById("renew-banner");
-              const txt = document.getElementById("renew-banner-text");
-              if (banner && txt) {
-                txt.textContent =
-                  daysLeft === 1
-                    ? "⏳ Your Premium expires tomorrow. Renew now to keep your logo, tracking extras and unlimited extractions — your remaining time carries over."
-                    : `⏳ Your Premium expires in ${daysLeft} days. Renew early — the new 30 days are added on top, nothing is lost.`;
-                banner.style.display = "flex";
-              }
-            }
-          }
-          window.userExtractions = company.extractions_used;
-          window.companyName = company.company_name;
-          window.companySheetId = company.sheet_id || "";
-          window.companyLogo = company.logo_url || null;
-          window.brandColor = company.brand_color || "#f97316";
-          renderBrandPalette();
+// Renewal reminder: show a banner when premium expires in ≤7, ≤3,
+// or ≤1 day(s). Renewing early extends from the current expiry
+// (verify-payment adds 30 days on top), so no days are lost.
+if (company.tier === "premium" && company.premium_until) {
+const msLeft = new Date(company.premium_until) - new Date();
+const daysLeft = Math.ceil(msLeft / 86400000);
+if (daysLeft <= 7 && daysLeft > 0) {
+const banner = document.getElementById("renew-banner");
+const txt = document.getElementById("renew-banner-text");
+if (banner && txt) {
+txt.textContent =
+daysLeft === 1
+? "⏳ Your Premium expires tomorrow. Renew now to keep your logo, tracking extras and unlimited extractions — your remaining time carries over."
+: `⏳ Your Premium expires in ${daysLeft} days. Renew early — the new 30 days are added on top, nothing is lost.`;
+banner.style.display = "flex";
+}
+}
+}
+window.userExtractions = company.extractions_used;
+window.companyName = company.company_name;
+window.companySheetId = company.sheet_id || "";
+window.companyLogo = company.logo_url || null;
+window.brandColor = company.brand_color || "#f97316";
+renderBrandPalette();
 
-          if (window.companyLogo) {
-            const p = document.getElementById("logo-preview");
-            if (p) {
-              p.style.display = "block";
-              p.innerHTML = `<img src="${esc(window.companyLogo)}" style="width:100%;height:auto;display:block;" crossorigin="anonymous"/>`;
-            }
-            const rb = document.getElementById("remove-logo-btn");
-            if (rb) rb.style.display = "inline-block";
-          }
+if (window.companyLogo) {
+const p = document.getElementById("logo-preview");
+if (p) {
+p.style.display = "block";
+p.innerHTML = `<img src="${esc(window.companyLogo)}" style="width:100%;height:auto;display:block;" crossorigin="anonymous"/>`;
+}
+const rb = document.getElementById("remove-logo-btn");
+if (rb) rb.style.display = "inline-block";
+}
 
-          // Reveal premium-only manual fields (delivery fee + payment status).
-          // company.tier is already expiry-corrected above, so lapsed premium
-          // accounts correctly see the free experience.
-          if (company.tier === "premium") {
-            const pf = document.getElementById("premium-fields");
-            if (pf) pf.style.display = "block";
-          }
+// Reveal premium-only manual fields (delivery fee + payment status).
+// company.tier is already expiry-corrected above, so lapsed premium
+// accounts correctly see the free experience.
+if (company.tier === "premium") {
+const pf = document.getElementById("premium-fields");
+if (pf) pf.style.display = "block";
+}
 
-          // Wire drawer fields
-          const dc = document.getElementById("drawer-company");
-          const de = document.getElementById("drawer-email");
-          if (dc) dc.textContent = company.company_name || "";
-          if (de)
-            de.textContent =
-              (session && session.user && session.user.email) || "";
+// Wire drawer fields
+const dc = document.getElementById("drawer-company");
+const de = document.getElementById("drawer-email");
+if (dc) dc.textContent = company.company_name || "";
+if (de)
+de.textContent =
+(session && session.user && session.user.email) || "";
 
-          // Drawer tier badge + sheet id
-          const dt = document.getElementById("drawer-tier");
-          const ds = document.getElementById("drawer-sheet-id");
-          if (dt) {
-            if (company.tier === "premium") {
-              dt.textContent = "Premium";
-              dt.classList.add("premium");
-            } else {
-              dt.textContent = "Free";
-              dt.classList.remove("premium");
-            }
-          }
-          if (ds) ds.textContent = `Sheet: ${window.companySheetId || "—"}`;
+// Drawer tier badge + sheet id
+const dt = document.getElementById("drawer-tier");
+const ds = document.getElementById("drawer-sheet-id");
+if (dt) {
+if (company.tier === "premium") {
+dt.textContent = "Premium";
+dt.classList.add("premium");
+} else {
+dt.textContent = "Free";
+dt.classList.remove("premium");
+}
+}
+if (ds) ds.textContent = `Sheet: ${window.companySheetId || "—"}`;
 
-          // Show company name in header
-          document.querySelector(".logo").innerHTML =
-            `ev<em>u</em>eo <span style="font-size:0.7rem;font-weight:500;color:var(--muted);letter-spacing:0;font-family:'Figtree',sans-serif;">· ${esc(company.company_name)}</span>`;
+// Show company name in header
+document.querySelector(".logo").innerHTML =
+`ev<em>u</em>eo <span style="font-size:0.7rem;font-weight:500;color:var(--muted);letter-spacing:0;font-family:'Figtree',sans-serif;">· ${esc(company.company_name)}</span>`;
 
-          // Premium badge
-          if (company.tier === "premium") {
-            document.querySelector(".tagline").insertAdjacentHTML(
-              "afterend",
-              `<div style="display:inline-flex;align-items:center;gap:4px;
-          background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.25);
-          border-radius:999px;padding:3px 10px;margin-top:6px;width:fit-content;">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-          <span style="font-family:'DM Mono',monospace;font-size:0.62rem;
-            color:#f97316;letter-spacing:0.1em;text-transform:uppercase;">Premium</span>
-        </div>`,
-            );
-          }
+// Premium badge
+if (company.tier === "premium") {
+document.querySelector(".tagline").insertAdjacentHTML(
+"afterend",
+`<div style="display:inline-flex;align-items:center;gap:4px;
+         background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.25);
+         border-radius:999px;padding:3px 10px;margin-top:6px;width:fit-content;">
+         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+           <polyline points="20 6 9 17 4 12"/>
+         </svg>
+         <span style="font-family:'DM Mono',monospace;font-size:0.62rem;
+           color:#f97316;letter-spacing:0.1em;text-transform:uppercase;">Premium</span>
+       </div>`,
+);
+}
 
-          const res = await fetch("/api/get-records", {
-            headers: await authHeaders(),
-            cache: "no-store",
-          });
-          console.log("get-records status:", res.status, res.ok);
+const res = await fetch("/api/get-records", {
+headers: await authHeaders(),
+cache: "no-store",
+});
+console.log("get-records status:", res.status, res.ok);
 
-          // Parse structured errors from the new get-records API. Each error
-          // code maps to a specific UI message + action so the user knows
-          // exactly what to fix, instead of a vague "System Offline".
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            const code = err.code || "UNKNOWN";
-            console.error("get-records error:", code, err.error);
-            dot.classList.add("offline");
+// Parse structured errors from the new get-records API. Each error
+// code maps to a specific UI message + action so the user knows
+// exactly what to fix, instead of a vague "System Offline".
+if (!res.ok) {
+const err = await res.json().catch(() => ({}));
+const code = err.code || "UNKNOWN";
+console.error("get-records error:", code, err.error);
+dot.classList.add("offline");
 
-            // Render code-specific messages with actionable fixes.
-            switch (code) {
-              case "SHEET_NOT_CONNECTED":
-                sText.innerHTML = `<span style="color:#f97316;">No Sheet Connected</span>`;
-                document.getElementById("recent-output").innerHTML = `
-                  <div class="empty-state">
-                    <div class="empty-icon">📎</div>
-                    <div class="empty-text">Connect your Google Sheet to begin.</div>
-                    <button class="btn" style="margin-top:12px;" onclick="document.querySelector('.drawer-link[onclick*=changeSheetId]').click()">Connect Sheet Now</button>
-                  </div>`;
-                break;
+// Render code-specific messages with actionable fixes.
+switch (code) {
+case "SHEET_NOT_CONNECTED":
+sText.innerHTML = `<span style="color:#f97316;">No Sheet Connected</span>`;
+document.getElementById("recent-output").innerHTML = `
+                 <div class="empty-state">
+                   <div class="empty-icon">📎</div>
+                   <div class="empty-text">Connect your Google Sheet to begin.</div>
+                   <button class="btn" style="margin-top:12px;" onclick="document.querySelector('.drawer-link[onclick*=changeSheetId]').click()">Connect Sheet Now</button>
+                 </div>`;
+break;
 
-              case "SHEET_FORBIDDEN":
-                sText.innerHTML = `<span style="color:#dc2626;">Sheet Not Accessible</span>`;
-                const serviceEmail =
-                  err.serviceAccount ||
-                  "logistics-sheets-bot@logistics-ai-484915.iam.gserviceaccount.com";
-                document.getElementById("recent-output").innerHTML = `
-                  <div class="empty-state">
-                    <div class="empty-icon">🔒</div>
-                    <div class="empty-text" style="max-width:420px;">Your sheet isn't shared with the Evueo service account. Open your Google Sheet → <strong>Share</strong> → paste this email → set to <strong>Editor</strong> → Done.</div>
-                    <div style="display:flex;align-items:center;gap:8px;margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-family:'DM Mono',monospace;font-size:0.8rem;">
-                      <span id="service-email-copy" style="color:var(--accent);user-select:all;">${esc(serviceEmail)}</span>
-                      <button class="btn" style="padding:6px 12px;font-size:0.78rem;" onclick="navigator.clipboard.writeText(document.getElementById('service-email-copy').textContent).then(()=>alert('Email copied!')).catch(()=>{})">Copy</button>
-                    </div>
-                  </div>`;
-                break;
+case "SHEET_FORBIDDEN":
+sText.innerHTML = `<span style="color:#dc2626;">Sheet Not Accessible</span>`;
+const serviceEmail =
+err.serviceAccount ||
+"logistics-sheets-bot@logistics-ai-484915.iam.gserviceaccount.com";
+document.getElementById("recent-output").innerHTML = `
+                 <div class="empty-state">
+                   <div class="empty-icon">🔒</div>
+                   <div class="empty-text" style="max-width:420px;">Your sheet isn't shared with the Evueo service account. Open your Google Sheet → <strong>Share</strong> → paste this email → set to <strong>Editor</strong> → Done.</div>
+                   <div style="display:flex;align-items:center;gap:8px;margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-family:'DM Mono',monospace;font-size:0.8rem;">
+                     <span id="service-email-copy" style="color:var(--accent);user-select:all;">${esc(serviceEmail)}</span>
+                     <button class="btn" style="padding:6px 12px;font-size:0.78rem;" onclick="navigator.clipboard.writeText(document.getElementById('service-email-copy').textContent).then(()=>alert('Email copied!')).catch(()=>{})">Copy</button>
+                   </div>
+                 </div>`;
+break;
 
-              case "SHEET_NOT_FOUND":
-                sText.innerHTML = `<span style="color:#dc2626;">Sheet Not Found</span>`;
-                document.getElementById("recent-output").innerHTML = `
-                  <div class="empty-state">
-                    <div class="empty-icon">🔍</div>
-                    <div class="empty-text">The Sheet ID in your settings doesn't match a real sheet. Check the ID and try again.</div>
-                    <button class="btn" style="margin-top:12px;" onclick="document.querySelector('.drawer-link[onclick*=changeSheetId]').click()">Update Sheet ID</button>
-                  </div>`;
-                break;
+case "SHEET_NOT_FOUND":
+sText.innerHTML = `<span style="color:#dc2626;">Sheet Not Found</span>`;
+document.getElementById("recent-output").innerHTML = `
+                 <div class="empty-state">
+                   <div class="empty-icon">🔍</div>
+                   <div class="empty-text">The Sheet ID in your settings doesn't match a real sheet. Check the ID and try again.</div>
+                   <button class="btn" style="margin-top:12px;" onclick="document.querySelector('.drawer-link[onclick*=changeSheetId]').click()">Update Sheet ID</button>
+                 </div>`;
+break;
 
-              case "UNAUTHORIZED":
-                sText.textContent = "Session Expired";
-                document.getElementById("recent-output").innerHTML = `
-                  <div class="empty-state">
-                    <div class="empty-icon">🔑</div>
-                    <div class="empty-text">Your session expired. Sign in again.</div>
-                    <button class="btn" style="margin-top:12px;" onclick="window.location.href='/login'">Sign In</button>
-                  </div>`;
-                break;
+case "UNAUTHORIZED":
+sText.textContent = "Session Expired";
+document.getElementById("recent-output").innerHTML = `
+                 <div class="empty-state">
+                   <div class="empty-icon">🔑</div>
+                   <div class="empty-text">Your session expired. Sign in again.</div>
+                   <button class="btn" style="margin-top:12px;" onclick="window.location.href='/login'">Sign In</button>
+                 </div>`;
+break;
 
-              default:
-                // Network, 500, or unrecognized error — the actual server/network issue case
-                sText.textContent = "System Offline";
-                document.getElementById("recent-output").innerHTML = `
-                  <div class="empty-state">
-                    <div class="empty-icon">⚠️</div>
-                    <div class="empty-text">Can't reach server. Check your network or try again in a moment.</div>
-                  </div>`;
-            }
+default:
+// Network, 500, or unrecognized error — the actual server/network issue case
+sText.textContent = "System Offline";
+document.getElementById("recent-output").innerHTML = `
+                 <div class="empty-state">
+                   <div class="empty-icon">⚠️</div>
+                   <div class="empty-text">Can't reach server. Check your network or try again in a moment.</div>
+                 </div>`;
+}
 
-            [0, 1, 2].forEach((i) =>
-              setTimeout(
-                () => document.getElementById(`sc-${i}`).classList.add("in"),
-                i * 100,
-              ),
-            );
-            return;
-          }
+[0, 1, 2].forEach((i) =>
+setTimeout(
+() => document.getElementById(`sc-${i}`).classList.add("in"),
+i * 100,
+),
+);
+return;
+}
 
-          const data = toArray(await res.json());
-          console.log("get-records data:", data);
+const data = toArray(await res.json());
+console.log("get-records data:", data);
 
-          dot.classList.add("online");
-          sText.textContent = "System Online";
+dot.classList.add("online");
+sText.textContent = "System Online";
 
-          const todayCount = countToday(data);
-          const lastDate = data.length
-            ? shortDate(data[data.length - 1].date)
-            : "—";
+const todayCount = countToday(data);
+const lastDate = data.length
+? shortDate(data[data.length - 1].date)
+: "—";
 
-          [0, 1, 2].forEach((i) =>
-            setTimeout(
-              () => document.getElementById(`sc-${i}`).classList.add("in"),
-              i * 100,
-            ),
-          );
-          countUp(document.getElementById("stat-total"), data.length, 100);
-          countUp(document.getElementById("stat-today"), todayCount, 200);
-          setTimeout(() => {
-            document.getElementById("stat-last").textContent = lastDate;
-          }, 300);
+[0, 1, 2].forEach((i) =>
+setTimeout(
+() => document.getElementById(`sc-${i}`).classList.add("in"),
+i * 100,
+),
+);
+countUp(document.getElementById("stat-total"), data.length, 100);
+countUp(document.getElementById("stat-today"), todayCount, 200);
+setTimeout(() => {
+document.getElementById("stat-last").textContent = lastDate;
+}, 300);
 
-          await loadStatuses();
-          renderRecent(data);
-          renderDrawerHistory(data);
-        } catch (e) {
-          // Catch-all for anything that throws outside the fetch (shouldn't
-          // happen now that we parse structured errors above, but keeps the
-          // bootstrap resilient).
-          console.error("Bootstrap catch-all:", e);
-          dot.classList.add("offline");
-          sText.textContent = "System Offline";
-          [0, 1, 2].forEach((i) =>
-            setTimeout(
-              () => document.getElementById(`sc-${i}`).classList.add("in"),
-              i * 100,
-            ),
-          );
-          document.getElementById("recent-output").innerHTML =
-            `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">Could not load. Check your network or try again.</div></div>`;
-        }
-      };
-      /* ── Analyze ── */
-      async function analyzeData(allowDuplicate) {
-        const out = document.getElementById("analyze-output");
-        const text = document.getElementById("messyInput").value.trim();
-        if (!text) {
-          alert("Please paste some text first.");
-          return;
-        }
+await loadStatuses();
+renderRecent(data);
+renderDrawerHistory(data);
+} catch (e) {
+// Catch-all for anything that throws outside the fetch (shouldn't
+// happen now that we parse structured errors above, but keeps the
+// bootstrap resilient).
+console.error("Bootstrap catch-all:", e);
+dot.classList.add("offline");
+sText.textContent = "System Offline";
+[0, 1, 2].forEach((i) =>
+setTimeout(
+() => document.getElementById(`sc-${i}`).classList.add("in"),
+i * 100,
+),
+);
+document.getElementById("recent-output").innerHTML =
+`<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">Could not load. Check your network or try again.</div></div>`;
+}
+};
+/* ── Analyze ── */
+async function analyzeData(allowDuplicate) {
+const out = document.getElementById("analyze-output");
+const text = document.getElementById("messyInput").value.trim();
+if (!text) {
+alert("Please paste some text first.");
+return;
+}
 
-        out.innerHTML = `<div class="spinner-wrap"><div class="spinner"></div><span class="spinner-label">AI extracting data…</span></div>`;
+out.innerHTML = `<div class="spinner-wrap"><div class="spinner"></div><span class="spinner-label">AI extracting data…</span></div>`;
 
-        // Premium-only manual fields. Inputs only exist/are visible for premium;
-        // the server ignores them for free accounts regardless.
-        const feeEl = document.getElementById("deliveryFeeInput");
-        const payEl = document.getElementById("paymentStatusInput");
-        const deliveryFee = feeEl ? feeEl.value.trim() : "";
-        const paymentStatus = payEl ? payEl.value : "";
+// Premium-only manual fields. Inputs only exist/are visible for premium;
+// the server ignores them for free accounts regardless.
+const feeEl = document.getElementById("deliveryFeeInput");
+const payEl = document.getElementById("paymentStatusInput");
+const deliveryFee = feeEl ? feeEl.value.trim() : "";
+const paymentStatus = payEl ? payEl.value : "";
 
-        try {
-          const res = await fetch("/api/analyze", {
-            method: "POST",
-            headers: await authHeaders(),
-            body: JSON.stringify({
-              text,
-              deliveryFee,
-              paymentStatus,
-              allow_duplicate: allowDuplicate === true,
-            }),
-          });
-          let result;
-          try {
-            result = await res.json();
-          } catch (e) {
-            const txt = await res.text().catch(() => "<no body>");
-            console.error("/api/analyze non-json response:", txt);
-            out.innerHTML = `<div class="result-error">❌ Server error: ${esc(String(txt).slice(0, 300))}</div>`;
-            return;
-          }
+try {
+const res = await fetch("/api/analyze", {
+method: "POST",
+headers: await authHeaders(),
+body: JSON.stringify({
+text,
+deliveryFee,
+paymentStatus,
+allow_duplicate: allowDuplicate === true,
+}),
+});
+let result;
+try {
+result = await res.json();
+} catch (e) {
+const txt = await res.text().catch(() => "<no body>");
+console.error("/api/analyze non-json response:", txt);
+out.innerHTML = `<div class="result-error">❌ Server error: ${esc(String(txt).slice(0, 300))}</div>`;
+return;
+}
 
-          // ── Possible duplicate (409): ask before saving it again ──
-          if (res.status === 409 && result.code === "DUPLICATE") {
-            out.innerHTML = "";
-            if (
-              confirm(
-                (result.error ||
-                  "This looks like a waybill you already saved.") +
-                  "\n\nSave it again anyway?",
-              )
-            ) {
-              return analyzeData(true);
-            }
-            out.innerHTML = `<div class="result-error" style="border-color:rgba(249,115,22,0.3);background:rgba(249,115,22,0.05);">Not saved. This waybill is already in your records${result.tracking_number ? " (" + esc(result.tracking_number) + ")" : ""}.</div>`;
-            return;
-          }
+// ── Possible duplicate (409): ask before saving it again ──
+if (res.status === 409 && result.code === "DUPLICATE") {
+out.innerHTML = "";
+if (
+confirm(
+(result.error ||
+"This looks like a waybill you already saved.") +
+"\n\nSave it again anyway?",
+)
+) {
+return analyzeData(true);
+}
+out.innerHTML = `<div class="result-error" style="border-color:rgba(249,115,22,0.3);background:rgba(249,115,22,0.05);">Not saved. This waybill is already in your records${result.tracking_number ? " (" + esc(result.tracking_number) + ")" : ""}.</div>`;
+return;
+}
 
-          // ── Limit reached (403) — check BEFORE res.ok ──
-          if (res.status === 403 && result.error === "LIMIT_REACHED") {
-            out.innerHTML = `
-          <div class="result-error" style="border-color:rgba(249,115,22,0.3);background:rgba(249,115,22,0.05);">
-            <div style="font-size:1rem;margin-bottom:8px;">🔒 Monthly limit reached</div>
-            <div style="font-size:0.84rem;color:var(--muted);margin-bottom:16px;">
-              You have used all 10 free extractions this month.
-            </div>
-            <a href="/upgrade" style="
-              display:inline-block;background:var(--accent);color:#fff;
-              font-family:'Figtree',sans-serif;font-weight:700;font-size:0.88rem;
-              padding:10px 20px;border-radius:8px;text-decoration:none;">
-              Upgrade to Premium — ₦5,000/month
-            </a>
-          </div>`;
-            return;
-          }
+// ── Limit reached (403) — check BEFORE res.ok ──
+if (res.status === 403 && result.error === "LIMIT_REACHED") {
+out.innerHTML = `
+         <div class="result-error" style="border-color:rgba(249,115,22,0.3);background:rgba(249,115,22,0.05);">
+           <div style="font-size:1rem;margin-bottom:8px;">🔒 Monthly limit reached</div>
+           <div style="font-size:0.84rem;color:var(--muted);margin-bottom:16px;">
+             You have used all 10 free extractions this month.
+           </div>
+           <a href="/upgrade" style="
+             display:inline-block;background:var(--accent);color:#fff;
+             font-family:'Figtree',sans-serif;font-weight:700;font-size:0.88rem;
+             padding:10px 20px;border-radius:8px;text-decoration:none;">
+             Upgrade to Premium — ₦5,000/month
+           </a>
+         </div>`;
+return;
+}
 
-          if (res.ok) {
-            const d = result.data;
+if (res.ok) {
+const d = result.data;
 
-            // ── Null check — prevent silent crash ──
-            if (!d) {
-              out.innerHTML = `<div class="result-error">❌ AI returned no data. Please try again.</div>`;
-              return;
-            }
+// ── Null check — prevent silent crash ──
+if (!d) {
+out.innerHTML = `<div class="result-error">❌ AI returned no data. Please try again.</div>`;
+return;
+}
 
-            const desc = formatDesc(
-              Array.isArray(d.description)
-                ? JSON.stringify(d.description)
-                : d.description,
-            );
+const desc = formatDesc(
+Array.isArray(d.description)
+? JSON.stringify(d.description)
+: d.description,
+);
 
-            const now = new Date().toLocaleString("en-GB", {
-              timeZone: "Africa/Lagos",
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            });
+const now = new Date().toLocaleString("en-GB", {
+timeZone: "Africa/Lagos",
+day: "2-digit",
+month: "short",
+year: "numeric",
+hour: "2-digit",
+minute: "2-digit",
+});
 
-            buildReceiptCard(d);
+buildReceiptCard(d);
 
-            const isPaid = window.userTier === "premium";
+const isPaid = window.userTier === "premium";
 
-            out.innerHTML = `
-          <div class="result-success">
-            <div class="result-badge">✓ Saved to Google Sheets</div>
-            <div class="fields-grid">
-              <div><div class="field-label">Date</div><div class="field-value">${now}</div></div>
-              <div><div class="field-label">Tracking</div><div class="field-value"><span class="tracking-chip">${esc(d.tracking_number || "N/A")}</span></div></div>
-              <div><div class="field-label">Sender</div><div class="field-value">${esc(d.sender || "N/A")}</div></div>
-              <div><div class="field-label">Receiver</div><div class="field-value">${esc(d.receiver || "N/A")}</div></div>
-              <div class="field-full"><div class="field-label">Items</div><div class="field-value">${esc(desc)}</div></div>
-            </div>
-          </div>
-          <div class="receipt-section">
-            <div class="receipt-preview-label">Receipt ready · ${isPaid ? "premium" : "free tier"}
-              ${
-                result.extractions_remaining !== undefined && !isPaid
-                  ? `<span style="color:var(--accent);margin-left:8px;">· ${result.extractions_remaining} extractions left</span>`
-                  : ""
-              }
-            </div>
-            <div class="btn-row">
-              <button class="btn-ghost" id="dl-btn" onclick="downloadReceipt()">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Download Receipt
-              </button>
-            </div>
-          </div>`;
+out.innerHTML = `
+         <div class="result-success">
+           <div class="result-badge">✓ Saved to Google Sheets</div>
+           <div class="fields-grid">
+             <div><div class="field-label">Date</div><div class="field-value">${now}</div></div>
+             <div><div class="field-label">Tracking</div><div class="field-value"><span class="tracking-chip">${esc(d.tracking_number || "N/A")}</span></div></div>
+             <div><div class="field-label">Sender</div><div class="field-value">${esc(d.sender || "N/A")}</div></div>
+             <div><div class="field-label">Receiver</div><div class="field-value">${esc(d.receiver || "N/A")}</div></div>
+             <div class="field-full"><div class="field-label">Items</div><div class="field-value">${esc(desc)}</div></div>
+           </div>
+         </div>
+         <div class="receipt-section">
+           <div class="receipt-preview-label">Receipt ready · ${isPaid ? "premium" : "free tier"}
+             ${
+               result.extractions_remaining !== undefined && !isPaid
+                 ? `<span style="color:var(--accent);margin-left:8px;">· ${result.extractions_remaining} extractions left</span>`
+                 : ""
+             }
+           </div>
+           <div class="btn-row">
+             <button class="btn-ghost" id="dl-btn" onclick="downloadReceipt()">
+               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+               Download Receipt
+             </button>
+           </div>
+         </div>`;
 
-            // Refresh recent + stats
-            const r2 = await fetch("/api/get-records", {
-              headers: await authHeaders(),
-            });
-            if (r2.ok) {
-              const d2 = toArray(await r2.json());
-              await loadStatuses();
-              renderRecent(d2);
-              renderDrawerHistory(d2);
-              const totalEl = document.getElementById("stat-total");
-              const todayEl = document.getElementById("stat-today");
-              const lastEl = document.getElementById("stat-last");
-              if (totalEl) totalEl.textContent = d2.length;
-              if (todayEl) todayEl.textContent = countToday(d2);
-              if (lastEl && d2.length)
-                lastEl.textContent = shortDate(d2[d2.length - 1].date);
-            }
-          } else {
-            out.innerHTML = `<div class="result-error">❌ ${esc(result.error || "Server error.")}</div>`;
-          }
-        } catch (err) {
-          console.error("analyzeData error:", err);
-          out.innerHTML = `<div class="result-error">❌ Connection error. Check console for details.</div>`;
-        }
-      }
+// Refresh recent + stats
+const r2 = await fetch("/api/get-records", {
+headers: await authHeaders(),
+});
+if (r2.ok) {
+const d2 = toArray(await r2.json());
+await loadStatuses();
+renderRecent(d2);
+renderDrawerHistory(d2);
+const totalEl = document.getElementById("stat-total");
+const todayEl = document.getElementById("stat-today");
+const lastEl = document.getElementById("stat-last");
+if (totalEl) totalEl.textContent = d2.length;
+if (todayEl) todayEl.textContent = countToday(d2);
+if (lastEl && d2.length)
+lastEl.textContent = shortDate(d2[d2.length - 1].date);
+}
+} else {
+out.innerHTML = `<div class="result-error">❌ ${esc(result.error || "Server error.")}</div>`;
+}
+} catch (err) {
+console.error("analyzeData error:", err);
+out.innerHTML = `<div class="result-error">❌ Connection error. Check console for details.</div>`;
+}
+}
 
-      /* ── Search ── */
-      function escapeHtml(s) {
-        return String(s).replace(
-          /[&<>"']/g,
-          (c) =>
-            ({
-              "&": "&amp;",
-              "<": "&lt;",
-              ">": "&gt;",
-              '"': "&quot;",
-              "'": "&#39;",
-            })[c],
-        );
-      }
+/* ── Search ── */
+function escapeHtml(s) {
+return String(s).replace(
+/[&<>"']/g,
+(c) =>
+({
+"&": "&amp;",
+"<": "&lt;",
+">": "&gt;",
+'"': "&quot;",
+"'": "&#39;",
+})[c],
+);
+}
 
-      async function searchSpreadsheet() {
-        const query = document.getElementById("searchInput").value.trim();
-        const out = document.getElementById("search-output");
+async function searchSpreadsheet() {
+const query = document.getElementById("searchInput").value.trim();
+const out = document.getElementById("search-output");
 
-        if (!query) {
-          out.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">Type a sender or receiver name to search.</div></div>`;
-          return;
-        }
+if (!query) {
+out.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">Type a sender or receiver name to search.</div></div>`;
+return;
+}
 
-        out.innerHTML = `<div class="spinner-wrap"><div class="spinner"></div><span class="spinner-label">Searching…</span></div>`;
+out.innerHTML = `<div class="spinner-wrap"><div class="spinner"></div><span class="spinner-label">Searching…</span></div>`;
 
-        try {
-          const res = await fetch("/api/get-records", {
-            headers: await authHeaders(),
-          });
+try {
+const res = await fetch("/api/get-records", {
+headers: await authHeaders(),
+});
 
-          if (!res.ok) {
-            let msg = `Server error (${res.status})`;
-            try {
-              const j = await res.json();
-              if (j?.error) msg = j.error;
-            } catch (_) {}
-            throw new Error(msg);
-          }
+if (!res.ok) {
+let msg = `Server error (${res.status})`;
+try {
+const j = await res.json();
+if (j?.error) msg = j.error;
+} catch (_) {}
+throw new Error(msg);
+}
+//ousher
+const records = toArray(await res.json());
+const q = query.toLowerCase();
+const matches = records.filter(
+(r) =>
+(r.sender || "").toLowerCase().includes(q) ||
+(r.receiver || "").toLowerCase().includes(q) ||
+(r.tracking_number || "").toLowerCase().includes(q),
+);
 
-          const records = toArray(await res.json());
-          const q = query.toLowerCase();
-          const matches = records.filter(
-            (r) =>
-              (r.sender || "").toLowerCase().includes(q) ||
-              (r.receiver || "").toLowerCase().includes(q) ||
-              (r.tracking_number || "").toLowerCase().includes(q),
-          );
+if (!matches.length) {
+out.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No records match "${escapeHtml(query)}".</div></div>`;
+return;
+}
 
-          if (!matches.length) {
-            out.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No records match "${escapeHtml(query)}".</div></div>`;
-            return;
-          }
-
-          // Refresh statuses so search-result cards show the current stage.
-          await loadStatuses();
-          out.innerHTML = `<div class="records-list">${[...matches]
-            .reverse()
-            .map(recordCardHTML)
-            .join("")}</div>`;
-        } catch (err) {
-          console.error("searchSpreadsheet error:", err);
-          out.innerHTML = `<div class="result-error">❌ ${escapeHtml(err.message || "Could not search records.")}</div>`;
-        }
-      }
-    </script>
-  </body>
-  <footer>
-    <p>
-      <a href="/terms.html">Terms of Use</a>
-      <span>·</span>
-      <a href="/privacy.html">Privacy Policy</a>
-      <span>·</span>
-      <span>© 2026 Evueo</span>
-    </p>
-  </footer>
+// Refresh statuses so search-result cards show the current stage.
+await loadStatuses();
+out.innerHTML = `<div class="records-list">${[...matches]
+           .reverse()
+           .map(recordCardHTML)
+           .join("")}</div>`;
+} catch (err) {
+console.error("searchSpreadsheet error:", err);
+out.innerHTML = `<div class="result-error">❌ ${escapeHtml(err.message || "Could not search records.")}</div>`;
+}
+}
+</script>
+</body>
+<footer>
+<p>
+<a href="/terms.html">Terms of Use</a>
+<span>·</span>
+<a href="/privacy.html">Privacy Policy</a>
+<span>·</span>
+<span>© 2026 Evueo</span>
+</p>
+</footer>
 </html>
